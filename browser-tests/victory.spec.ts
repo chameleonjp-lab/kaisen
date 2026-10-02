@@ -14,9 +14,15 @@ async function started(page: Page) {
   await page.locator("#start").tap();
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
 }
-async function capture(page: Page, name: string) {
+async function capture(page: Page, name: string, inspectPausedScene = false) {
   await mkdir("test-results/evidence", { recursive: true });
-  await page.screenshot({ path: `test-results/evidence/${name}.png` });
+  await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({
+    note: inspectPausedScene ? "Real-input gameplay, explicitly paused. Only pause menu hidden for this screenshot; camera/world unchanged." : "Unmodified gameplay screen",
+    snapshot: await state(page),
+  }, null, 2));
+  await page.screenshot({ path: `test-results/evidence/${name}.png`,
+    ...(inspectPausedScene ? { style: "#pause-screen { visibility: hidden !important; }" } : {}),
+  });
 }
 const errors: string[] = [];
 test.beforeEach(async ({ page }) => {
@@ -52,6 +58,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
+  let fleetCaptured = false;
   let targetId: number | null = null,
     attackingShip = false,
     extendUntil = 0,
@@ -102,6 +109,18 @@ test("physical circular-stick inputs reach the victory screen", async ({
         1,
       ),
     );
+    if (!fleetCaptured && target.kind === "ship" && d < 700 && angle < .3) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await page.locator("#pause").tap();
+      await expect.poll(async () => (await state(page)).phase).toBe("paused");
+      await capture(page, "fleet-approach-paused", true);
+      fleetCaptured = true;
+      await page.locator("#resume").tap();
+      await expect.poll(async () => (await state(page)).phase).toBe("playing");
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ ...origin, id: 1 }] });
+      lastSample = -6;
+      continue;
+    }
     const tooClose =
       target.kind === "ship" && !attackingShip && d < 360 && angle > 0.25;
     if (
@@ -144,6 +163,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
     touchPoints: [],
   });
   const result = await state(page);
+  expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
   expect(result.result?.outcome).toBe("victory");
   expect(result.enemies.every((t: any) => t.health <= 0)).toBe(true);
   expect(result.ships.every((t: any) => t.health <= 0)).toBe(true);

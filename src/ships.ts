@@ -26,7 +26,7 @@ export class ShipFactory {
     transparent: true,
     depthWrite: false,
     vertexShader:
-      "varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+      "varying vec2 vUv;void main(){vUv=uv;vec4 world=modelMatrix*vec4(position,1.);world.y=1.6;gl_Position=projectionMatrix*viewMatrix*world;}",
     fragmentShader:
       "varying vec2 vUv;void main(){float t=vUv.y;float edge=abs(vUv.x-.5)*2.;float line=exp(-pow((edge-(1.-t)*.8-.08)*16.,2.));float center=exp(-edge*10.);gl_FragColor=vec4(.70,.87,.87,(line*.28+center*.12)*sin(t*3.14159));}",
   });
@@ -70,6 +70,9 @@ export class ShipFactory {
       this.keep(new PlaneGeometry(W * 3.2, L * 1.05)),
       this.wakeMaterial,
     );
+    // Keep foam horizontal and above the bounded ±1.32m visual swells.
+    // Depth testing stays enabled; the hull still occludes the wake.
+    wake.name = "wake";
     wake.rotation.x = -Math.PI / 2;
     wake.position.set(0, 0.18, L * 0.93);
     root.add(wake);

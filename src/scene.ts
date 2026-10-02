@@ -40,27 +40,28 @@ const CAPACITY = 512;
 const seaVertex = `
 uniform float uTime;
 varying vec3 vWorld;
-varying vec3 vNormal;
 void main(){
  vec3 p=position;
  vec4 base=modelMatrix*vec4(p,1.0);
- float a=base.x*.023+base.z*.013-uTime*.7;
- float b=base.x*-.039+base.z*.031+uTime*.46;
+ float a=base.x*.0023+base.z*.0013-uTime*.7;
+ float b=base.x*-.0039+base.z*.0031+uTime*.46;
  p.y+=sin(a)*.9+sin(b)*.42;
  vWorld=(modelMatrix*vec4(p,1.)).xyz;
- vNormal=normalize(vec3(-cos(a)*.0207+cos(b)*.01638,1.,-cos(a)*.0117-cos(b)*.01302));
  gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);
 }`;
 const seaFragment = `
 uniform float uTime;
 varying vec3 vWorld;
-varying vec3 vNormal;
 void main(){
  float d=length(cameraPosition-vWorld);
  vec2 uv=vWorld.xz*.14;
  float rippleA=sin(dot(uv,vec2(1.,.36))+uTime*.9+sin(uv.y*.36)*.4);
  float rippleB=sin(dot(uv,vec2(-.55,.82))-uTime*.63);
- vec3 n=normalize(vNormal+vec3(rippleA*.018,0.,rippleB*.012)*exp(-d*.002));
+ // Resolve mid-scale wave normals per pixel, not on the 390m vertex grid.
+ float a=vWorld.x*.023+vWorld.z*.013-uTime*.7;
+ float b=vWorld.x*-.039+vWorld.z*.031+uTime*.46;
+ vec3 swell=vec3(-cos(a)*.046+cos(b)*.036,1.,-cos(a)*.026-cos(b)*.029);
+ vec3 n=normalize(swell+vec3(rippleA*.035,0.,rippleB*.025)*exp(-d*.0015));
  vec3 eye=normalize(cameraPosition-vWorld);
  vec3 light=normalize(vec3(-.6,.65,-.35));
  float fres=pow(1.-max(0.,dot(n,eye)),3.);
@@ -68,7 +69,10 @@ void main(){
  float fleck=sin(vWorld.x*.025+vWorld.z*.042+sin(vWorld.x*.04)-uTime*.4);
  vec3 water=mix(vec3(.022,.17,.22),vec3(.24,.48,.53),fres);
  water+=vec3(.90,.76,.45)*glint*.9;
- water+=vec3(.006,.013,.012)*fleck*exp(-d*.0015);
+ water+=vec3(.015,.038,.040)*fleck*exp(-d*.0008);
+ float crest=smoothstep(1.1,1.7,sin(a)+sin(b)*.7);
+ float broken=smoothstep(-.2,.6,sin(vWorld.x*.012-vWorld.z*.018+sin(b)));
+ water+=vec3(.045,.07,.072)*crest*broken*exp(-d*.001);
  water=mix(water,vec3(.57,.73,.75),smoothstep(3500.,18000.,d));
  gl_FragColor=vec4(water,1.);
  #include <tonemapping_fragment>
@@ -366,6 +370,8 @@ export class KaisenScene {
     for (const s of state.ships) {
       const v = this.fleet.get(s.id)!;
       v.visible = s.health > 0;
+      const wake = v.getObjectByName("wake");
+      if (wake) wake.visible = s.health > 0;
       v.position.copy(s.position);
       v.quaternion.copy(s.quaternion);
       v.rotation.z += Math.sin(state.elapsed * 0.5 + s.id) * 0.009;
