@@ -33,7 +33,7 @@ async function opened(page: Page) {
     .toBe(true);
 }
 async function started(page: Page) {
-  await page.locator("#start").click();
+  await page.locator("#start").tap();
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
 }
 test.beforeEach(async ({ page }) => {
@@ -131,6 +131,16 @@ for (const viewport of [
     expect(s.enemies).toHaveLength(5);
     expect(s.ships).toHaveLength(3);
     expect(s.player.kind).toBe("aircraft");
+    for (const id of ["pause", "loop", "game-sound"]) {
+      const box = await page.locator(`#${id}`).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 0.01);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 0.01);
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
     await capture(page, `flight-${viewport.width}x${viewport.height}`);
     await page.locator("#pause").click();
     const tick = (await state(page)).tick;
@@ -140,13 +150,13 @@ for (const viewport of [
     await page.locator("#pause-home").click();
     await expect(page.locator("#start")).toBeVisible();
   });
-test("touch steering, multitouch release, loop and explicit resume", async ({
+test("touch steering, two-finger release, loop and explicit resume", async ({
   page,
   context,
 }) => {
   await opened(page);
-  await started(page);
   const cdp = await context.newCDPSession(page);
+  await started(page);
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [{ x: 100, y: 600, id: 1 }],
@@ -167,11 +177,11 @@ test("touch steering, multitouch release, loop and explicit resume", async ({
       { x: loop!.x + loop!.width / 2, y: loop!.y + loop!.height / 2, id: 2 },
     ],
   });
-  // CDP touchEnd requires an empty list. A changed active-point list on
-  // touchMove releases only finger 2 while finger 1 remains down.
+  // CDP ends the gesture with an empty point list. Per-finger ownership
+  // is separately covered by the input unit regression.
   await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchMove",
-    touchPoints: [{ x: 132, y: 597, id: 1 }],
+    type: "touchEnd",
+    touchPoints: [],
   });
   await expect(page.locator("#loop")).toHaveAttribute("aria-pressed", "false");
   await expect
@@ -247,10 +257,12 @@ test("200 percent text remains reachable on a short screen", async ({
   await page.setViewportSize({ width: 320, height: 568 });
   await opened(page);
   await page.evaluate(() => {
-    for (const e of document.querySelectorAll<HTMLElement>(
-      "button,p,h1,h2,span,small,em,strong,dt,dd",
-    ))
-      e.style.fontSize = `${parseFloat(getComputedStyle(e).fontSize) * 2}px`;
+    const original = [
+      ...document.querySelectorAll<HTMLElement>(
+        "button,p,h1,h2,span,small,em,strong,dt,dd",
+      ),
+    ].map((e) => ({ e, size: parseFloat(getComputedStyle(e).fontSize) }));
+    for (const { e, size } of original) e.style.fontSize = `${size * 2}px`;
   });
   await page.locator("#start").scrollIntoViewIfNeeded();
   await expect(page.locator("#start")).toBeInViewport();

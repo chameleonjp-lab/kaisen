@@ -333,6 +333,9 @@ p {
   text-shadow: 0 1px 6px #001c26;
 }
 .health-label {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
   font-size: 9px;
   color: #caddd8;
   letter-spacing: 1px;
@@ -340,13 +343,12 @@ p {
 .health-label b {
   font-size: 15px;
   color: #f6ead1;
-  float: right;
+  margin-left: auto;
   font-weight: 450;
 }
 .health-label small {
   font-size: 9px;
-  margin-right: 5px;
-  float: right;
+  margin-right: 0;
 }
 .health-track {
   height: 3px;
@@ -392,7 +394,7 @@ p {
 }
 .flight-tip {
   position: absolute;
-  bottom: calc(44px + var(--safe-bottom));
+  bottom: calc(86px + var(--safe-bottom));
   left: 20px;
   max-width: calc(100% - 165px);
   font-size: 11px;
@@ -652,7 +654,7 @@ p {
     font-size: 8px;
   }
   .flight-tip {
-    bottom: 35px;
+    bottom: calc(80px + var(--safe-bottom));
   }
 }
 @media (orientation: landscape) and (max-height: 600px) {
@@ -757,5 +759,27 @@ p {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .hud-top {
+    gap: 8px;
+  }
+  .time-block strong {
+    font-size: 21px;
+    letter-spacing: -1px;
+  }
+  .targets {
+    gap: 8px;
+    padding: 8px;
+    font-size: 8px;
+  }
+  .targets b {
+    font-size: 19px;
+    margin-left: 4px;
+  }
+  .targets small {
+    font-size: 8px;
   }
 }

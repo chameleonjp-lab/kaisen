@@ -11,7 +11,7 @@ async function opened(page: Page) {
   await expect(page.locator("#start")).toBeEnabled();
 }
 async function started(page: Page) {
-  await page.locator("#start").click();
+  await page.locator("#start").tap();
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
 }
 async function capture(page: Page, name: string) {
@@ -45,8 +45,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
 }) => {
   test.setTimeout(180000);
   await opened(page);
-  await started(page);
   const cdp = await context.newCDPSession(page);
+  await started(page);
   const origin = { x: 90, y: 650 };
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchStart",
