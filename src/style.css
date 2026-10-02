@@ -783,3 +783,25 @@ p {
     font-size: 8px;
   }
 }
+
+/* Reload stays outside the original aiming circle (13.5vmin radius). */
+.reload-status {
+  position: absolute;
+  top: calc(50% + 13.5vmin + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #ffd27a99;
+  border-radius: 5px;
+  background: #071e2be6;
+  color: #ffdc97;
+  font-size: .8rem;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+.ammo { margin-top: 7px; font-size: .65rem; color: #e1ded0; }
+.ammo b { font-variant-numeric: tabular-nums; color: #fff0c2; }

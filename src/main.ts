@@ -208,6 +208,13 @@ function updateHUD() {
   el("enemy-count").textContent = String(
     state.enemies.filter((p) => p.health > 0).length,
   );
+  el("enemy-total").textContent = `/ ${state.enemies.length}`;
+  el("mg-ammo").textContent = String(state.player.mg);
+  el("cannon-ammo").textContent = String(state.player.cannon);
+  const reloading = state.player.reloadTicksRemaining > 0;
+  el("reload-status").hidden = !reloading;
+  el("reload-status").textContent = reloading ? `再装填中 あと${(state.player.reloadTicksRemaining / 60).toFixed(1)}秒` : "";
+  el("reload-status").dataset.progress = String(1 - state.player.reloadTicksRemaining / 360);
   el("ship-count").textContent = String(
     state.ships.filter((s) => s.health > 0).length,
   );
@@ -276,6 +283,10 @@ function frame() {
         e.owner === state.player.id || e.target === state.player.id;
       if (e.type === "kill") audio.event(e, e.target !== state.player.id);
       else if (relates) audio.event(e, true);
+      if (e.type === "reload-start") announce("弾切れ · 6秒後に再装填", 2);
+      if (e.type === "reload-complete") announce("再装填完了", 1.5);
+      if (e.type === "reinforcement") announce("敵3機が復活 · 撃破でHP回復", 4);
+      if (e.type === "heal") announce(`復活敵撃破 · HP +${e.amount ?? 0}`, 2.5);
       if (
         e.type === "kill" &&
         e.target !== state.player.id &&
@@ -413,6 +424,7 @@ if (import.meta.env.DEV) {
           screen,
           tick: state.tick,
           elapsed: state.elapsed,
+          reinforcementsSpawned: state.reinforcementsSpawned,
           player: state.player,
           allies: state.allies,
           enemies: state.enemies,

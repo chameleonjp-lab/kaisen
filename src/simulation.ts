@@ -1,9 +1,13 @@
-import { Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
 import { autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
-import { AA_COOLDOWN, AA_MUZZLE_SPEED, AA_RANGE, FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, resolveMissionConfig, SEA_COLLISION_HEIGHT } from './mission';
+import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_COUNT, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, resolveMissionConfig } from './mission';
+import { beginPlayerReload, tickPlayerReload } from './ammunition';
+import { aircraftSeaContact } from './sea-contact';
+import { oceanHeight } from './ocean';
+import { segmentNavalHullEntry, shipCollisionBoxes, stepNavalGuns } from './naval';
 import type { Aircraft, Bullet, CombatTarget, EndReason, FlightInput, GameEvent, GameMode, GameState, MissionConfig, Ship, Team } from './types';
 export { FIXED_DT } from './mission';
 
@@ -19,6 +23,7 @@ const HIT_SPHERES = [
 interface SimulationMeta {
   nextEntityId: number; nextEventId: number; accumulator: number; pendingLoop: boolean;
   flight: FlightController; deathReason: EndReason | null;
+  previousOrientations: Map<number, Quaternion>; pendingHeal: number;
 }
 const metadata = new WeakMap<GameState, SimulationMeta>();
 function metaFor(state: GameState): SimulationMeta {
@@ -44,12 +49,12 @@ export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | G
   const allies = [-1, 1, -2, 2].map((side, index) => makeAircraft(2 + index, 'friendly', new Vector3(side * 62, 350 + index * 13, 280 + Math.abs(side) * 36), 0, index < 2 ? 'interceptor' : 'strike'));
   const enemies = Array.from({ length: 5 }, (_, index) => makeAircraft(10 + index, 'enemy', new Vector3((index - 2) * 115, 355 + (random() - 0.5) * 65, -350 - Math.abs(index - 2) * 85), 0));
   const state: GameState = {
-    phase: 'ready', mode: mission.mode, config: mission, seed: normalized, player, allies, enemies,
+    phase: 'ready', reinforcementsSpawned: false, mode: mission.mode, config: mission, seed: normalized, player, allies, enemies,
     ships: makeFleet(mission.shipCount), bullets: [], events: [], elapsed: 0, tick: 0,
     stats: { playerAircraftKills: 0, playerShipKills: 0, allyAircraftKills: 0, allyShipKills: 0, shots: 0, hits: 0, loops: 0, damageTaken: 0 },
     result: null, endReason: null,
   };
-  metadata.set(state, { nextEntityId: 1000, nextEventId: 1, accumulator: 0, pendingLoop: false, flight: createFlightController(player), deathReason: null });
+  metadata.set(state, { nextEntityId: 1000, nextEventId: 1, accumulator: 0, pendingLoop: false, flight: createFlightController(player), deathReason: null, previousOrientations: new Map(), pendingHeal: 0 });
   assignTargets(state);
   return state;
 }
@@ -75,7 +80,10 @@ function registerDestruction(state: GameState, target: CombatTarget, owner: numb
   if (target.team !== 'enemy' || team !== 'friendly') return;
   if (owner === state.player.id) {
     if (target.kind === 'ship') state.stats.playerShipKills += 1;
-    else state.stats.playerAircraftKills += 1;
+    else {
+      state.stats.playerAircraftKills += 1;
+      if (target.generation === 'reinforcement') metaFor(state).pendingHeal += REINFORCEMENT_HEAL;
+    }
   } else {
     if (target.kind === 'ship') state.stats.allyShipKills += 1;
     else state.stats.allyAircraftKills += 1;
@@ -123,18 +131,20 @@ export function segmentBoxEntry(start: Vector3, end: Vector3, min: Vector3, max:
   }
   return enter;
 }
+const shipSolids = new WeakMap<Ship, { min: Vector3; max: Vector3 }[]>();
 export function sweptShipHitTime(bullet: Pick<Bullet, 'previous' | 'position'>, ship: Ship, padding = 0, stepFraction = 1): number | null {
   const inverse = ship.quaternion.clone().invert();
   const start = bullet.previous.clone().sub(ship.previous).applyQuaternion(inverse);
   const endCenter = ship.previous.clone().lerp(ship.position, stepFraction);
   const end = bullet.position.clone().sub(endCenter).applyQuaternion(inverse);
-  const boxes = [
-    [new Vector3(-ship.width / 2 - padding, -padding, -ship.length / 2 - padding), new Vector3(ship.width / 2 + padding, ship.height * 0.36 + padding, ship.length / 2 + padding)],
-    [new Vector3(-ship.width * 0.3 - padding, ship.height * 0.3 - padding, -ship.length * 0.22 - padding), new Vector3(ship.width * 0.3 + padding, ship.height + padding, ship.length * 0.2 + padding)],
-  ];
-  let first: number | null = null;
-  for (const [min, max] of boxes) {
-    const time = segmentBoxEntry(start, end, min, max);
+  // Reject distant segments before allocating/testing detailed ship solids.
+  if (segmentBoxEntry(start, end, new Vector3(-ship.width / 2 - padding, -3 - padding, -ship.length / 2 - padding),
+    new Vector3(ship.width / 2 + padding, ship.height + padding, ship.length / 2 + padding)) === null) return null;
+  let boxes = shipSolids.get(ship);
+  if (!boxes) { boxes = shipCollisionBoxes(ship); shipSolids.set(ship, boxes); }
+  let first: number | null = segmentNavalHullEntry(start, end, padding);
+  for (const { min, max } of boxes) {
+    const time = segmentBoxEntry(start, end, padding ? min.clone().addScalar(-padding) : min, padding ? max.clone().addScalar(padding) : max);
     if (time !== null && (first === null || time < first)) first = time;
   }
   return first;
@@ -155,8 +165,11 @@ function resolveContacts(state: GameState): void {
   const planes = [state.player, ...state.allies, ...state.enemies];
   for (const plane of planes) {
     if (plane.health <= 0) continue;
-    if (plane.position.y <= SEA_COLLISION_HEIGHT) {
-      destroy(state, plane, plane.id); emit(state, 'splash', plane.position, plane.id);
+    const seaContact = aircraftSeaContact(plane, meta.previousOrientations.get(plane.id) ?? plane.quaternion, state.elapsed - FIXED_DT, state.elapsed);
+    if (seaContact) {
+      plane.position.lerpVectors(plane.previous, plane.position, seaContact.fraction);
+      plane.quaternion.slerpQuaternions(meta.previousOrientations.get(plane.id) ?? plane.quaternion, plane.quaternion.clone(), seaContact.fraction);
+      destroy(state, plane, plane.id); emit(state, 'splash', seaContact.point, plane.id);
       if (plane === state.player) meta.deathReason = 'sea';
       continue;
     }
@@ -181,20 +194,24 @@ function resolveContacts(state: GameState): void {
   }
 }
 
-function appendBullet(state: GameState, bullet: Omit<Bullet, 'id' | 'previous'>): void {
-  if (state.bullets.length >= MAX_BULLETS) return;
+function appendBullet(state: GameState, bullet: Omit<Bullet, 'id' | 'previous'>): boolean {
+  if (state.bullets.length >= MAX_BULLETS) return false;
   state.bullets.push({ ...bullet, id: metaFor(state).nextEntityId++, previous: bullet.position.clone() });
   if (bullet.owner === state.player.id) state.stats.shots += 1;
   emit(state, 'shot', bullet.position, bullet.owner, undefined, bullet.team);
+  return true;
 }
 function fireAircraft(state: GameState, plane: Aircraft, firing: boolean, target: CombatTarget | null): void {
   plane.fireClock = Math.max(0, plane.fireClock - FIXED_DT);
   plane.cannonClock = Math.max(0, plane.cannonClock - FIXED_DT);
   if (!firing || plane.health <= 0) return;
   const player = plane === state.player;
+  if (player && plane.reloadTicksRemaining > 0) return;
   for (const kind of ['mg', 'cannon'] as const) {
     const clock = kind === 'mg' ? 'fireClock' : 'cannonClock';
-    if (plane[clock] > EPSILON) continue;
+    if (plane[clock] > EPSILON || (player && plane[kind] < 2)) continue;
+    // Reserve both barrels together. No one-sided shot or ammo loss on saturation.
+    if (state.bullets.length + 2 > MAX_BULLETS) continue;
     for (const side of [-1, 1]) {
       const forward = forwardOf(plane);
       const offset = kind === 'mg' ? new Vector3(side * 0.3, 0.52, -4.25) : new Vector3(side * 2.5, 0, -2.4);
@@ -211,30 +228,22 @@ function fireAircraft(state: GameState, plane: Aircraft, firing: boolean, target
       appendBullet(state, { owner: plane.id, team: plane.team, kind, position, velocity: direction.multiplyScalar(speed), life: BULLET_LIFETIME,
         damage: player ? (kind === 'mg' ? 5 : 25) : plane.team === 'friendly' ? (kind === 'mg' ? 3 : 12) : (kind === 'mg' ? 2 : 8) });
     }
+    if (player) plane[kind] -= 2;
     plane[clock] = player ? (kind === 'mg' ? 1 / 12 : 1 / 4) : (kind === 'mg' ? 0.28 : 0.95);
   }
+  if (player && beginPlayerReload(plane)) emit(state, 'reload-start', plane.position, plane.id);
 }
 function updateShips(state: GameState): void {
   for (const ship of state.ships) {
     if (ship.health <= 0) continue;
     ship.previous.copy(ship.position); ship.age += FIXED_DT;
     ship.position.addScaledVector(ship.velocity, FIXED_DT);
-    ship.fireClock = Math.max(0, ship.fireClock - FIXED_DT);
   }
 }
 function fireShip(state: GameState, ship: Ship): void {
-  if (ship.health <= 0 || ship.fireClock > EPSILON) return;
-  const candidates = [state.player, ...state.allies].filter(item => item.health > 0 && item.position.distanceTo(ship.position) < AA_RANGE);
-  candidates.sort((a, b) => a.position.distanceToSquared(ship.position) - b.position.distanceToSquared(ship.position) || a.id - b.id);
-  const target = candidates[0]; ship.targetId = target?.id ?? null;
-  if (!target) return;
-  ship.fireClock = AA_COOLDOWN;
-  const position = ship.position.clone().add(new Vector3(0, ship.height + 2, 0));
-  const duration = Math.min(2.6, position.distanceTo(target.position) / AA_MUZZLE_SPEED);
-  const aim = target.position.clone().addScaledVector(forwardOf(target), target.speed * duration * 0.82);
-  // Deterministic, modest AA dispersion. The launch direction never changes afterward.
-  aim.x += Math.sin(state.tick * 0.7 + ship.id) * 12; aim.y += Math.cos(state.tick * 0.4 + ship.id) * 7;
-  appendBullet(state, { owner: ship.id, team: 'enemy', kind: 'aa', position, velocity: aim.sub(position).normalize().multiplyScalar(AA_MUZZLE_SPEED), life: 3.6, damage: 8 });
+  if (ship.health <= 0) return;
+  const shots = stepNavalGuns(ship, [state.player, ...state.allies], state.tick, FIXED_DT);
+  for (const shot of shots) appendBullet(state, { ...shot, owner: ship.id, team: 'enemy' });
 }
 
 function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, position: Vector3): void {
@@ -253,25 +262,64 @@ function updateBullets(state: GameState): void {
     if (bullet.life <= 0) continue;
     bullet.previous.copy(bullet.position);
     const travel = Math.min(FIXED_DT, bullet.life);
-    bullet.position.addScaledVector(bullet.velocity, travel); bullet.life = Math.max(0, bullet.life - FIXED_DT);
-    const seaTime = bullet.previous.y <= 0 ? 0 : bullet.position.y <= 0 ? bullet.previous.y / (bullet.previous.y - bullet.position.y) : Infinity;
+    bullet.position.addScaledVector(bullet.velocity, travel);
+    bullet.position.y -= 0.5 * (bullet.gravity ?? 0) * travel * travel;
+    bullet.velocity.y -= (bullet.gravity ?? 0) * travel;
+    bullet.life = Math.max(0, bullet.life - FIXED_DT);
+    const startClearance = bullet.previous.y - oceanHeight(bullet.previous.x, bullet.previous.z, state.elapsed - FIXED_DT);
+    const endClearance = bullet.position.y - oceanHeight(bullet.position.x, bullet.position.z, state.elapsed - FIXED_DT + travel);
+    const seaTime = startClearance <= 0 ? 0 : endClearance <= 0 ? startClearance / (startClearance - endClearance) : Infinity;
     let target: CombatTarget | null = null, first = seaTime;
     for (const candidate of candidates) {
-      if (candidate.health <= 0 || candidate.team === bullet.team || candidate.id === bullet.owner) continue;
+      if (candidate.health <= 0 || candidate.id === bullet.owner) continue;
+      // Other hulls are solid even to their own fleet's AA; no friendly damage.
+      if (candidate.team === bullet.team && !(bullet.kind === 'aa' && candidate.kind === 'ship')) continue;
       const hit = candidate.kind === 'ship' ? sweptShipHitTime(bullet, candidate, 0, travel / FIXED_DT) : sweptAircraftHitTime(bullet, candidate, travel / FIXED_DT);
       if (hit !== null && (hit < first || (hit === first && target !== null && candidate.id < target.id))) { target = candidate; first = hit; }
     }
-    if (target) { damageTarget(state, target, bullet, bullet.previous.clone().lerp(bullet.position, first)); continue; }
+    if (target) {
+      const point = bullet.previous.clone().lerp(bullet.position, first);
+      if (target.team !== bullet.team) damageTarget(state, target, bullet, point);
+      else emit(state, 'hit', point, bullet.owner, target, bullet.team);
+      continue;
+    }
     if (seaTime !== Infinity) { emit(state, 'splash', bullet.previous.clone().lerp(bullet.position, seaTime), bullet.owner); continue; }
     if (bullet.life > 0) survivors.push(bullet);
   }
   state.bullets = survivors;
 }
 
+/** One wave at the beginning of tick 10800; a mission ended earlier stays ended. */
+function spawnReinforcements(state: GameState): void {
+  if (state.reinforcementsSpawned || state.tick < REINFORCEMENT_TICK) return;
+  state.reinforcementsSpawned = true;
+  const forward = forwardOf(state.player);
+  const horizontal = new Vector3(forward.x, 0, forward.z).normalize();
+  if (horizontal.lengthSq() < EPSILON) horizontal.set(0, 0, -1);
+  const right = new Vector3(-horizontal.z, 0, horizontal.x);
+  for (let index = 0; index < REINFORCEMENT_COUNT; index++) {
+    const position = state.player.position.clone().addScaledVector(horizontal, 1400).addScaledVector(right, (index - 1) * 180);
+    position.y = Math.max(220, state.player.position.y + 100 + index * 35);
+    const yaw = Math.atan2(position.x - state.player.position.x, position.z - state.player.position.z);
+    const enemy = makeAircraft(metaFor(state).nextEntityId++, 'enemy', position, yaw);
+    enemy.generation = 'reinforcement';
+    state.enemies.push(enemy);
+  }
+  emit(state, 'reinforcement', state.player.position, state.player.id);
+}
+
 function fixedStep(state: GameState, input: FlightInput): void {
   const meta = metaFor(state), player = state.player;
   if (player.health <= 0) { finish(state, meta.deathReason ?? 'shot-down'); return; }
   state.tick += 1; state.elapsed = state.tick * FIXED_DT;
+  spawnReinforcements(state);
+  meta.pendingHeal = 0;
+  for (const plane of [player, ...state.allies, ...state.enemies]) {
+    let previous = meta.previousOrientations.get(plane.id);
+    if (!previous) { previous = new Quaternion(); meta.previousOrientations.set(plane.id, previous); }
+    previous.copy(plane.quaternion);
+  }
+  if (tickPlayerReload(player)) emit(state, 'reload-complete', player.position, player.id);
   player.previous.copy(player.position); player.age += FIXED_DT;
   const targets: CombatTarget[] = [...state.enemies, ...state.ships].filter(item => item.health > 0);
   const assist = getFlightAssist(player, targets, input, state.mode);
@@ -300,6 +348,15 @@ function fixedStep(state: GameState, input: FlightInput): void {
   for (const plane of [...state.allies, ...state.enemies]) fireAircraft(state, plane, plane.aiFire, targetFor(state, plane.targetId));
   for (const ship of state.ships) fireShip(state, ship);
   updateBullets(state);
+  // A kill bonus cannot resurrect a plane killed by any round in this same tick.
+  if (player.health > 0 && meta.pendingHeal > 0) {
+    const amount = Math.min(meta.pendingHeal, player.maxHealth - player.health);
+    player.health += amount;
+    if (amount > 0) {
+      emit(state, 'heal', player.position, player.id);
+      state.events[state.events.length - 1].amount = amount;
+    }
+  }
   // Resolve every in-flight round before choosing the outcome. Death wins a simultaneous all-clear.
   if (player.health <= 0) finish(state, meta.deathReason ?? 'shot-down');
   else if (state.enemies.every(item => item.health <= 0) && state.ships.every(item => item.health <= 0)) finish(state, 'all-clear');

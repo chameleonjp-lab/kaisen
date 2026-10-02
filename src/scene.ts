@@ -12,7 +12,6 @@ import {
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
-  PlaneGeometry,
   Points,
   Quaternion,
   ShaderMaterial,
@@ -28,6 +27,8 @@ import { targetAimPoint } from "./flight-assist";
 import { AircraftBatchFactory } from "./aircraft-batch";
 import { ShipFactory } from "./ships";
 import { RenderQueue } from "./render-queue";
+import { MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
+import { createOceanGeometry, oceanAnchor, OCEAN_GLSL } from "./ocean";
 import {
   FLIGHT_FOV,
   FLIGHT_FAR,
@@ -38,30 +39,30 @@ import { Scene } from "three";
 import type { Aircraft, GameEvent, GameState } from "./types";
 
 const CAPACITY = 512;
+const TRACER_CAPACITY = MAX_BULLETS;
 const seaVertex = `
 uniform float uTime;
 varying vec3 vWorld;
+${OCEAN_GLSL}
 void main(){
- vec3 p=position;
- vec4 base=modelMatrix*vec4(p,1.0);
- float a=base.x*.0023+base.z*.0013-uTime*.7;
- float b=base.x*-.0039+base.z*.0031+uTime*.46;
- p.y+=sin(a)*.9+sin(b)*.42;
- vWorld=(modelMatrix*vec4(p,1.)).xyz;
+ vWorld=(modelMatrix*vec4(position,1.)).xyz;
+ vWorld.y=oceanHeight(vWorld.xz,uTime);
  gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);
 }`;
 const seaFragment = `
 uniform float uTime;
 varying vec3 vWorld;
+${OCEAN_GLSL}
 void main(){
  float d=length(cameraPosition-vWorld);
  vec2 uv=vWorld.xz*.14;
  float rippleA=sin(dot(uv,vec2(1.,.36))+uTime*.9+sin(uv.y*.36)*.4);
  float rippleB=sin(dot(uv,vec2(-.55,.82))-uTime*.63);
- // Resolve mid-scale wave normals per pixel, not on the 390m vertex grid.
+ // Broad normals use the same surface as collision; small ripples only shade it.
  float a=vWorld.x*.023+vWorld.z*.013-uTime*.7;
  float b=vWorld.x*-.039+vWorld.z*.031+uTime*.46;
- vec3 swell=vec3(-cos(a)*.046+cos(b)*.036,1.,-cos(a)*.026-cos(b)*.029);
+ vec2 gradient=oceanGradient(vWorld.xz,uTime);
+ vec3 swell=vec3(-gradient.x,1.,-gradient.y);
  vec3 n=normalize(swell+vec3(rippleA*.035,0.,rippleB*.025)*exp(-d*.0015));
  vec3 eye=normalize(cameraPosition-vWorld);
  vec3 light=normalize(vec3(-.6,.65,-.35));
@@ -116,7 +117,7 @@ export class KaisenScene {
     fragmentShader: seaFragment,
   });
   private sea = new Mesh(
-    new PlaneGeometry(50000, 50000, 128, 128).rotateX(-Math.PI / 2),
+    createOceanGeometry(),
     this.seaMaterial,
   );
   private sky = new Mesh(
@@ -129,8 +130,8 @@ export class KaisenScene {
     }),
   );
   private tracersGeometry = new BufferGeometry();
-  private tracerPositions = new Float32Array(CAPACITY * 6);
-  private tracerColors = new Float32Array(CAPACITY * 6);
+  private tracerPositions = new Float32Array(TRACER_CAPACITY * 6);
+  private tracerColors = new Float32Array(TRACER_CAPACITY * 6);
   private tracers: LineSegments;
   private particleGeometry = new BufferGeometry();
   private particlePositions = new Float32Array(240 * 3);
@@ -279,20 +280,13 @@ export class KaisenScene {
   resetRenderQueue() {
     this.renderQueue.reset();
   }
-  private reset(state: GameState) {
-    for (const p of this.planes.values()) this.scene.remove(p.root);
-    this.planes.clear();
-    for (const s of this.fleet.values()) this.scene.remove(s);
-    this.fleet.clear();
-    this.ships.dispose();
-    this.ships = new ShipFactory();
-    for (const p of [state.player, ...state.allies, ...state.enemies]) {
-      const detail = p === state.player ? "hero" : "enemy";
+  private addPlane(p: Aircraft, player: boolean) {
+      const detail = player ? "hero" : "enemy";
       const visual = this.aircraftBatches.optimize(
         this.aircraft.create(detail),
         detail,
       );
-      if (p !== state.player) {
+      if (!player) {
         const band = new Mesh(
           this.teamBandGeometry,
           this.teamMaterials[p.team],
@@ -304,7 +298,16 @@ export class KaisenScene {
       }
       this.planes.set(p.id, visual);
       this.scene.add(visual.root);
-    }
+    return visual;
+  }
+  private reset(state: GameState) {
+    for (const p of this.planes.values()) this.scene.remove(p.root);
+    this.planes.clear();
+    for (const s of this.fleet.values()) this.scene.remove(s);
+    this.fleet.clear();
+    this.ships.dispose();
+    this.ships = new ShipFactory();
+    for (const p of [state.player, ...state.allies, ...state.enemies]) this.addPlane(p, p === state.player);
     for (const s of state.ships) {
       const visual = this.ships.create(s);
       this.fleet.set(s.id, visual);
@@ -390,7 +393,7 @@ export class KaisenScene {
       this.visualTime += Math.max(0, Math.min(0.1, presentationDt));
     else this.visualTime = state.elapsed;
     for (const p of [state.player, ...state.allies, ...state.enemies]) {
-      const v = this.planes.get(p.id)!;
+      const v = this.planes.get(p.id) ?? this.addPlane(p, p === state.player);
       v.root.visible = p.health > 0;
       v.root.position.copy(p.position);
       v.root.quaternion.copy(p.quaternion);
@@ -422,7 +425,7 @@ export class KaisenScene {
       if (wake) wake.visible = s.health > 0;
       v.position.copy(s.position);
       v.quaternion.copy(s.quaternion);
-      v.rotation.z += Math.sin(state.elapsed * 0.5 + s.id) * 0.009;
+      this.ships.update(s, v);
       const wreck = this.wrecks.get(s.id);
       if (s.health <= 0 && wreck) {
         const age = this.visualTime - wreck.time;
@@ -442,10 +445,10 @@ export class KaisenScene {
     );
     this.camera.updateMatrixWorld();
     this.sky.position.copy(this.camera.position);
-    this.sea.position.x = state.player.position.x;
-    this.sea.position.z = state.player.position.z;
+    this.sea.position.x = oceanAnchor(state.player.position.x);
+    this.sea.position.z = oceanAnchor(state.player.position.z);
     this.seaMaterial.uniforms.uTime.value = state.elapsed;
-    const n = Math.min(CAPACITY, state.bullets.length);
+    const n = Math.min(TRACER_CAPACITY, state.bullets.length);
     for (let i = 0; i < n; i++) {
       const b = state.bullets[i],
         tail = b.position.clone().addScaledVector(b.velocity, -0.025);
@@ -494,6 +497,16 @@ export class KaisenScene {
     c.beginPath();
     c.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
     c.stroke();
+    if (state.player.reloadTicksRemaining > 0) {
+      const progress = 1 - state.player.reloadTicksRemaining / PLAYER_RELOAD_TICKS;
+      c.strokeStyle = "rgba(7,30,43,.8)";
+      c.lineWidth = 5;
+      c.beginPath(); c.arc(w / 2, h / 2, radius + 7, 0, Math.PI * 2); c.stroke();
+      c.strokeStyle = "#ffd27a";
+      c.lineWidth = 3;
+      c.beginPath(); c.arc(w / 2, h / 2, radius + 7, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2); c.stroke();
+      c.lineWidth = 1;
+    }
     c.fillStyle = "#faf4da";
     c.fillRect(w / 2 - 1, h / 2 - 1, 2, 2);
     const targets = [...state.allies, ...state.enemies, ...state.ships];
