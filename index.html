@@ -22,7 +22,7 @@
         <div class="brand-line">
           <span class="brand-mark">K</span
           ><span>AIR &amp; SEA / TIME ATTACK</span
-          ><span class="version">試作 01</span>
+          ><span class="version">試作 02</span>
         </div>
         <div class="home-copy">
           <p class="eyebrow">空と海、その先へ</p>
@@ -39,7 +39,7 @@
             </div>
             <div>
               <span>敵航空隊</span><strong>5<small>機</small></strong
-              ><em>増援なし</em>
+              ><em>3分で敵3機が復活</em>
             </div>
             <div>
               <span>敵艦隊</span><strong>3<small>隻</small></strong
@@ -51,7 +51,7 @@
           </button>
           <p class="controls-guide">
             <span>画面をドラッグ</span>で操縦<br />照準円内・1.2km以内へ自動射撃
-            · 右下で宙返り
+            · 右下で宙返り<br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復
           </p>
           <p id="startup-error" class="error" role="alert" hidden></p>
           <button id="reload" class="secondary" hidden>再読み込み</button>
@@ -69,7 +69,7 @@
             <span>作戦経過</span><strong id="timer">00:00.00</strong>
           </div>
           <div class="targets">
-            <div>敵機 <b id="enemy-count">5</b><small>/ 5</small></div>
+            <div>敵機 <b id="enemy-count">5</b><small id="enemy-total">/ 5</small></div>
             <div>敵艦 <b id="ship-count">3</b><small>/ 3</small></div>
           </div>
           <button id="pause" class="icon-button" aria-label="一時停止">
@@ -85,7 +85,9 @@
             <span id="altitude">350m</span><span id="speed">396km/h</span>
           </div>
           <div class="wingmen">僚機 <span id="allies-count">4</span> / 4</div>
+          <div class="ammo" aria-label="残弾数">機銃 <b id="mg-ammo">288</b> · 機関砲 <b id="cannon-ammo">96</b></div>
         </div>
+        <p id="reload-status" class="reload-status" hidden></p>
         <p id="warning" class="warning" role="status" hidden>
           低空注意 · 機首を上げて
         </p>

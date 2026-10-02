@@ -84,6 +84,10 @@ test.afterAll(async () => {
     "src/flight.ts",
     "src/ai.ts",
     "src/mission.ts",
+    "src/naval.ts",
+    "src/ammunition.ts",
+    "src/ocean.ts",
+    "src/sea-contact.ts",
     "src/input.ts",
     "src/aircraft.ts",
     "src/style.css",
@@ -230,7 +234,8 @@ test("real flight to sea failure, result, replay, and home", async ({
   await page.keyboard.up("ArrowDown");
   const s = await state(page);
   expect(s.result.outcome).toBe("defeat");
-  expect(s.player.position.y).toBeLessThanOrEqual(2.5);
+  expect(s.player.position.y).toBeLessThan(8); // Oriented airframe can touch while its origin is above water.
+  expect(s.player.health).toBe(0);
   await expect(page.locator("#result-reason")).toContainText("海面");
   expect(s.result.time).toBeGreaterThan(0);
   expect(s.elapsed).toBe(s.result.time);

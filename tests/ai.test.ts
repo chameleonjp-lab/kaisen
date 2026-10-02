@@ -7,6 +7,7 @@ import { autoFireTarget, getFlightAssist, predictedShotDirection, targetAimPoint
 import { projectFlightTarget } from '../src/flight-view';
 import { updateQuaternion } from '../src/flight';
 import { Vector3 } from 'three';
+import { flyLargeFleetMission } from './helpers/large-fleet-pilot';
 
 const neutral = { turn: 0, climb: 0, fire: false, loop: false };
 
@@ -91,12 +92,23 @@ function flyMission(shipCount: 3 | 5 | 7) {
 // Imported here to make the pilot's production flight-math dependency explicit.
 import { desiredFlightInput, forwardOf } from '../src/flight';
 
-test('complete input-only missions reach all-clear for every fleet size, while idle is not a guaranteed win', () => {
+test('complete input-only missions reach all-clear for every fleet size, while idle is not a guaranteed win', context => {
   for (const shipCount of [3, 5, 7] as const) {
-    const active = flyMission(shipCount);
+    // Larger internal fleets need a fore/aft attack plan against the new real mount arcs.
+    // The default mission retains its original nearest-target route below and the touch test.
+    const tactical = shipCount === 3 ? null : flyLargeFleetMission(shipCount);
+    const active = tactical?.state ?? flyMission(shipCount);
+    if (tactical) {
+      const [start, completed] = tactical.diagnostics.reloads;
+      assert.equal(start.type, 'reload-start'); assert.equal(completed.type, 'reload-complete');
+      assert.equal(completed.tick - start.tick, 360);
+      assert.equal(start.mg + start.cannon, 0); assert.equal(completed.mg + completed.cannon, 384);
+      assert.ok(tactical.diagnostics.minAltitude > 100);
+    }
+    context.diagnostic(JSON.stringify({ shipCount, reason: active.endReason, time: active.elapsed, hp: active.player.health, kills: active.stats, survivors: active.ships.map(s => s.health) }));
     assert.equal(active.endReason, 'all-clear', `${shipCount}-ship real-input route`);
     assert.ok(active.player.health > 0);
-    assert.equal(active.stats.playerAircraftKills + active.stats.allyAircraftKills, 5);
+    assert.equal(active.stats.playerAircraftKills + active.stats.allyAircraftKills, active.enemies.length);
     assert.equal(active.stats.playerShipKills + active.stats.allyShipKills, shipCount);
     assert.ok(active.stats.playerAircraftKills + active.stats.playerShipKills > 0);
     const idle = createGame(undefined, { shipCount }); startGame(idle);
@@ -193,9 +205,17 @@ test('default mission clears with unit-circle source touch conversion and 10 Hz 
     }
     stepGame(state, heldInput);
   }
+  context.diagnostic(JSON.stringify({ reason: state.endReason, time: state.elapsed, hp: state.player.health, kills: state.stats, survivors: state.ships.map(s => s.health) }));
   assert.equal(state.endReason, 'all-clear'); assert.ok(state.player.health > 0);
-  assert.equal(state.stats.playerAircraftKills + state.stats.allyAircraftKills, 5);
+  assert.equal(state.stats.playerAircraftKills + state.stats.allyAircraftKills, state.enemies.length);
   assert.equal(state.stats.playerShipKills + state.stats.allyShipKills, 3);
   assert.ok(state.stats.playerAircraftKills + state.stats.playerShipKills > 0);
   context.diagnostic(JSON.stringify({ touchSampleHz: 10, radiusCssPx: 36, deadzone: .08, time: state.elapsed, health: state.player.health, samples, maxCommandMagnitude, kills: state.stats }));
+});
+
+
+test('large-fleet tactical replay is identical across the complete authoritative state', () => {
+  const first = flyLargeFleetMission(7), second = flyLargeFleetMission(7);
+  assert.equal(first.state.endReason, 'all-clear');
+  assert.equal(JSON.stringify(first.state), JSON.stringify(second.state));
 });

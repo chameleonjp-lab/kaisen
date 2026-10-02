@@ -1,20 +1,25 @@
 import { Quaternion, Vector3 } from 'three';
+import { createNavalMounts } from './naval';
 import type { Aircraft, GameMode, MissionConfig, Ship, Team } from './types';
 import { CRUISE_SPEED, updateQuaternion } from './flight';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-prototype-1';
+export const RULES_VERSION = 'kaisen-naval-2';
 export const FIXED_DT = 1 / 60;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 3, mode: 'easy' });
-export const MAX_BULLETS = 512;
+export const MAX_BULLETS = 2048;
 export const MAX_EVENTS_PER_STEP = 1024;
-export const SEA_COLLISION_HEIGHT = 2.5;
 export const LOW_ALTITUDE_WARNING = 65;
 export const AIRCRAFT_HEALTH = 100;
 export const AI_DECISION_TICKS = 6;
-export const AA_RANGE = 950;
-export const AA_MUZZLE_SPEED = 330;
-export const AA_COOLDOWN = 2.6;
+/** Tunable gameplay load, equivalent to 12 seconds at the inherited firing rates. */
+export const PLAYER_MG_CAPACITY = 288;
+export const PLAYER_CANNON_CAPACITY = 96;
+export const PLAYER_RELOAD_TICKS = 6 * 60;
+export const REINFORCEMENT_TICK = 180 * 60;
+export const REINFORCEMENT_COUNT = 3;
+/** Provisional bonus: player's own reinforcement kills heal 15 HP, capped at maxHealth. */
+export const REINFORCEMENT_HEAL = 15;
 
 export function resolveMissionConfig(config: Partial<MissionConfig> | GameMode = {}): Readonly<MissionConfig> {
   const supplied = typeof config === 'string' ? { mode: config } : config;
@@ -29,7 +34,7 @@ export function makeAircraft(id: number, team: Team, position: Vector3, yaw = 0,
   const aircraft: Aircraft = {
     kind: 'aircraft', id, team, role, position, previous: position.clone(), quaternion: new Quaternion(),
     yaw, pitch: 0, bank: 0, speed: CRUISE_SPEED, health: AIRCRAFT_HEALTH, maxHealth: AIRCRAFT_HEALTH,
-    mg: 1000, cannon: 120, fireClock: 0, cannonClock: 0, loopProgress: 0, loopCooldown: 0,
+    mg: PLAYER_MG_CAPACITY, cannon: PLAYER_CANNON_CAPACITY, reloadTicksRemaining: 0, generation: 'initial', fireClock: 0, cannonClock: 0, loopProgress: 0, loopCooldown: 0,
     mode: 'pursue', age: 0, targetId: null, aiPhase: 'approach', aiPhaseTime: 0,
     aiWaypoint: position.clone(), aiTurn: 0, aiClimb: 0, aiFire: false,
   };
@@ -49,8 +54,9 @@ export function makeFleet(count: 3 | 5 | 7): Ship[] {
       kind: 'ship', id: 100 + index, team: 'enemy', variant: flagship ? 'flagship' : 'escort',
       position, previous: position.clone(), yaw, quaternion: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw),
       velocity, health: flagship ? 1000 : 600, maxHealth: flagship ? 1000 : 600,
-      length: flagship ? 142 : 98, width: flagship ? 23 : 17, height: flagship ? 23 : 17,
-      fireClock: 1.2 + index * 0.37, targetId: null, age: 0,
+      length: 263, width: 38.9, height: 42,
+      guns: createNavalMounts(100 + index),
+      age: 0,
     };
   });
 }
