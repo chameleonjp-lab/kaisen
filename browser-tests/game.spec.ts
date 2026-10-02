@@ -247,11 +247,19 @@ test("ten replays keep renderer resources bounded", async ({ page }) => {
   const samples = [];
   for (let i = 0; i < 10; i++) {
     await started(page);
-    const s = await state(page);
-    samples.push(s.render);
     await page.locator("#pause").click();
+    await expect.poll(async () => (await state(page)).phase).toBe("paused");
+    const submittedBefore = (await state(page)).render.queue.submittedCount;
+    // Wait beyond every already-submitted frame so at least one frame of this
+    // paused mission is fully uploaded/rendered. Never mix pre-upload counts.
+    await expect.poll(async () => (await state(page)).render.queue.completedCount)
+      .toBeGreaterThanOrEqual(submittedBefore + 1);
+    const s = await state(page);
+    samples.push({ ...s.render, tick: s.tick, phase: s.phase });
     await page.locator("#pause-home").click();
   }
+  // Preserve all measurements even when an assertion fails.
+  records.push({ name: "ten-replay-resources", samples });
   expect(
     Math.max(...samples.map((s) => s.geometries)) -
       Math.min(...samples.map((s) => s.geometries)),
@@ -260,7 +268,6 @@ test("ten replays keep renderer resources bounded", async ({ page }) => {
     Math.max(...samples.map((s) => s.textures)) -
       Math.min(...samples.map((s) => s.textures)),
   ).toBeLessThanOrEqual(1);
-  records.push({ name: "ten-replay-resources", samples });
 });
 test("200 percent text remains reachable on a short screen", async ({
   page,
