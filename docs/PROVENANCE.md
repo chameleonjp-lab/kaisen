@@ -17,9 +17,10 @@
 | src/simulation.ts | simulation.ts | 弾のsweep方式・銃口・基本周期を参照。陣営・艦・固定目標・時計/結果は新作専用 |
 | src/scene.ts | scene.tsの操縦面更新 | 機体の姿勢、プロペラ、補助翼/昇降舵更新を参照。海、光、船、HUDは新規 |
 
-機体/入力の取得時SHA-256:
+機体/入力/カメラの取得時SHA-256:
 - aircraft.ts: 1a9c18f93e5a48869882b2aa2946cdeb352dc4a8acd76b4fd9beade8ded621d5
 - input.ts: 767e194b080a2db4a330c548ad855aef29e645df67aec5bc02ae499ef1aaef5f
+- flight-view.ts: 1f9b7e040c2270de5838f24bad93c7ac1c75c7827ba3c1b58591ef6271a20363
 
 艦の形状、海の波/反射、UIは本作向けにコードで制作。実在艦の精密再現や写真の転用はない。機体に含まれる手続き模様以外の画像・有料素材は追加していない。音は録音でなく合成音。一般的なシステムフォントを使い、外部フォントへ接続しない。
 

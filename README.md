@@ -29,6 +29,12 @@ npm run test:browser
 
 ブラウザ検査の画像と状態記録は test-results/ に保存されます。GitHub Actionsは読み取り権限のPR検査だけを行い、配備しません。
 
+## 検査状況
+
+[コア実装の確定CI](https://github.com/chameleonjp-lab/kaisen/actions/runs/36972581897)で56単体検査・build・ブラウザ10件が合格。実タッチの検査操縦で35.50秒のクリアを確認しました。代表本編画像は独立目視済みです。実機性能・音の実聴・本人による操縦感の採用は未確認です。
+
+公開プレイURLはまだ確認されていません。配備はこの実装作業に含めていません。
+
 ## 仕様と状態
 - [実装計画・確定事項と提案](docs/PLAN.md)
 - [検査結果と未確認項目](docs/VERIFICATION.md)
