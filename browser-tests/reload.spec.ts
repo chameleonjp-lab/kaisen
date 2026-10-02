@@ -21,12 +21,19 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   const touchEnd = () => cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await page.locator('#start').tap(); await touchStart();
   let lastSample = -6, captured = false, completed = false, clearDuringReload = false;
+  let capturedRemaining = 360, progressAdvanced = false;
   try {
     while (true) {
       if (lastSample >= 0) await page.waitForFunction(next => {
         const s=(window as any).__kaisenReadState(); return s.phase !== 'playing' || s.tick >= next;
       },lastSample+6,{polling:'raf'});
       const s = await read();
+      if (captured && s.player.reloadTicksRemaining < capturedRemaining) progressAdvanced = true;
+      if (captured && s.phase === 'playing' && s.player.reloadTicksRemaining > 0) {
+        const shown = Number(await page.locator('#reload-status').getAttribute('data-progress'));
+        expect(shown).toBeGreaterThanOrEqual(1 - s.player.reloadTicksRemaining / 360);
+        expect(shown).toBeLessThanOrEqual(1);
+      }
       if (captured && s.phase === 'ended') {
         // All-clear has priority over waiting for ammunition. An ally can land
         // the final hit while reloading, which is a valid mission completion.
@@ -51,12 +58,19 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
       }
       expect(s.phase, 'Legal reload route stays in active flight').toBe('playing');
       expect(s.elapsed).toBeLessThan(145);
-      if (!captured && s.player.reloadTicksRemaining > 0 && s.player.reloadTicksRemaining <= 240) {
+      if (!captured && s.player.reloadTicksRemaining > 0) {
         await touchEnd(); await page.locator('#pause').tap();
         const frozen = await read();
+        capturedRemaining = frozen.player.reloadTicksRemaining;
+        // Require a completed rendering of this paused state, not a previous
+        // GPU frame whose canvas may predate the reload event.
+        const submittedBefore = frozen.render.queue.submittedCount;
+        await expect.poll(async () => (await read()).render.queue.completedCount)
+          .toBeGreaterThanOrEqual(submittedBefore + 1);
         await expect(page.locator('#reload-status')).toContainText('再装填中 あと');
         const progress = Number(await page.locator('#reload-status').getAttribute('data-progress'));
-        expect(progress).toBeGreaterThanOrEqual(1/3); expect(progress).toBeLessThan(1);
+        expect(progress).toBeGreaterThanOrEqual(0); expect(progress).toBeLessThan(1);
+        expect(progress).toBeCloseTo(1 - capturedRemaining / 360, 8);
         await capture('reload-paused'); await page.waitForTimeout(650);
         const still = await read();
         expect(still.tick).toBe(frozen.tick); expect(still.stats.shots).toBe(frozen.stats.shots);
@@ -76,14 +90,15 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
       expect(Math.hypot(dx,dy)).toBeLessThanOrEqual(36+1e-9);
       await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:origin.x+dx,y:origin.y+dy,id:1}]});
     }
-    expect(captured).toBe(true); expect(completed || clearDuringReload).toBe(true);
+    expect(captured).toBe(true); expect(progressAdvanced).toBe(true);
+    expect(completed || clearDuringReload).toBe(true);
     const end = await read();
     await page.locator(end.phase === 'ended' ? '#result-home' : '#pause-home').tap();
     await expect(page.locator('#start')).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await mkdir('test-results/evidence',{recursive:true});
-    await writeFile('test-results/evidence/reload-route-state.json',JSON.stringify({captured,completed,clearDuringReload,errors,snapshot:await read()},null,2));
+    await writeFile('test-results/evidence/reload-route-state.json',JSON.stringify({captured,completed,clearDuringReload,capturedRemaining,progressAdvanced,errors,snapshot:await read()},null,2));
     if (!completed && !clearDuringReload) await page.screenshot({path:'test-results/evidence/reload-route-failure.png'});
   }
 });
