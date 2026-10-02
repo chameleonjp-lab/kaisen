@@ -373,7 +373,6 @@ el("pause-reload").addEventListener("click", () => location.reload());
 try {
   scene = new KaisenScene(canvas, overlay);
   scene.render(state, false);
-  frameId = requestAnimationFrame(frame);
   const attempt = ++preparationGeneration;
   let timeout: ReturnType<typeof setTimeout>;
   void Promise.race([
@@ -390,6 +389,7 @@ try {
       if (contextLost)
         throw new Error("Rendering context was lost while preparing");
       graphicsReady = true;
+      frameId = requestAnimationFrame(frame);
       el<HTMLButtonElement>("start").disabled = false;
       el("start").innerHTML = '出撃する <span aria-hidden="true">↗</span>';
     })

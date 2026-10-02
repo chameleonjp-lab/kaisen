@@ -31,3 +31,17 @@ test("late shader completion cannot revive a disposed renderer", async () => {
   await scene.prepare();
   assert.equal(releases, firstReleaseCount, "duplicate disposal is harmless");
 });
+
+test("a queued old view cannot retain event ownership after replay", () => {
+  const oldMission = {}, newMission = {};
+  const order: string[] = [];
+  const scene: any = Object.create(KaisenScene.prototype);
+  Object.assign(scene, {
+    disposed: false, current: oldMission,
+    reset(state: object) { this.current = state; order.push("bind"); },
+    pollRender() { order.push("poll"); return "pending"; },
+  });
+  assert.equal(scene.render(newMission, true), false);
+  assert.equal(scene.current, newMission);
+  assert.deepEqual(order, ["bind", "poll"]);
+});

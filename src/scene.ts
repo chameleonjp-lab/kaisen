@@ -259,14 +259,19 @@ export class KaisenScene {
     this.tracersGeometry.setDrawRange(0, 2);
     this.particleGeometry.setDrawRange(0, 1);
     this.renderer.render(this.scene, this.camera);
-    // One loading-only synchronization, never part of the gameplay frame loop.
-    this.renderer.getContext().finish();
-    this.renderQueue.reset();
     this.tracersGeometry.setDrawRange(0, 0);
     this.particleGeometry.setDrawRange(0, 0);
     this.renderer.render(this.scene, this.camera);
-    this.renderer.getContext().finish();
-    this.prepared = true;
+    this.renderQueue.submit(performance.now());
+    // A linked program or a returned draw call is not a visible-frame barrier.
+    // Keep Start disabled until the first real frame completes on the GPU.
+    while (!this.disposed) {
+      const status = this.renderQueue.poll(performance.now());
+      if (status === "ready") break;
+      if (status === "failed") throw new Error("Initial GPU frame failed");
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
+    if (!this.disposed) this.prepared = true;
   }
   pollRender(now = performance.now()) {
     return this.prepared ? this.renderQueue.poll(now) : "ready";
@@ -374,8 +379,11 @@ export class KaisenScene {
       this.particles.splice(0, this.particles.length - 240);
   }
   render(state: GameState, showHUD: boolean, presentationDt = 0) {
-    if (this.disposed || this.pollRender() !== "ready") return false;
+    if (this.disposed) return false;
+    // Event IDs and wreck ownership follow the new mission immediately, even
+    // when the previous view still has one GPU frame in flight.
     if (this.current !== state) this.reset(state);
+    if (this.pollRender() !== "ready") return false;
     const dt = Math.max(0, Math.min(0.1, state.elapsed - this.lastTime));
     this.lastTime = state.elapsed;
     if (state.phase === "ended")
