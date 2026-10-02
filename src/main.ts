@@ -47,6 +47,8 @@ let accumulator = 0,
   announcementUntil = 0;
 let pendingLoop = false;
 let lastFrameGap = 0;
+let lastInterruption: { reason: string; gap: number; render: unknown } | null = null;
+let renderStatus: "ready" | "pending" | "stalled" | "failed" = "ready";
 let frameIntervals: number[] = [];
 let updateTimes: number[] = [];
 function formatTime(seconds: number) {
@@ -152,14 +154,19 @@ function pause(reason: string) {
   setScreen("paused");
   el("pause-reason").textContent = contextLost
     ? "描画が中断されました。復帰を待っています"
+    : reason === "render-failed"
+      ? "描画を続けられません。再読み込みしてお試しください"
+    : reason === "render"
+      ? "描画の完了を待っています。復帰後に再開できます"
     : reason === "frame"
       ? "画面の更新が中断されたため停止しました"
       : "タイムの計測も止まっています";
-  el<HTMLButtonElement>("resume").disabled = contextLost;
+  el<HTMLButtonElement>("resume").disabled = contextLost || renderStatus === "stalled" || renderStatus === "failed";
+  el("pause-reload").hidden = renderStatus !== "failed";
   syncAudio();
 }
 function resume() {
-  if (document.hidden || contextLost || state.phase !== "paused") return;
+  if (document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
   pauseReasons.clear();
   resumeGame(state);
   accumulator = 0;
@@ -233,7 +240,14 @@ function frame() {
   lastFrameGap = dt;
   if (state.phase === "playing" && screen === "playing") {
     if (dt > 1) {
+      lastInterruption = { reason: "frame", gap: dt, render: scene?.diagnostics() };
       pause("frame");
+      return;
+    }
+    renderStatus = scene?.pollRender(now) ?? "failed";
+    if (renderStatus === "stalled" || renderStatus === "failed") {
+      lastInterruption = { reason: renderStatus, gap: dt, render: scene?.diagnostics() };
+      pause(renderStatus === "failed" ? "render-failed" : "render");
       return;
     }
     if (dt > 0) {
@@ -273,8 +287,23 @@ function frame() {
     updateHUD();
     if (state.result !== null) finish();
   }
-  if (scene && !contextLost)
+  if (state.phase !== "playing" && scene && !contextLost) {
+    renderStatus = scene.pollRender(now);
+    if (screen === "paused") {
+      el<HTMLButtonElement>("resume").disabled = renderStatus === "stalled" || renderStatus === "failed";
+      el("pause-reload").hidden = renderStatus !== "failed";
+      if (pauseReasons.has("render") && renderStatus === "ready")
+        el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
+    }
+  }
+  if (scene && !contextLost) {
     scene.render(state, screen === "playing" || screen === "paused", dt);
+    if (scene.diagnostics().queue.status === "failed") {
+      renderStatus = "failed";
+      if (screen === "home") preparationFailed(new Error("GPU frame completion unavailable"));
+      else if (screen === "playing") pause("render-failed");
+    }
+  }
 }
 for (const id of ["start", "retry", "pause-restart"])
   el(id).addEventListener("click", begin);
@@ -292,8 +321,8 @@ document.addEventListener("keydown", (e) => {
     else if (screen === "paused") resume();
   }
   if (e.key === "Tab" && screen === "paused") {
-    const items = [el("resume"), el("pause-restart"), el("pause-home")].filter(
-      (x) => !(x as HTMLButtonElement).disabled,
+    const items = [el("pause-reload"), el("resume"), el("pause-restart"), el("pause-home")].filter(
+      (x) => !x.hidden && !(x as HTMLButtonElement).disabled,
     );
     const index = items.indexOf(document.activeElement as HTMLElement);
     if (e.shiftKey && index <= 0) {
@@ -308,10 +337,13 @@ document.addEventListener("keydown", (e) => {
 canvas.addEventListener("webglcontextlost", (event) => {
   event.preventDefault();
   contextLost = true;
+  scene?.resetRenderQueue();
   pause("context");
 });
 canvas.addEventListener("webglcontextrestored", () => {
   contextLost = false;
+  scene?.resetRenderQueue();
+  renderStatus = "ready";
   el<HTMLButtonElement>("resume").disabled = false;
   el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
 });
@@ -337,6 +369,7 @@ function preparationFailed(error: unknown) {
   console.error("Kaisen renderer preparation failed", error);
 }
 el("reload").addEventListener("click", () => location.reload());
+el("pause-reload").addEventListener("click", () => location.reload());
 try {
   scene = new KaisenScene(canvas, overlay);
   scene.render(state, false);
@@ -397,6 +430,8 @@ if (import.meta.env.DEV) {
           },
           frameIntervals,
           lastFrameGap,
+          lastInterruption,
+          renderStatus,
           pauseReasons: [...pauseReasons],
           updateTimes,
         }),

@@ -27,6 +27,7 @@ import { AircraftFactory, type AircraftVisual } from "./aircraft";
 import { targetAimPoint } from "./flight-assist";
 import { AircraftBatchFactory } from "./aircraft-batch";
 import { ShipFactory } from "./ships";
+import { RenderQueue } from "./render-queue";
 import {
   FLIGHT_FOV,
   FLIGHT_FAR,
@@ -95,6 +96,8 @@ interface Particle {
 }
 export class KaisenScene {
   readonly renderer: WebGLRenderer;
+  private renderQueue: RenderQueue;
+  private prepared = false;
   readonly camera = new PerspectiveCamera(FLIGHT_FOV, 1, 0.5, 22000);
   private scene = new Scene();
   private aircraft = new AircraftFactory();
@@ -144,6 +147,7 @@ export class KaisenScene {
     { time: number; position: Vector3; rotation: Quaternion; velocity: Vector3 }
   >();
   private current: GameState | null = null;
+  private disposed = false;
   private ctx: CanvasRenderingContext2D;
   private width = 1;
   private height = 1;
@@ -157,6 +161,9 @@ export class KaisenScene {
       antialias: true,
       powerPreference: "high-performance",
     });
+    const gl = this.renderer.getContext();
+    if (!("fenceSync" in gl)) throw new Error("WebGL2 is required");
+    this.renderQueue = new RenderQueue(gl);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
@@ -231,9 +238,11 @@ export class KaisenScene {
     this.overlay.height = Math.round(r.height);
   }
   async prepare(): Promise<void> {
+    if (this.disposed) return;
     // Include initially empty projectile/effect materials before mission time
     // starts, so their first real use is not a shader-compilation checkpoint.
     await this.renderer.compileAsync(this.scene, this.camera);
+    if (this.disposed) return;
     // Linked programs alone do not initialize every backend draw pipeline.
     // Exercise the pooled line/point materials once, behind the loading screen,
     // before an authoritative mission exists. No simulation entity is created.
@@ -252,9 +261,18 @@ export class KaisenScene {
     this.renderer.render(this.scene, this.camera);
     // One loading-only synchronization, never part of the gameplay frame loop.
     this.renderer.getContext().finish();
+    this.renderQueue.reset();
     this.tracersGeometry.setDrawRange(0, 0);
     this.particleGeometry.setDrawRange(0, 0);
     this.renderer.render(this.scene, this.camera);
+    this.renderer.getContext().finish();
+    this.prepared = true;
+  }
+  pollRender(now = performance.now()) {
+    return this.prepared ? this.renderQueue.poll(now) : "ready";
+  }
+  resetRenderQueue() {
+    this.renderQueue.reset();
   }
   private reset(state: GameState) {
     for (const p of this.planes.values()) this.scene.remove(p.root);
@@ -356,6 +374,7 @@ export class KaisenScene {
       this.particles.splice(0, this.particles.length - 240);
   }
   render(state: GameState, showHUD: boolean, presentationDt = 0) {
+    if (this.disposed || this.pollRender() !== "ready") return false;
     if (this.current !== state) this.reset(state);
     const dt = Math.max(0, Math.min(0.1, state.elapsed - this.lastTime));
     this.lastTime = state.elapsed;
@@ -451,6 +470,8 @@ export class KaisenScene {
       a.needsUpdate = true;
     this.renderer.render(this.scene, this.camera);
     this.drawOverlay(state, showHUD);
+    if (this.prepared) this.renderQueue.submit(performance.now());
+    return true;
   }
   private drawOverlay(state: GameState, show: boolean) {
     const c = this.ctx,
@@ -589,6 +610,7 @@ export class KaisenScene {
   }
   diagnostics() {
     return {
+      queue: this.renderQueue.diagnostics(performance.now()),
       calls: this.renderer.info.render.calls,
       triangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,
@@ -602,6 +624,9 @@ export class KaisenScene {
     };
   }
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.renderQueue.dispose();
     for (const plane of this.planes.values()) this.scene.remove(plane.root);
     this.planes.clear();
     this.aircraftBatches.dispose();
