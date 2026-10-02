@@ -113,3 +113,7 @@ TypeScript＋Three.js＋Viteを使い、元作の固定依存を基準にする�
 
 ## 12. 保護確認の限界
 2026-10-02、branch一覧では main のprotected=false、rulesets一覧は空。詳細のbranch protection APIは接続権限により403であり、詳細保護はblocked。全制約が存在しないとは断定しない。repo id、完全base/head、差分pathを各書込み直前に照合し、作業ブランチだけへfast-forward更新する。権限や保護設定は変更しない。
+
+
+## 2026-10-02 計画PRマージ後の継続
+利用者がPR #1をマージし「完成まで実装進めてください」と指示。GitHubでmain = 11e4d139c604ad6c96b9350c6c3c94c137d08a38、計画と同一treeを確認した。進行中の実装を保持し、feat/kaisen-gameplay と新しいmain宛てDraft PRで、検査と修正を含めてコア完成まで進める。配備・マージ・本番連携の許可は含まない。

@@ -1,0 +1,22 @@
+{
+  "name": "kaisen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@types/three": "0.183.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.1"
+  }
+}

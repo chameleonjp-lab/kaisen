@@ -6,3 +6,4 @@
 4. npm test / npm run build と変更対象の画面経路を検査する。模擬端末をiPhone実機と呼ばない。
 5. 作業ブランチとmain宛てDraft PRまで。main直接push、merge、auto-merge、配備、公開設定、本番DB操作は行わない。
 6. 元作 faitofuraito は参照のみ。元作の名前・得点・順位接続・低高度終了・無限補充を新作へ混入させない。
+
