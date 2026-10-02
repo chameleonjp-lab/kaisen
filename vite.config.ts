@@ -1,2 +1,6 @@
-import { defineConfig } from 'vite';
-export default defineConfig({base:'./',server:{host:'127.0.0.1',port:4176,strictPort:true},build:{sourcemap:false}});
+import { defineConfig } from "vite";
+export default defineConfig({
+  base: "./",
+  server: { host: "127.0.0.1", port: 4176, strictPort: true },
+  build: { sourcemap: false },
+});

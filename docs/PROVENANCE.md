@@ -26,3 +26,5 @@
 Three.js 0.186.1 / @types/three 0.183.1 / TypeScript 5.9.3 / Vite 8.3.1 / tsx 4.21.0は元作の固定依存から継承。Playwright 1.61.1はブラウザ検査のための開発依存。package-lock.jsonに解決版と整合性値を固定。Three.jsのMIT表記を public/third-party-notices.txt に保持する。
 
 元作のランキング接続、ゲーム識別子、保存キー、共有画像、得点式、無限補充、1,200m低高度終了、検査画像は移植していない。
+
+音の6件の単体回帰検査も同じ元作commitの tests/audio.test.ts から複製した。ブラウザ音APIのfakeによる論理検査であり、実聴の評価ではない。src/aircraft-batch.ts は本作独自の描画専用まとめ処理で、元のaircraft.tsのバイト列は変更せず、同じ材質/形状の静的部分を共有キャッシュへまとめる。

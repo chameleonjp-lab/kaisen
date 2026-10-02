@@ -1,48 +1,169 @@
 <!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#071e2b" />
-  <meta name="description" content="自機と4機の僚機で、敵機と海上艦隊へ挑む空海タイムアタック。" />
-  <title>カイセン</title>
-</head>
-<body>
-  <main id="app" data-screen="home">
-    <canvas id="flight" aria-label="海上の航空戦闘画面"></canvas>
-    <canvas id="markers" aria-hidden="true"></canvas>
-    <div class="vignette" aria-hidden="true"></div>
-    <section id="home" class="screen home-screen" aria-labelledby="title">
-      <div class="brand-line"><span class="brand-mark">K</span><span>AIR &amp; SEA / TIME ATTACK</span><span class="version">試作 01</span></div>
-      <div class="home-copy">
-        <p class="eyebrow">空と海、その先へ</p>
-        <h1 id="title">カイセン</h1>
-        <p class="intro">僚機とともに、敵機と艦隊を撃破。<br>すべてを倒すまでの、時間を競う。</p>
-      </div>
-      <div class="briefing">
-        <div class="mission-data"><div><span>味方編隊</span><strong>5<small>機</small></strong><em>自機 + 僚機4</em></div><div><span>敵航空隊</span><strong>5<small>機</small></strong><em>増援なし</em></div><div><span>敵艦隊</span><strong>3<small>隻</small></strong><em>初期構成</em></div></div>
-        <button id="start" class="primary">出撃する <span aria-hidden="true">↗</span></button>
-        <p class="controls-guide"><span>画面をドラッグ</span>で操縦<br>照準円内・1.2km以内へ自動射撃 · 右下で宙返り</p>
-        <p id="startup-error" class="error" role="alert" hidden></p>
-      </div>
-      <footer class="home-footer"><span>KAISEN / 空海戦</span><button id="home-sound" class="text-button" aria-pressed="false">音をオンにする</button></footer>
-    </section>
-    <section id="hud" aria-label="飛行中の情報" hidden>
-      <div class="hud-top"><div class="time-block"><span>作戦経過</span><strong id="timer">00:00.00</strong></div><div class="targets"><div>敵機 <b id="enemy-count">5</b><small>/ 5</small></div><div>敵艦 <b id="ship-count">3</b><small>/ 3</small></div></div><button id="pause" class="icon-button" aria-label="一時停止">Ⅱ</button></div>
-      <div class="flight-data"><div class="health-label">機体 <b id="health">100</b><small>%</small></div><div class="health-track"><i id="health-bar"></i></div><div class="instrument"><span id="altitude">350m</span><span id="speed">396km/h</span></div><div class="wingmen">僚機 <span id="allies-count">4</span> / 4</div></div>
-      <p id="warning" class="warning" role="status" hidden>低空注意 · 機首を上げて</p>
-      <p id="flight-tip" class="flight-tip">触れた位置からドラッグして操縦</p>
-      <div class="bottom-controls"><button id="game-sound" class="icon-button sound-button" aria-label="音をオンにする" aria-pressed="false">音 OFF</button><button id="loop" class="loop-button"><span aria-hidden="true">↻</span><b>宙返り</b><small id="loop-status">すぐ使える</small></button></div>
-      <div hidden><button id="fire">射撃</button><button id="accelerate">加速</button><button id="brake">減速</button></div>
-    </section>
-    <section id="pause-screen" class="screen modal-screen" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
-      <div class="panel"><p class="eyebrow">PAUSED</p><h2 id="pause-title">一時停止</h2><p id="pause-reason">タイムの計測も止まっています</p><button id="resume" class="primary">飛行を再開</button><button id="pause-restart" class="secondary">はじめから出撃</button><button id="pause-home" class="text-button">ホームへ戻る</button></div>
-    </section>
-    <section id="result" class="screen modal-screen" aria-labelledby="result-title" hidden>
-      <div class="panel result-panel"><p id="result-kicker" class="eyebrow">MISSION REPORT</p><h2 id="result-title">作戦終了</h2><p id="result-reason"></p><div class="result-time"><span id="result-time-label">経過時間</span><strong id="result-time">00:00.00</strong></div><dl class="result-stats"><div><dt>自機の撃破</dt><dd id="player-kills">0機 · 0隻</dd></div><div><dt>僚機の撃破</dt><dd id="ally-kills">0機 · 0隻</dd></div><div><dt>生還した僚機</dt><dd id="survivors">4機</dd></div></dl><button id="retry" class="primary">もう一度出撃</button><button id="result-home" class="secondary">ホームへ戻る</button><p class="result-note">この試作ではオンライン送信は行いません</p></div>
-    </section>
-    <div id="announcement" class="announcement" role="status" aria-live="polite"></div>
-  </main>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#071e2b" />
+    <meta
+      name="description"
+      content="自機と4機の僚機で、敵機と海上艦隊へ挑む空海タイムアタック。"
+    />
+    <title>カイセン</title>
+  </head>
+  <body>
+    <main id="app" data-screen="home">
+      <canvas id="flight" tabindex="0" aria-label="海上の航空戦闘画面"></canvas>
+      <canvas id="markers" aria-hidden="true"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+      <section id="home" class="screen home-screen" aria-labelledby="title">
+        <div class="brand-line">
+          <span class="brand-mark">K</span
+          ><span>AIR &amp; SEA / TIME ATTACK</span
+          ><span class="version">試作 01</span>
+        </div>
+        <div class="home-copy">
+          <p class="eyebrow">空と海、その先へ</p>
+          <h1 id="title">カイセン</h1>
+          <p class="intro">
+            僚機とともに、敵機と艦隊を撃破。<br />すべてを倒すまでの、時間を競う。
+          </p>
+        </div>
+        <div class="briefing">
+          <div class="mission-data">
+            <div>
+              <span>味方編隊</span><strong>5<small>機</small></strong
+              ><em>自機 + 僚機4</em>
+            </div>
+            <div>
+              <span>敵航空隊</span><strong>5<small>機</small></strong
+              ><em>増援なし</em>
+            </div>
+            <div>
+              <span>敵艦隊</span><strong>3<small>隻</small></strong
+              ><em>初期構成</em>
+            </div>
+          </div>
+          <button id="start" class="primary">
+            出撃する <span aria-hidden="true">↗</span>
+          </button>
+          <p class="controls-guide">
+            <span>画面をドラッグ</span>で操縦<br />照準円内・1.2km以内へ自動射撃
+            · 右下で宙返り
+          </p>
+          <p id="startup-error" class="error" role="alert" hidden></p>
+        </div>
+        <footer class="home-footer">
+          <span>KAISEN / 空海戦</span
+          ><button id="home-sound" class="text-button" aria-pressed="false">
+            音をオンにする
+          </button>
+        </footer>
+      </section>
+      <section id="hud" aria-label="飛行中の情報" hidden>
+        <div class="hud-top">
+          <div class="time-block">
+            <span>作戦経過</span><strong id="timer">00:00.00</strong>
+          </div>
+          <div class="targets">
+            <div>敵機 <b id="enemy-count">5</b><small>/ 5</small></div>
+            <div>敵艦 <b id="ship-count">3</b><small>/ 3</small></div>
+          </div>
+          <button id="pause" class="icon-button" aria-label="一時停止">
+            Ⅱ
+          </button>
+        </div>
+        <div class="flight-data">
+          <div class="health-label">
+            機体 <b id="health">100</b><small>%</small>
+          </div>
+          <div class="health-track"><i id="health-bar"></i></div>
+          <div class="instrument">
+            <span id="altitude">350m</span><span id="speed">396km/h</span>
+          </div>
+          <div class="wingmen">僚機 <span id="allies-count">4</span> / 4</div>
+        </div>
+        <p id="warning" class="warning" role="status" hidden>
+          低空注意 · 機首を上げて
+        </p>
+        <p id="flight-tip" class="flight-tip">触れた位置からドラッグして操縦</p>
+        <div class="bottom-controls">
+          <button
+            id="game-sound"
+            class="icon-button sound-button"
+            aria-label="音をオンにする"
+            aria-pressed="false"
+          >
+            音 OFF</button
+          ><button id="loop" class="loop-button">
+            <span aria-hidden="true">↻</span><b>宙返り</b
+            ><small id="loop-status">すぐ使える</small>
+          </button>
+        </div>
+        <div hidden>
+          <button id="fire">射撃</button><button id="accelerate">加速</button
+          ><button id="brake">減速</button>
+        </div>
+      </section>
+      <section
+        id="pause-screen"
+        class="screen modal-screen"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pause-title"
+        hidden
+      >
+        <div class="panel">
+          <p class="eyebrow">PAUSED</p>
+          <h2 id="pause-title">一時停止</h2>
+          <p id="pause-reason">タイムの計測も止まっています</p>
+          <button id="resume" class="primary">飛行を再開</button
+          ><button id="pause-restart" class="secondary">はじめから出撃</button
+          ><button id="pause-home" class="text-button">ホームへ戻る</button>
+        </div>
+      </section>
+      <section
+        id="result"
+        class="screen modal-screen"
+        aria-labelledby="result-title"
+        hidden
+      >
+        <div class="panel result-panel">
+          <p id="result-kicker" class="eyebrow">MISSION REPORT</p>
+          <h2 id="result-title">作戦終了</h2>
+          <p id="result-reason"></p>
+          <div class="result-time">
+            <span id="result-time-label">経過時間</span
+            ><strong id="result-time">00:00.00</strong>
+          </div>
+          <dl class="result-stats">
+            <div>
+              <dt>自機の撃破</dt>
+              <dd id="player-kills">0機 · 0隻</dd>
+            </div>
+            <div>
+              <dt>僚機の撃破</dt>
+              <dd id="ally-kills">0機 · 0隻</dd>
+            </div>
+            <div>
+              <dt>生還した僚機</dt>
+              <dd id="survivors">4機</dd>
+            </div>
+          </dl>
+          <button id="retry" class="primary">もう一度出撃</button
+          ><button id="result-home" class="secondary">ホームへ戻る</button>
+          <p class="result-note">この試作ではオンライン送信は行いません</p>
+        </div>
+      </section>
+      <div
+        id="announcement"
+        class="announcement"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
