@@ -111,3 +111,22 @@ test('naval rounds integrate gravity without homing toward later target position
   assert.ok(Math.abs(b.velocity.y - (30 - 9.80665)) < 1e-9);
   assert.equal(b.velocity.x, 500); assert.equal(b.velocity.z, -100);
 });
+
+
+test('an allied last hit clears immediately during reload and freezes the unfinished reload', () => {
+  const s = isolated(); s.player.mg = 2; s.player.cannon = 2;
+  stepGame(s, { ...neutral, fire: true });
+  assert.equal(s.player.reloadTicksRemaining, 360);
+  for (let i = 0; i < 20; i++) stepGame(s, neutral);
+  const ship = s.ships[0]; ship.health = 1;
+  ship.position.set(0, 0, 0); ship.previous.copy(ship.position);
+  s.bullets.push(shot(s.allies[0].id, 'friendly', new Vector3(0, 8, 200), new Vector3(0, 0, -24000)));
+  stepGame(s, neutral);
+  assert.equal(s.result?.outcome, 'victory'); assert.equal(s.stats.allyShipKills, 1);
+  assert.equal(s.player.reloadTicksRemaining, 339);
+  assert.equal(s.player.mg + s.player.cannon, 0);
+  assert.equal(s.events.filter(e => e.type === 'reload-complete').length, 0);
+  const ended = JSON.stringify(s);
+  for (let i = 0; i < 400; i++) stepGame(s, { ...neutral, fire: true });
+  assert.equal(JSON.stringify(s), ended);
+});
