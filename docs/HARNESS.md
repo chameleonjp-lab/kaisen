@@ -15,3 +15,5 @@ core.contract / core.execution / domain.testing / domain.lifecycle / domain.pers
 
 
 初回描画準備の改修で同じ固定版のdomain.loading / domain.compatibilityを追加参照。Three.js0.186.1の実装でcompileAsyncの完了条件を確認し、準備完了と開始操作を分離する。
+
+2026-10-02、利用者のGitHub Pages公開依頼により、同じ固定版のworkflow.release（requires: workflow.delivery）を追加参照。既存の配備対象外という記述は初回実装の境界であり、今回の公開許可と実施状態はDEPLOYMENT.mdへ記録する。

@@ -22,6 +22,10 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: npm run build
+      - name: Validate Pages artifact and revision manifest
+        env:
+          BUILD_COMMIT: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/prepare-pages.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - name: Preserve browser evidence
