@@ -111,7 +111,7 @@ function begin() {
   state = createGame();
   startGame(state);
   accumulator = 0;
-  lastFrame = performance.now();
+  lastFrame = 0;
   frameIntervals = [];
   updateTimes = [];
   setScreen("playing");
@@ -120,7 +120,7 @@ function begin() {
   announce("敵機5機と艦隊3隻をすべて撃破", 4);
   scene.render(state, true);
   // Initial resource upload is preparation, not elapsed mission time.
-  lastFrame = performance.now();
+  lastFrame = 0;
   updateHUD();
 }
 function home() {
@@ -155,7 +155,7 @@ function resume() {
   pauseReasons.clear();
   resumeGame(state);
   accumulator = 0;
-  lastFrame = performance.now();
+  lastFrame = 0;
   setScreen("playing");
   syncAudio();
   void audio.unlock().then(() => syncAudio());
@@ -215,10 +215,12 @@ function updateHUD() {
   el("flight-tip").hidden = state.elapsed > 8;
   if (state.elapsed > announcementUntil) el("announcement").textContent = "";
 }
-function frame(now: number) {
+function frame() {
+  // Sample callback execution time, not a possibly queued vsync timestamp.
+  const now = performance.now();
   if (disposed) return;
   frameId = requestAnimationFrame(frame);
-  const dt = lastFrame ? (now - lastFrame) / 1000 : 0;
+  const dt = lastFrame ? Math.max(0, (now - lastFrame) / 1000) : 0;
   lastFrame = now;
   lastFrameGap = dt;
   if (state.phase === "playing" && screen === "playing") {

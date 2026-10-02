@@ -167,10 +167,13 @@ test("touch steering, multitouch release, loop and explicit resume", async ({
       { x: loop!.x + loop!.width / 2, y: loop!.y + loop!.height / 2, id: 2 },
     ],
   });
+  // CDP touchEnd requires an empty list. A changed active-point list on
+  // touchMove releases only finger 2 while finger 1 remains down.
   await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
+    type: "touchMove",
     touchPoints: [{ x: 132, y: 597, id: 1 }],
   });
+  await expect(page.locator("#loop")).toHaveAttribute("aria-pressed", "false");
   await expect
     .poll(async () => (await state(page)).player.loopProgress)
     .toBeGreaterThan(0);

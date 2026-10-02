@@ -141,3 +141,61 @@ test('a nearby ship acquired behind a strike aircraft triggers repositioning ins
   assert.equal(plane.aiPhase, 'extend'); assert.equal(plane.aiFire, false);
   assert.ok(plane.aiWaypoint.distanceTo(plane.position) > 400, 'creates enough space for another straight attack run');
 });
+
+/** Source input.ts radial conversion, exercised with a physical 36 CSS-pixel stick. */
+function sourceStickInput(dx: number, dy: number) {
+  const distance = Math.hypot(dx, dy);
+  const magnitude = Math.min(distance / 36, 1);
+  const response = magnitude <= .08 ? 0 : (magnitude - .08) / .92;
+  return { turn: distance === 0 ? 0 : dx / distance * response, climb: distance === 0 ? 0 : -dy / distance * response };
+}
+
+test('default mission clears with unit-circle source touch conversion and 10 Hz sample-and-hold', context => {
+  const state = createGame(); startGame(state);
+  let targetId: number | null = null, extendUntilTick = 0, attackingShip = false;
+  let waypoint = state.player.position.clone();
+  let heldInput = { ...neutral, viewAspect: 393 / 852 };
+  let samples = 0, maxCommandMagnitude = 0;
+  // Only the real simulation below changes state. The pilot reads it and sends input.
+  for (let i = 0; i < 60 * 240 && state.phase === 'playing'; i++) {
+    if (i % 6 === 0) {
+      const targets = [...state.enemies, ...state.ships].filter(item => item.health > 0);
+      const target = targets.find(item => item.id === targetId) ?? targets.sort((a, b) => state.player.position.distanceTo(a.position) - state.player.position.distanceTo(b.position))[0];
+      assert.ok(target);
+      if (targetId !== target.id) attackingShip = false;
+      targetId = target.id;
+      let aim = target.position.clone(); const distance = state.player.position.distanceTo(aim);
+      const heading = forwardOf(state.player); heading.y = 0;
+      const horizontal = aim.clone().sub(state.player.position); horizontal.y = 0;
+      const angle = heading.angleTo(horizontal);
+      const tooCloseToLineUp = target.kind === 'ship' && !attackingShip && distance < 360 && angle > .25;
+      if (state.tick >= extendUntilTick && (tooCloseToLineUp || state.player.position.y < 90 || distance < (target.kind === 'ship' ? 210 : 70))) {
+        extendUntilTick = state.tick + 360; attackingShip = false;
+        waypoint = state.player.position.clone().addScaledVector(forwardOf(state.player), 740);
+        waypoint.y = Math.max(250, state.player.position.y + 100);
+      }
+      if (state.tick < extendUntilTick) aim = waypoint;
+      else if (target.kind === 'ship') {
+        if (angle < .25 && distance > 330) attackingShip = true;
+        aim.y = attackingShip ? targetAimPoint(target).y : 250;
+      }
+      const requested = desiredFlightInput(state.player, aim);
+      let x = requested.turn, y = requested.climb * .62 / .95;
+      const commandMagnitude = Math.hypot(x, y);
+      if (commandMagnitude > 1) { x /= commandMagnitude; y /= commandMagnitude; }
+      const dx = 36 * x, dy = -36 * y;
+      assert.ok(Math.hypot(dx, dy) <= 36 + 1e-12, 'physical stick stays inside its circular radius');
+      const stick = sourceStickInput(dx, dy);
+      const magnitude = Math.hypot(stick.turn, stick.climb);
+      assert.ok(magnitude <= 1 + 1e-12, 'real touch cannot request independent full-strength axes');
+      maxCommandMagnitude = Math.max(maxCommandMagnitude, magnitude);
+      heldInput = { ...neutral, ...stick, viewAspect: 393 / 852 }; samples++;
+    }
+    stepGame(state, heldInput);
+  }
+  assert.equal(state.endReason, 'all-clear'); assert.ok(state.player.health > 0);
+  assert.equal(state.stats.playerAircraftKills + state.stats.allyAircraftKills, 5);
+  assert.equal(state.stats.playerShipKills + state.stats.allyShipKills, 3);
+  assert.ok(state.stats.playerAircraftKills + state.stats.playerShipKills > 0);
+  context.diagnostic(JSON.stringify({ touchSampleHz: 10, radiusCssPx: 36, deadzone: .08, time: state.elapsed, health: state.player.health, samples, maxCommandMagnitude, kills: state.stats }));
+});
