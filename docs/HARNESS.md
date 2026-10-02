@@ -12,3 +12,4 @@ core.contract / core.execution / domain.testing / domain.lifecycle / domain.pers
 確定情報の新設は governance/PROJECT_STATE.md、提出は references/work/write-preflight.md に従う。規約本文は本作へ一括複製しない。ランキングは後続判断を整理するために読み、通信/DB実装を許可するものとは扱わない。配備・multiplayer・Supabase・ハブ改訂は対象外。
 
 実装と検査の正本は PLAN.md と VERIFICATION.md。初回の調整値、静止画、模擬端末、旧作検査を利用者の採用承認や実機合格に昇格させない。
+
