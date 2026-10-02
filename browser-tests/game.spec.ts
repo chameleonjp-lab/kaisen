@@ -187,11 +187,22 @@ test("touch steering, two-finger release, loop and explicit resume", async ({
   await expect
     .poll(async () => (await state(page)).player.loopProgress)
     .toBeGreaterThan(0);
+  await capture(page, "touch-loop");
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: 100, y: 600, id: 3 }],
+  });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: 90, y: 630, id: 3 }],
+  });
+  await expect
+    .poll(async () => (await state(page)).player.loopProgress)
+    .toBe(0);
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchCancel",
     touchPoints: [],
   });
-  await capture(page, "touch-loop");
   await page.locator("#pause").click();
   const before = await state(page);
   await page.keyboard.press("ArrowDown");

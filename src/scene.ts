@@ -226,6 +226,11 @@ export class KaisenScene {
     this.overlay.width = Math.round(r.width);
     this.overlay.height = Math.round(r.height);
   }
+  async prepare(): Promise<void> {
+    // Include initially empty projectile/effect materials before mission time
+    // starts, so their first real use is not a shader-compilation checkpoint.
+    await this.renderer.compileAsync(this.scene, this.camera);
+  }
   private reset(state: GameState) {
     for (const p of this.planes.values()) this.scene.remove(p.root);
     this.planes.clear();

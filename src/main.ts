@@ -23,6 +23,7 @@ const app = el("app"),
 let state = createGame();
 let screen: "home" | "playing" | "paused" | "result" = "home";
 let scene: KaisenScene | null = null;
+let graphicsReady = false;
 let contextLost = false;
 const audio = new FlightAudio();
 audio.enabled = false;
@@ -102,7 +103,14 @@ async function toggleAudio() {
 for (const id of ["home-sound", "game-sound"])
   el(id).addEventListener("click", () => void toggleAudio());
 function begin() {
-  if (!scene || contextLost || document.hidden || screen === "playing") return;
+  if (
+    !scene ||
+    !graphicsReady ||
+    contextLost ||
+    document.hidden ||
+    screen === "playing"
+  )
+    return;
   generation++;
   pendingLoop = false;
   audio.resetFlight();
@@ -312,17 +320,53 @@ window.visualViewport?.addEventListener("resize", () => scene?.resize());
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) pause("restored");
 });
+let preparationGeneration = 0;
+function preparationFailed(error: unknown) {
+  preparationGeneration++;
+  graphicsReady = false;
+  cancelAnimationFrame(frameId);
+  scene?.dispose();
+  scene = null;
+  el<HTMLButtonElement>("start").disabled = true;
+  el("start").textContent = "出撃の準備ができませんでした";
+  const message = el("startup-error");
+  message.hidden = false;
+  message.textContent =
+    "3D画面の準備が完了しませんでした。再読み込みしてお試しください";
+  el("reload").hidden = false;
+  console.error("Kaisen renderer preparation failed", error);
+}
+el("reload").addEventListener("click", () => location.reload());
 try {
   scene = new KaisenScene(canvas, overlay);
   scene.render(state, false);
   frameId = requestAnimationFrame(frame);
+  const attempt = ++preparationGeneration;
+  let timeout: ReturnType<typeof setTimeout>;
+  void Promise.race([
+    scene.prepare(),
+    new Promise<never>((_, reject) => {
+      timeout = setTimeout(
+        () => reject(new Error("Renderer preparation timed out")),
+        15000,
+      );
+    }),
+  ])
+    .then(() => {
+      if (disposed || attempt !== preparationGeneration) return;
+      if (contextLost)
+        throw new Error("Rendering context was lost while preparing");
+      graphicsReady = true;
+      el<HTMLButtonElement>("start").disabled = false;
+      el("start").innerHTML = '出撃する <span aria-hidden="true">↗</span>';
+    })
+    .catch((error) => {
+      if (!disposed && attempt === preparationGeneration)
+        preparationFailed(error);
+    })
+    .finally(() => clearTimeout(timeout));
 } catch (error) {
-  el<HTMLButtonElement>("start").disabled = true;
-  const message = el("startup-error");
-  message.hidden = false;
-  message.textContent =
-    "3D画面を開始できませんでした。対応するブラウザで開き直してください";
-  console.error("Kaisen renderer initialization failed", error);
+  preparationFailed(error);
 }
 
 // Development-only, deeply copied observation. No mutation or result injection API.
@@ -332,6 +376,7 @@ if (import.meta.env.DEV) {
       JSON.parse(
         JSON.stringify({
           phase: state.phase,
+          graphicsReady,
           screen,
           tick: state.tick,
           elapsed: state.elapsed,
