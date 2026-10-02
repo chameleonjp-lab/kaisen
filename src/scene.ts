@@ -234,6 +234,27 @@ export class KaisenScene {
     // Include initially empty projectile/effect materials before mission time
     // starts, so their first real use is not a shader-compilation checkpoint.
     await this.renderer.compileAsync(this.scene, this.camera);
+    // Linked programs alone do not initialize every backend draw pipeline.
+    // Exercise the pooled line/point materials once, behind the loading screen,
+    // before an authoritative mission exists. No simulation entity is created.
+    const sample = new Vector3(0, 0, -80)
+      .applyQuaternion(this.camera.quaternion).add(this.camera.position);
+    this.tracerPositions.set([sample.x - 1, sample.y, sample.z, sample.x + 1, sample.y, sample.z]);
+    this.tracerColors.set([1, .8, .4, 1, .8, .4]);
+    this.particlePositions.set([sample.x, sample.y, sample.z]);
+    this.particleColors.set([1, .6, .2]);
+    this.particleSizes[0] = 8;
+    this.particleOpacity[0] = 1;
+    for (const geometry of [this.tracersGeometry, this.particleGeometry])
+      for (const attribute of Object.values(geometry.attributes)) attribute.needsUpdate = true;
+    this.tracersGeometry.setDrawRange(0, 2);
+    this.particleGeometry.setDrawRange(0, 1);
+    this.renderer.render(this.scene, this.camera);
+    // One loading-only synchronization, never part of the gameplay frame loop.
+    this.renderer.getContext().finish();
+    this.tracersGeometry.setDrawRange(0, 0);
+    this.particleGeometry.setDrawRange(0, 0);
+    this.renderer.render(this.scene, this.camera);
   }
   private reset(state: GameState) {
     for (const p of this.planes.values()) this.scene.remove(p.root);
