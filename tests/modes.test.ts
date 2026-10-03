@@ -100,7 +100,7 @@ test('source offscreen yaw boost ramps gently in both modes without amplifying b
   }
 });
 
-test('Normal sight projects source forward aim depth through the real camera without moving the aircraft', () => {
+test('Normal sight projects fixed forward convergence plane through the real camera without moving the aircraft', () => {
   const state = quiet('normal'), target = state.enemies[0];
   for (const [width, height] of [[393, 852], [852, 393], [320, 568]]) {
     for (const pitch of [-.5, 0, .95]) for (const bank of [-.72, 0, .72]) {
@@ -110,12 +110,12 @@ test('Normal sight projects source forward aim depth through the real camera wit
       const before = JSON.stringify(state.player);
       const camera = new PerspectiveCamera(64, width / height, .1, FLIGHT_FAR);
       getFlightCameraPose(state.player, 'normal', camera.position, camera.quaternion); camera.updateMatrixWorld(true);
-      // Independent source updateCamera calculation: muzzle at -4.5, target depth 650.
-      const projected = new Vector3(0, 0, -654.5).applyQuaternion(state.player.quaternion).add(state.player.position).project(camera);
+      // Independent source updateCamera calculation: muzzle at -4.5, convergence depth 500.
+      const projected = new Vector3(0, 0, -504.5).applyQuaternion(state.player.quaternion).add(state.player.position).project(camera);
       const sight = projectGunSight(state.player, [target], width, height);
       assert.ok(Math.abs(sight.x - (projected.x * .5 + .5) * width) < 1e-9);
       assert.ok(Math.abs(sight.y - (.5 - projected.y * .5) * height) < 1e-9);
-      assert.ok(Math.abs(sight.depth - 650) < 1e-9);
+      assert.ok(Math.abs(sight.depth - 500) < 1e-9);
       assert.equal(JSON.stringify(state.player), before);
     }
   }
@@ -141,4 +141,14 @@ test('Normal input releases only the ended finger while steering and another act
   controls.endButton('accelerate', button, { pointerId: 3 }, false);
   assert.equal(controls.sample().accelerate, false);
   assert.equal(controls.steerPointer, 1);
+});
+
+
+test('Normal sight is independent of target loss, switching and extreme target depth', () => {
+  const state = quiet('normal'), target = state.enemies[0]; target.health = 100;
+  const fixed = projectGunSight(state.player, [], 393, 852);
+  for (const depth of [24, 25, 500, 1199, 1200, 1201]) {
+    target.position.copy(state.player.position).addScaledVector(forwardOf(state.player), depth);
+    assert.deepEqual(projectGunSight(state.player, [target], 393, 852), fixed);
+  }
 });

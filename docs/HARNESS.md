@@ -19,3 +19,6 @@ core.contract / core.execution / domain.testing / domain.lifecycle / domain.pers
 2026-10-02、利用者のGitHub Pages公開依頼により、同じ固定版のworkflow.release（requires: workflow.delivery）を追加参照。既存の配備対象外という記述は初回実装の境界であり、今回の公開許可と実施状態はDEPLOYMENT.mdへ記録する。
 
 2026-10-03の公開試遊後の変更では、同じ固定版のdomain.ui-input/domain.gameplay/domain.testing/domain.enemy-ai/domain.performance/workflow.deliveryを必要範囲で再照合。元作の参照SHA、今回の許可事項、計測結果はPLAN.md/PROVENANCE.md/VERIFICATION.mdへ対応づけ、新版ハーネスへ移行しない。
+
+
+追加試遊フィードバックでは同じ固定版のcore/registryを再確認し、gameplay/lifecycle/ui-input/persistence/audio/performance/visual.camera/testing/deliveryを今回の変更境界へ適用。REQUESTS.mdですべての依頼を保持し、旧仕様の置換と未検証を区別する。操縦入力や本体を書き換える試験専用公開APIは追加しない。

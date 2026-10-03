@@ -8,6 +8,7 @@ import {
 } from "./simulation";
 import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
+import { ControlSettings } from "./control-settings";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
 import type { GameEvent, GameMode, GameState } from "./types";
@@ -28,22 +29,23 @@ let graphicsReady = false;
 let contextLost = false;
 const audio = new FlightAudio();
 audio.enabled = false;
-const controls = new FlightControls(
-  canvas,
-  {
-    fire: el("fire"),
-    loop: el("loop"),
-    accelerate: el("accelerate"),
-    brake: el("brake"),
-  },
-  () => screen === "playing" && state.phase === "playing",
-);
+const buttons = {
+    fire: el<HTMLButtonElement>("fire"),
+    loop: el<HTMLButtonElement>("loop"),
+    accelerate: el<HTMLButtonElement>("accelerate"),
+    brake: el<HTMLButtonElement>("brake"),
+};
+for (const button of Object.values(buttons)) button.dataset.flightControl = "true";
+const settings = new ControlSettings(buttons);
+const controls = new FlightControls(canvas, buttons, () => screen === "playing" && state.phase === "playing" && !settings.isOpen);
 controls.setMode(selectedMode);
 function modeName(mode: GameMode): string { return mode === "easy" ? "イージー" : "ノーマル"; }
 function syncMode() {
   app.dataset.mode = state.mode;
   controls.setMode(state.mode);
+  settings.setActiveMode(state.mode);
   el("normal-controls").hidden = state.mode !== "normal";
+  el("friendly-fire-guide").hidden = state.mode !== "normal";
   el("hud-mode").textContent = modeName(state.mode);
   el("result-mode").textContent = modeName(state.mode);
   el("flight-tip").textContent = state.mode === "normal"
@@ -73,17 +75,28 @@ let accumulator = 0,
   disposed = false,
   generation = 0,
   announcementUntil = 0;
+let announcementPriority = 0;
 let pendingLoop = false;
 let lastFrameGap = 0;
 let lastInterruption: { reason: string; gap: number; render: unknown } | null = null;
 let renderStatus: "ready" | "pending" | "stalled" | "failed" = "ready";
 let frameIntervals: number[] = [];
 let updateTimes: number[] = [];
+
+for (const [id, allowBoth] of [["home-controls", true], ["pause-controls", false], ["result-controls", true]] as const) {
+  const button = el<HTMLButtonElement>(id);
+  button.addEventListener("click", () => {
+    controls.clear();
+    settings.open(button, screen === "home" ? selectedMode : state.mode, allowBoth);
+  });
+}
+
 function formatTime(seconds: number) {
   const cs = Math.floor(Math.max(0, seconds) * 100 + 1e-6);
   return `${String(Math.floor(cs / 6000)).padStart(2, "0")}:${String(Math.floor(cs / 100) % 60).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
 }
 function setScreen(next: typeof screen) {
+  settings.close();
   screen = next;
   app.dataset.screen = next;
   el("home").hidden = next !== "home";
@@ -102,7 +115,9 @@ function setScreen(next: typeof screen) {
   if (focus) el<HTMLButtonElement>(focus).focus({ preventScroll: true });
   else if (next === "playing") canvas.focus({ preventScroll: true });
 }
-function announce(text: string, duration = 3) {
+function announce(text: string, duration = 3, priority = 0) {
+  if (state.elapsed < announcementUntil && priority < announcementPriority) return;
+  announcementPriority = priority;
   el("announcement").textContent = text;
   announcementUntil = state.elapsed + duration;
 }
@@ -138,10 +153,11 @@ function begin() {
     !graphicsReady ||
     contextLost ||
     document.hidden ||
-    screen === "playing"
+    screen === "playing" || settings.isOpen
   )
     return;
   generation++;
+  announcementUntil = 0; announcementPriority = 0;
   pendingLoop = false;
   audio.resetFlight();
   controls.clear();
@@ -156,7 +172,7 @@ function begin() {
   setScreen("playing");
   syncAudio();
   void audio.unlock().then(() => syncAudio());
-  announce("敵機5機と艦隊3隻をすべて撃破", 4);
+  announce("敵機5機と艦隊4隻をすべて撃破", 4);
   scene.render(state, true);
   // Initial resource upload is preparation, not elapsed mission time.
   lastFrame = 0;
@@ -181,7 +197,7 @@ function pause(reason: string) {
   pauseReasons.add(reason);
   pauseGame(state);
   accumulator = 0;
-  setScreen("paused");
+  if (screen !== "paused") setScreen("paused");
   el("pause-reason").textContent = contextLost
     ? "描画が中断されました。復帰を待っています"
     : reason === "render-failed"
@@ -196,7 +212,7 @@ function pause(reason: string) {
   syncAudio();
 }
 function resume() {
-  if (document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
+  if (settings.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
   pauseReasons.clear();
   resumeGame(state);
   accumulator = 0;
@@ -216,14 +232,18 @@ function finish() {
     r.outcome === "victory" ? "作戦成功" : "作戦終了";
   el("result-kicker").textContent =
     r.outcome === "victory" ? "ALL TARGETS DESTROYED" : "MISSION REPORT";
-  el("result-reason").textContent =
-    r.outcome === "victory"
-      ? "敵航空隊と敵艦隊を全滅させました"
-      : state.endReason === "sea"
-        ? "海面に接触しました"
-        : state.endReason === "collision"
-          ? "敵と衝突しました"
-          : "自機が撃墜されました";
+  const causes = {
+    'sea': '海面に機体が接触しました',
+    'ship-collision': '戦艦の船体・構造物に衝突しました',
+    'aircraft-collision': '敵航空機と衝突しました',
+    'naval-fire': '艦隊の対空砲撃で撃墜されました',
+    'enemy-aircraft': '敵航空機の射撃で撃墜されました',
+  };
+  el("result-reason").textContent = r.outcome === "victory"
+    ? "敵航空隊と敵艦隊を全滅させました"
+    : state.deathCause ? causes[state.deathCause] : "自機が撃墜されました";
+  el("result-score").textContent = String(Math.round(r.score));
+  el("friendly-fire-result").textContent = `誤射 ${r.friendlyDamage.toFixed(1)} HP · 味方撃墜 ${r.friendlyKills}機`;
   el("result-time-label").textContent =
     r.outcome === "victory" ? "クリアタイム" : "経過時間";
   el("result-time").textContent = formatTime(r.time);
@@ -235,6 +255,7 @@ function finish() {
 }
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
+  el("score").textContent = String(Math.round(state.stats.score));
   el("enemy-count").textContent = String(
     state.enemies.filter((p) => p.health > 0).length,
   );
@@ -271,7 +292,7 @@ function updateHUD() {
 function positionReloadStatus() {
   if (state.mode === "normal" && scene) {
     const sight = scene.gunSight(state);
-    el("reload-status").style.top = `${sight.y + 30}px`;
+    el("reload-status").style.top = `${sight.y + 52}px`;
     el("reload-status").style.left = `${sight.x}px`;
   } else {
     el("reload-status").style.removeProperty("top");
@@ -326,12 +347,13 @@ function frame() {
       else if (relates) audio.event(e, true);
       if (e.type === "reload-start") announce("弾切れ · 6秒後に再装填", 2);
       if (e.type === "reload-complete") announce("再装填完了", 1.5);
-      if (e.type === "reinforcement") announce("敵3機が復活 · 撃破でHP回復", 4);
+      if (e.type === "reinforcement") announce(`敵${e.amount ?? 0}機が復活 · 撃破でHP回復`, 4, 3);
+      if (e.type === "ally-respawn") announce("僚機が戦線へ復帰", 2, 1);
       if (e.type === "heal") announce(`復活敵撃破 · HP +${e.amount ?? 0}`, 2.5);
       if (
         e.type === "kill" &&
         e.target !== state.player.id &&
-        e.team === "friendly"
+        e.team === "friendly" && !state.allies.some(p => p.id === e.target)
       )
         announce(e.targetKind === "ship" ? "敵艦撃沈" : "敵機撃墜", 1.5);
     }
@@ -369,12 +391,14 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("blur", () => pause("blur"));
 document.addEventListener("keydown", (e) => {
+  // Native dialog owns Escape and Tab while configuration is open.
+  if (settings.isOpen) return;
   if (e.key === "Escape") {
     if (screen === "playing") pause("manual");
     else if (screen === "paused") resume();
   }
   if (e.key === "Tab" && screen === "paused") {
-    const items = [el("pause-reload"), el("resume"), el("pause-restart"), el("pause-home")].filter(
+    const items = [el("pause-reload"), el("resume"), el("pause-restart"), el("pause-home"), el("pause-controls")].filter(
       (x) => !x.hidden && !(x as HTMLButtonElement).disabled,
     );
     const index = items.indexOf(document.activeElement as HTMLElement);
@@ -478,6 +502,10 @@ if (import.meta.env.DEV) {
           bullets: state.bullets.length,
           result: state.result,
           stats: state.stats,
+          deathCause: state.deathCause,
+          allyRespawnAt: state.allyRespawnAt,
+          controlsInput: controls.peek(),
+          settingsOpen: settings.isOpen,
           render: scene?.diagnostics(),
           audio: {
             enabled: audio.enabled,
@@ -506,6 +534,7 @@ window.addEventListener("pagehide", (event) => {
   disposed = true;
   cancelAnimationFrame(frameId);
   controls.dispose();
+  settings.dispose();
   audio.dispose();
   scene?.dispose();
 });

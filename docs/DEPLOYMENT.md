@@ -1,6 +1,12 @@
 # GitHub Pagesへの配備
 
-## 対象と現在の状態
+## 現在の公開版（2026-10-03）
+
+PR #6を利用者がマージしたmain `1950788018fa2a0466715f85c866d9f273718138` を、承認後に [run37086928771](https://github.com/chameleonjp-lab/kaisen/actions/runs/37086928771) で配備し成功。107単体・build・成果物照合が再度合格。公開画面のEasy/Normal切替、読み込まれたJS `index-BTmHSAV9.js` / CSS `index-KW3ZlEZ-.css` と、そのSHAを記録した配備成果物の対応を確認した。公開manifestの直接取得はアクセス制限のため未検証であり、別経路で迂回しない。dot側クラウドブラウザはWebGL無効なので公開版の飛行確認はblocked、CIの模擬ブラウザ成功とは区別する。
+
+本人は以後もマージされたカイセンをPagesへ反映するよう指示した。運用はmain/検査済みtreeを確認して既存手動ワークフローへ完全SHAを指定する。GitHubの自動実行設定・保護・権限を変更する指示とは扱わず、未マージ変更は公開しない。
+
+## 初回準備の記録
 
 2026-10-02、利用者がカイセンmainのGitHub Pages公開について「pages反映してください」と承認した。対象は `chameleonjp-lab/kaisen` のみ。mainへの直接push、代理マージ、自動マージ、保護の変更は引き続き行わない。
 
@@ -17,7 +23,7 @@
 
 1. この変更のDraft PRで既存の全検査とPages成果物検査を確認し、利用者がmainへマージする。
 2. mainの完全commit SHAと、検査したPR headとの差分を照合する。
-3. Actionsの **Deploy Kaisen to GitHub Pages** を **main** で手動実行し、`expected_sha` に照合したmainの完全SHAを指定する。PR/pushでは自動公開しない。今回の公開依頼を以後の無条件な公開許可へ広げない。
+3. Actionsの **Deploy Kaisen to GitHub Pages** を **main** で手動実行し、`expected_sha` に照合したmainの完全SHAを指定する。PR/pushでは自動公開しない。現在の本人指示に従い、カイセンを本人がマージした後、検査合格とmain一致を確認して反映する。
 4. ワークフローは選択refとSHAを照合し、固定Node24/lockfileで単体検査・型/buildを実行する。既存Pages設定を読むだけで、新しいPAT/秘密情報・有料サービス・管理権限を追加しない。
 5. `dist/` だけを公開用artifactへ保存し、`github-pages` 環境へ配備する。公開jobだけが一時的な `pages:write` / `id-token:write` を使う。保護ルールを緩和しない。
 6. deploy stepが返す実URLを開き、次項を確認してから公開完了とする。
@@ -38,7 +44,7 @@ main以外やSHA不一致は公開しない。同時配備は直列化し、進�
 
 ## 復旧の扱い
 
-初回公開前のため既知の正常な公開版はまだない。配備後の正常版はrun・main commit・manifestを記録する。必要な復旧は保持中の正しいartifactか、確認済みソース/lockfileからの再buildを使い、改めて公開内容を検証する。復旧操作自体は実行していない。
+初回準備時点では既知の正常な公開版はなかった。現在の公開版は冒頭の記録を参照。配備後の正常版はrun・main commit・manifestを記録する。必要な復旧は保持中の正しいartifactか、確認済みソース/lockfileからの再buildを使い、改めて公開内容を検証する。復旧操作自体は実行していない。
 
 ## 参照
 

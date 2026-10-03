@@ -57,36 +57,39 @@ test('projectile saturation reserves complete twin volleys without losing ammuni
   assert.equal(s.stats.shots, 0); assert.equal(s.player.mg, 288); assert.equal(s.player.cannon, 96);
   assert.equal(s.player.reloadTicksRemaining, 0);
 });
-test('180 seconds spawns exactly three new enemies once and preserves surviving initial aircraft', () => {
+test('each 40-second boundary tops up only missing enemies, preserves survivors and keeps five bounded slots', () => {
   const s = isolated(); const initial = s.enemies[0]; initial.health = 57;
   initial.position.set(-10000, 500, 0); initial.previous.copy(initial.position);
   const ids = new Set(s.enemies.map(e => e.id));
   s.tick = REINFORCEMENT_TICK - 2; s.elapsed = s.tick * FIXED_DT;
-  stepGame(s, neutral); assert.equal(s.reinforcementsSpawned, false); assert.equal(s.enemies.length, 5);
+  stepGame(s, neutral); assert.equal(s.reinforcementsSpawned, false);
   pauseGame(s); stepGame(s, neutral, .25); assert.equal(s.tick, REINFORCEMENT_TICK - 1);
   resumeGame(s); stepGame(s, neutral);
-  assert.equal(s.tick, REINFORCEMENT_TICK); assert.equal(s.reinforcementsSpawned, true);
   const added = s.enemies.filter(e => e.generation === 'reinforcement');
-  assert.equal(added.length, 3); assert.equal(s.enemies.length, 8); assert.equal(initial.health, 57);
+  assert.equal(added.length, 4); assert.equal(s.enemies.length, 5); assert.equal(initial.health, 57);
   assert.ok(added.every(e => !ids.has(e.id) && e.health === 100));
-  assert.equal(new Set(s.enemies.map(e => e.id)).size, 8);
-  assert.equal(s.events.filter(e => e.type === 'reinforcement').length, 1);
-  for (let i = 0; i < 60; i++) stepGame(s, neutral);
-  assert.equal(s.enemies.length, 8);
+  assert.equal(s.events.find(e => e.type === 'reinforcement')?.amount, 4);
+  // A full wave at 80 seconds emits no alert and changes no identities.
+  const fullIds = s.enemies.map(e => e.id); s.tick = REINFORCEMENT_TICK * 2 - 1; s.elapsed = s.tick * FIXED_DT;
+  stepGame(s, neutral); assert.deepEqual(s.enemies.map(e => e.id), fullIds);
+  assert.ok(!s.events.some(e => e.type === 'reinforcement'));
+  // The next boundary replenishes the two defeated slots, not five more.
+  s.enemies[1].health = s.enemies[3].health = 0;
+  s.tick = REINFORCEMENT_TICK * 3 - 1; s.elapsed = s.tick * FIXED_DT; stepGame(s, neutral);
+  assert.equal(s.enemies.length, 5); assert.equal(s.enemies.filter(e => e.health > 0).length, 5);
+  assert.equal(s.events.find(e => e.type === 'reinforcement')?.amount, 2);
+  assert.equal(new Set(s.enemies.map(e => e.id)).size, 5);
+  assert.equal(s.enemies[0], initial);
 });
-test('full clear before 180 wins immediately; wave on boundary must also be destroyed', () => {
-  const early = isolated(); early.tick = REINFORCEMENT_TICK - 2; early.elapsed = early.tick * FIXED_DT;
-  early.ships[0].health = 0; stepGame(early, neutral);
-  assert.equal(early.result?.outcome, 'victory'); assert.equal(early.reinforcementsSpawned, false);
-  stepGame(early, neutral); assert.equal(early.enemies.length, 5);
-  const boundary = isolated(); boundary.tick = REINFORCEMENT_TICK - 1; boundary.elapsed = boundary.tick * FIXED_DT;
-  boundary.ships[0].health = 0; stepGame(boundary, neutral);
-  assert.equal(boundary.phase, 'playing'); assert.equal(boundary.enemies.filter(e => e.health > 0).length, 3);
-  for (const e of boundary.enemies) e.health = 0; stepGame(boundary, neutral);
-  assert.equal(boundary.result?.outcome, 'victory');
+test('all-clear wins immediately before and on a replenishment boundary; ended missions stay ended', () => {
+  for (const tick of [REINFORCEMENT_TICK - 2, REINFORCEMENT_TICK - 1]) {
+    const s = isolated(); s.tick = tick; s.elapsed = tick * FIXED_DT; s.ships[0].health = 0;
+    stepGame(s, neutral); assert.equal(s.result?.outcome, 'victory'); assert.equal(s.reinforcementsSpawned, false);
+    const before = JSON.stringify(s); stepGame(s, neutral, .25); assert.equal(JSON.stringify(s), before);
+  }
   assert.equal(createGame().reinforcementsSpawned, false);
 });
-test('only player reinforcement kills heal once, capped at max HP; no points are introduced', () => {
+test('only player reinforcement kills heal once, capped at max HP; reinforcement kills award no points', () => {
   for (const [generation, owner, hp, expected] of [['reinforcement', 1, 50, 65], ['reinforcement', 1, 95, 100], ['initial', 1, 50, 50], ['reinforcement', 2, 50, 50]] as const) {
     const s = isolated(); s.player.health = hp; killable(s, generation, owner);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
@@ -94,7 +97,7 @@ test('only player reinforcement kills heal once, capped at max HP; no points are
     assert.equal(events.length, expected > hp ? 1 : 0);
     if (events.length) assert.equal(events[0].amount, expected - hp);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
-    assert.equal('score' in s.stats, false);
+    assert.equal(s.stats.score, 0);
   }
 });
 test('all damage resolves before healing so a same-tick lethal hit cannot be resurrected', () => {

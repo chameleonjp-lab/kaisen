@@ -1,0 +1,34 @@
+# 2026-10-03 試遊フィードバック追跡
+
+基点: main `1950788018fa2a0466715f85c866d9f273718138`。この一覧は今回の依頼全体と対応コードを保持する。最新候補のSHA・自動検査合否は[PR #7](https://github.com/chameleonjp-lab/kaisen/pull/7)の本文とChecks、各実行の詳細は[VERIFICATION.md](VERIFICATION.md)で区別する。途中の値を本人の最終採用とは扱わない。
+
+| 依頼 | 現状 | 対応内容・検査対象 |
+|---|---|---|
+| 敵機の定期復活とアラート | 実装済み | 最新指示は40秒ごとに生存5機へ不足数だけ補充。45秒/5機追加案は置換済み。停止・全滅優先・反復・上限を検査 |
+| 僚機は各機の撃墜40秒後に復活 | 実装済み | 自機除外、個別時計、新ID、表示資源の上限、再出撃を検査 |
+| 戦艦が大きく見える実寸比 | 実装済み | 原機体12m翼幅と263m艦の実geometryを計測。船腹が見える4隻の配置・距離を、同じ通常カメラの実画像で比較 |
+| 戦艦HPを現在の4倍・4隻 | 実装済み | 旗艦1000→4000、他艦600→2400。実際の全滅到達性を再検査 |
+| 照準円: 白/敵赤/味方青 | 実装済み | 円内の陣営判定と表示だけを接続。Easyの旋回補助・射撃ゲートを変更しない |
+| Normalの味方への誤射と減点、味方撃墜-1500 | 実装済み | 自機の弾だけ味方へ命中。僚機同士・僚機から自機は保護。実命中・実HP損失・所有者で一度だけ集計。仮値は損傷1HPごと-10、撃墜時は追加-1500。復活敵の撃破は加点しない |
+| 元作と同じ操作配置設定、各画面からの入口 | 実装済み | 元作の位置/大きさ/不透明度/モード別保存・破棄・リセットを再利用。ホーム/停止/結果、保存拒否と小画面を検査 |
+| 添付画像の操作不能 | 再現条件を修正済み | 画像実物を確認。指IDの残留、capture失敗/取消/画面回転/複数指を再現検査。画像だけから端末での原因を断定しない |
+| Normal照準の拡大・上下跳ね抑制 | 実装済み | 標的切替で24〜1200mへ変わる投影面を固定500mにし、射線・入力を維持。境界と実画面を検査 |
+| 結果に死亡原因 | 実装済み | 敵機射撃/艦砲/機体衝突/艦衝突/海面を最後の実判定から表示 |
+| 敵航空機の機銃を艦砲弾より弱く | 実装済み | 仮値: 敵機銃0.4、機関砲0.8HP。軽対空1/重対空6HP未満。自機/僚機/艦砲の損傷値はこの比較のために変えない |
+| プロペラ音だけ小さく | 実装済み | エンジン専用gainを0.095→0.0475へ。master・射撃・命中・爆発の音量を維持した検査 |
+| 今回に含めない依頼を残す | この一覧で追跡 | 全依頼を実装に含めた。下記に証拠と未実施の実機確認を残す |
+
+現時点で意図的な機能除外はない。iPhone実機の操作感・実聴・熱性能はこの環境では直接確認できず、CIの模擬端末検査と分けて報告する。mainへのマージは利用者が行う。公開はマージ後に承認済みの運用で対応する。
+
+## 対応する自動検査
+
+- 復活・HP・4隻・誤射・死亡原因・敵弾の強弱: `tests/feedback-rules.test.ts`, `tests/mission-rules.test.ts`, `tests/simulation.test.ts`。反復補充の実画面は `browser-tests/reinforcement.spec.ts`
+- 原機体・実寸と投影比較: `tests/fleet-scale.test.ts`, `tests/sea-contact.test.ts`。実際の艦接近/勝利画像は `browser-tests/victory.spec.ts` の成果物
+- 照準色・固定投影・Easy保全: `tests/aim-indicator.test.ts`, `tests/modes.test.ts`, `browser-tests/modes.spec.ts`
+- 設定の保存/破棄/3入口と入力復帰: `tests/input-recovery.test.ts`, `tests/review-input-ownership.test.ts`, `browser-tests/feedback-settings.spec.ts`, `browser-tests/review-accessibility.spec.ts`
+- プロペラ専用音量と他SE保全: `tests/audio.test.ts`。再装填・停止時計・リング: `tests/touch-reload.test.ts`, `browser-tests/reload.spec.ts`
+- 全滅到達・実入力時刻の変動: `tests/normal-mission.test.ts`, `tests/browser-cadence.test.ts`。両モードの実ブラウザ全滅は `browser-tests/normal-victory.spec.ts`, `browser-tests/victory.spec.ts`。失敗を合格へ読み替えず、最終候補のChecksで確定する
+
+## 実機で残る確認
+
+機能として今回から延期した依頼はない。iPhone17Pro Safariの指離れ・画面回転・アプリ復帰、主観的な照準/艦の大きさ、プロペラの実聴、熱と持続性能は実機環境がなく未実施。所有者のマージ後、承認済みPages反映を確認してから同端末で確かめる。CIの模擬画面を実機合格とは扱わない。

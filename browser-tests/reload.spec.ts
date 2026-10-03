@@ -1,6 +1,8 @@
+import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
+import { steerAndObserve } from './touch-command';
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createTouchReloadPilot, pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 
 test.use({ trace: 'off' });
 test('real touch flight shows a filling reload ring, freezes it, then refills or clears all targets', async ({page, context}) => {
@@ -15,7 +17,7 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
     await page.screenshot({path:`test-results/evidence/${name}.png`,style:'#pause-screen { visibility: hidden !important; }'});
   };
   await page.goto('/'); await expect(page.locator('#start')).toBeEnabled();
-  const cdp = await context.newCDPSession(page), pilot = createTouchReloadPilot();
+  const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
   const origin = {x:90,y:650};
   const touchStart = () => cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   const touchEnd = () => cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
@@ -86,9 +88,13 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         completed = true; break;
       }
       lastSample = s.tick;
-      const request = pilot(s), {dx,dy} = pointerOffsetForControls(request.turn,request.climb);
+      // Empty magazines are a reason to disengage: climb and bank using the
+      // same legal stick instead of pursuing a reinforcement head-on unarmed.
+      const request = s.player.reloadTicksRemaining > 0
+        ? {turn:.45,climb:.8} : pilot(s);
+      const {dx,dy} = pointerOffsetForControls(request.turn,request.climb);
       expect(Math.hypot(dx,dy)).toBeLessThanOrEqual(36+1e-9);
-      await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:origin.x+dx,y:origin.y+dy,id:1}]});
+      lastSample = (await steerAndObserve(page,cdp,origin,request.turn,request.climb)).tick;
     }
     expect(captured).toBe(true); expect(progressAdvanced).toBe(true);
     expect(completed || clearDuringReload).toBe(true);

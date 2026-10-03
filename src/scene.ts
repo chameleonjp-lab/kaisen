@@ -25,6 +25,7 @@ import {
 import { AircraftFactory, type AircraftVisual } from "./aircraft";
 import { targetAimPoint } from "./flight-assist";
 import { projectGunSight } from "./gun-sight";
+import { AIM_COLORS, aimIndicator, aimRadius } from "./aim-indicator";
 import { AircraftBatchFactory } from "./aircraft-batch";
 import { ShipFactory } from "./ships";
 import { RenderQueue } from "./render-queue";
@@ -412,6 +413,10 @@ export class KaisenScene {
     if (state.phase === "ended")
       this.visualTime += Math.max(0, Math.min(0.1, presentationDt));
     else this.visualTime = state.elapsed;
+    const liveRoster = new Set([state.player, ...state.allies, ...state.enemies].map(p => p.id));
+    for (const [id, visual] of this.planes) if (!liveRoster.has(id)) {
+      this.scene.remove(visual.root); this.planes.delete(id); this.wrecks.delete(id);
+    }
     for (const p of [state.player, ...state.allies, ...state.enemies]) {
       const v = this.planes.get(p.id) ?? this.addPlane(p, p === state.player);
       v.root.visible = p.health > 0;
@@ -525,21 +530,23 @@ export class KaisenScene {
     c.clearRect(0, 0, w, h);
     if (!show) return;
     const sight = state.mode === "normal" ? this.gunSight(state) : { x: w / 2, y: h / 2 };
-    const radius = state.mode === "normal" ? 13 : Math.min(w, h) * 0.135;
-    c.strokeStyle = "rgba(243,236,210,.60)";
+    const radius = aimRadius(state.mode, w, h);
+    const indicator = aimIndicator(state, [...state.allies, ...state.enemies, ...state.ships], sight, w, h);
+    const aimColor = AIM_COLORS[indicator];
+    c.strokeStyle = aimColor;
     c.lineWidth = 1;
     c.beginPath();
     c.arc(sight.x, sight.y, radius, 0, Math.PI * 2);
     if (state.mode === "normal") {
-      c.moveTo(sight.x - 19, sight.y); c.lineTo(sight.x - 8, sight.y);
-      c.moveTo(sight.x + 8, sight.y); c.lineTo(sight.x + 19, sight.y);
-      c.moveTo(sight.x, sight.y - 19); c.lineTo(sight.x, sight.y - 8);
-      c.moveTo(sight.x, sight.y + 8); c.lineTo(sight.x, sight.y + 19);
+      c.moveTo(sight.x - radius - 6, sight.y); c.lineTo(sight.x - radius + 5, sight.y);
+      c.moveTo(sight.x + radius - 5, sight.y); c.lineTo(sight.x + radius + 6, sight.y);
+      c.moveTo(sight.x, sight.y - radius - 6); c.lineTo(sight.x, sight.y - radius + 5);
+      c.moveTo(sight.x, sight.y + radius - 5); c.lineTo(sight.x, sight.y + radius + 6);
       // A dark outline keeps the manual bore sight readable over bright sky/sea.
       c.strokeStyle = "rgba(3,25,39,.9)";
       c.lineWidth = 4;
       c.stroke();
-      c.strokeStyle = "#fff1d2";
+      c.strokeStyle = aimColor;
       c.lineWidth = 1.5;
     }
     c.stroke();
@@ -553,7 +560,7 @@ export class KaisenScene {
       c.beginPath(); c.arc(sight.x, sight.y, radius + 7, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2); c.stroke();
       c.lineWidth = 1;
     }
-    c.fillStyle = "#faf4da";
+    c.fillStyle = aimColor;
     c.fillRect(sight.x - 1, sight.y - 1, 2, 2);
     const targets = [...state.allies, ...state.enemies, ...state.ships];
     c.shadowColor = "rgba(0,20,30,.9)";
