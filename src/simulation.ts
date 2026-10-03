@@ -266,7 +266,7 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
     state.stats.score -= damage * FRIENDLY_DAMAGE_PENALTY;
   }
   if (target === state.player && target.health <= 0) {
-    state.deathCause = bullet.team === 'friendly' ? 'friendly-fire' : bullet.kind === 'aa' ? 'naval-fire' : 'enemy-aircraft';
+    state.deathCause = bullet.kind === 'aa' ? 'naval-fire' : 'enemy-aircraft';
   }
   emit(state, 'hit', position, bullet.owner, target, bullet.team);
   emit(state, 'damage', position, target.id, target, target.team);
@@ -289,15 +289,15 @@ function updateBullets(state: GameState): void {
     let target: CombatTarget | null = null, first = seaTime;
     for (const candidate of candidates) {
       if (candidate.health <= 0 || candidate.id === bullet.owner) continue;
-      // Other hulls are solid even to their own fleet's AA; no friendly damage.
+      // Other hulls stop their fleet's AA. Only the Normal player's rounds damage allies; AI retains team protection.
       if (candidate.team === bullet.team && !(bullet.kind === 'aa' && candidate.kind === 'ship')
-        && !(state.mode === 'normal' && bullet.team === 'friendly' && candidate.kind === 'aircraft')) continue;
+        && !(state.mode === 'normal' && bullet.owner === state.player.id && bullet.team === 'friendly' && candidate.kind === 'aircraft')) continue;
       const hit = candidate.kind === 'ship' ? sweptShipHitTime(bullet, candidate, 0, travel / FIXED_DT) : sweptAircraftHitTime(bullet, candidate, travel / FIXED_DT);
       if (hit !== null && (hit < first || (hit === first && target !== null && candidate.id < target.id))) { target = candidate; first = hit; }
     }
     if (target) {
       const point = bullet.previous.clone().lerp(bullet.position, first);
-      if (target.team !== bullet.team || (state.mode === 'normal' && target.kind === 'aircraft' && bullet.team === 'friendly')) damageTarget(state, target, bullet, point);
+      if (target.team !== bullet.team || (state.mode === 'normal' && bullet.owner === state.player.id && target.kind === 'aircraft' && bullet.team === 'friendly')) damageTarget(state, target, bullet, point);
       else emit(state, 'hit', point, bullet.owner, target, bullet.team);
       continue;
     }

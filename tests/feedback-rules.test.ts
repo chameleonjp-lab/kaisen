@@ -45,10 +45,24 @@ test('each allied slot returns 40 seconds after its own destruction with fresh i
   assert.equal(s.allies.length,4);assert.equal(Object.keys(s.allyRespawnAt).length,0);assert.equal(s.player.id,1);
   s.player.health=0;stepGame(s,neutral);const ended=JSON.stringify(s);stepGame(s,neutral,.25);assert.equal(JSON.stringify(s),ended);
 });
-test('fatal real bullet source identifies aircraft, naval and friendly fire',()=>{
-  for(const [team,kind,cause] of [['enemy','mg','enemy-aircraft'],['enemy','aa','naval-fire'],['friendly','mg','friendly-fire']] as const){
+test('fatal real bullet source identifies enemy aircraft and naval fire',()=>{
+  for(const [team,kind,cause] of [['enemy','mg','enemy-aircraft'],['enemy','aa','naval-fire']] as const){
     const s=quiet();s.player.position.set(0,1000,0);s.player.previous.copy(s.player.position);s.player.health=1;
     s.bullets.push(shot(44,team,0,2,kind));stepGame(s,neutral);
     assert.equal(s.endReason,'shot-down');assert.equal(s.deathCause,cause);assert.equal(s.result?.outcome,'defeat');
+  }
+});
+
+
+test('allied AI rounds preserve team protection in both modes and pass on to an enemy',()=>{
+  for(const mode of ['easy','normal'] as const){
+    const s=quiet(mode);s.player.position.set(0,1000,0);s.player.previous.copy(s.player.position);
+    const owner=s.allies[0],ally=s.allies[1],enemy=s.enemies[0];
+    owner.health=100;owner.position.set(400,1000,400);owner.previous.copy(owner.position);
+    ally.health=100;ally.position.set(100,1000,0);ally.previous.copy(ally.position);
+    enemy.health=100;enemy.position.set(0,1000,-130);enemy.previous.copy(enemy.position);
+    s.bullets.push(shot(owner.id,'friendly',0,200),shot(owner.id,'friendly',100,200));stepGame(s,neutral);
+    assert.equal(s.player.health,100);assert.equal(ally.health,100);assert.equal(enemy.health,0);
+    assert.equal(s.stats.score,0);assert.equal(s.stats.friendlyDamage,0);assert.equal(s.stats.allyAircraftKills,1);
   }
 });

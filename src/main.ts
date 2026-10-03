@@ -238,7 +238,6 @@ function finish() {
     'aircraft-collision': '敵航空機と衝突しました',
     'naval-fire': '艦隊の対空砲撃で撃墜されました',
     'enemy-aircraft': '敵航空機の射撃で撃墜されました',
-    'friendly-fire': '味方の射撃で撃墜されました',
   };
   el("result-reason").textContent = r.outcome === "victory"
     ? "敵航空隊と敵艦隊を全滅させました"

@@ -46,7 +46,7 @@ export interface GameResult {
   allyAircraftKills: number; allyShipKills: number; alliesSurvived: number; score: number; friendlyDamage: number; friendlyKills: number;
 }
 export type EndReason = 'all-clear' | 'shot-down' | 'collision' | 'sea';
-export type DeathCause = 'enemy-aircraft' | 'naval-fire' | 'friendly-fire' | 'aircraft-collision' | 'ship-collision' | 'sea' | null;
+export type DeathCause = 'enemy-aircraft' | 'naval-fire' | 'aircraft-collision' | 'ship-collision' | 'sea' | null;
 export interface GameState {
   phase: 'ready' | 'playing' | 'paused' | 'ended'; mode: GameMode;
   reinforcementsSpawned: boolean;

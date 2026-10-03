@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { steerAndObserve } from './touch-command';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
@@ -38,9 +39,11 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
       lastSample = state.tick;
       const input = pilot(state), { dx, dy } = pointerOffsetForControls(input.turn, input.climb);
       expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(36 + 1e-9);
-      await cdp.send('Input.dispatchTouchEvent', {
-        type: 'touchMove', touchPoints: [{ x: origin.x + dx, y: origin.y + dy, id: 1 }],
-      });
+      const accepted = await steerAndObserve(page,cdp,origin,input.turn,input.climb);
+      const acceptedTick = accepted.tick;
+      lastSample = acceptedTick;
+      // Do not send Space to the result screen's newly focused retry button.
+      if (accepted.phase !== 'playing') break;
       if (input.fire !== fireHeld) {
         if (input.fire) await page.keyboard.down('Space');
         else await page.keyboard.up('Space');
@@ -54,7 +57,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         if (input.brake) await page.keyboard.down('s'); else await page.keyboard.up('s');
         brakeHeld = Boolean(input.brake);
       }
-      samples.push({ tick: state.tick, requested: input, previousInput: state.controlsInput, player: {position:state.player.position,yaw:state.player.yaw,pitch:state.player.pitch,speed:state.player.speed,health:state.player.health} });
+      samples.push({ tick: state.tick, acceptedTick, requested: input, previousInput: state.controlsInput, player: {position:state.player.position,yaw:state.player.yaw,pitch:state.player.pitch,speed:state.player.speed,health:state.player.health} });
     }
     await page.keyboard.up('Space'); fireHeld = false; await page.keyboard.up('w'); await page.keyboard.up('s'); accelerateHeld = brakeHeld = false;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });

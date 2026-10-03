@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from 'three';
 import { desiredFlightInput, forwardOf } from '../../src/flight';
-import { targetAimPoint } from '../../src/flight-assist';
+import { targetAimPoint, getFlightAssist } from '../../src/flight-assist';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value));
@@ -24,7 +24,7 @@ export function createBrowserMissionPilot() {
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
   let waypoint = new Vector3();
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
-  let lastTime = 0, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1;
+  let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1;
   return (snapshot: GameState): FlightInput => {
     const sampleDt = Math.max(1/60, snapshot.elapsed - lastTime); lastTime = snapshot.elapsed;
     estimatedTrim = Math.max(65,Math.min(141,estimatedTrim + trimDirection * 18 * sampleDt));
@@ -59,9 +59,13 @@ export function createBrowserMissionPilot() {
     const air = enemies.filter(e => e.health > 0);
     const score = (enemy:Aircraft) => player.position.distanceTo(enemy.position) + forwardOf(player).angleTo(enemy.position.clone().sub(player.position)) * 220 + enemy.health * 3;
     const bestAir = air.sort((a,b)=>score(a)-score(b))[0];
-    const target = current?.kind === 'aircraft'
+    const airFirst = current?.kind === 'aircraft'
       ? (bestAir && score(bestAir) < score(current) * .65 ? bestAir : current)
       : healTarget ?? current ?? pick;
+    // Clear the finite fleet before chasing endlessly replenished aircraft.
+    // This is the external test pilot's strategy, never a product AI change.
+    const weakestShip = ships.filter(s=>s.health>0).sort((a,b)=>a.health-b.health || player.position.distanceTo(a.position)-player.position.distanceTo(b.position))[0];
+    const target = snapshot.mode === 'easy' ? airFirst : weakestShip ?? (current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false };
     if (targetId !== target.id) { shipPhase = 'stage'; }
     targetId = target.id;
@@ -115,15 +119,27 @@ export function createBrowserMissionPilot() {
     const h2 = relative.x ** 2 + relative.z ** 2, h = Math.sqrt(h2);
     const yawRate = h2 > 1 ? (relative.z * velocity.x - relative.x * velocity.z) / h2 : 0;
     const pitchRate = h > 1 ? (velocity.y * h - relative.y * (relative.x * velocity.x + relative.z * velocity.z) / h) / relative.lengthSq() : 0;
-    let turn = clamp(controls.turn * 8 - yawRate / .82 + weave * Math.sin(snapshot.elapsed * Math.PI));
+    // Account for the source turn authority with a damped proportional gain.
+    // The previous high gain oscillated when queued touch delivery lagged.
+    const desiredResponse = getFlightAssist(player,targets,{turn:0,climb:0,fire:false,loop:false,viewAspect:393/852},snapshot.mode).responseMultiplier;
+    yawResponse += Math.max(-2.5*sampleDt,Math.min(2.5*sampleDt,desiredResponse-yawResponse));
+    const speed = player.speed;
+    const lowAuthority = speed <= 85 ? .92 + ((speed-65)/20)*.23 : speed <= 110 ? 1.15 - ((speed-85)/25)*.15 : 1;
+    const highLoad = Math.max(.78,Math.min(1,1-Math.max(0,speed-115)*.008));
+    const yawAuthority = .82 * lowAuthority * highLoad * yawResponse;
+    const desiredYaw = Math.atan2(-relative.x,-relative.z);
+    const error = Math.atan2(Math.sin(desiredYaw-player.yaw),Math.cos(desiredYaw-player.yaw));
+    let turn = snapshot.mode === 'normal'
+      ? clamp(-(yawRate + error * 3.5) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI))
+      : clamp(controls.turn * 8 - yawRate / .82 + weave * Math.sin(snapshot.elapsed * Math.PI));
     let climb = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
     const norm = Math.hypot(turn, climb);
     if (norm > 1) { turn /= norm; climb /= norm; }
     const alignment = forwardOf(player).angleTo(aim.clone().sub(player.position));
     if (target.kind !== 'aircraft' || distance < 500) fastChase = false;
     else if (distance > 800) fastChase = true;
-    const speed = fastChase ? 141 : 85;
-    trimDirection = snapshot.mode === 'easy' ? 0 : estimatedTrim < speed - 1 ? 1 : estimatedTrim > speed + 1 ? -1 : 0;
+    const wantedSpeed = fastChase ? 141 : 85;
+    trimDirection = snapshot.mode === 'easy' ? 0 : estimatedTrim < wantedSpeed - 1 ? 1 : estimatedTrim > wantedSpeed + 1 ? -1 : 0;
     return {turn,climb,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
 
   };
