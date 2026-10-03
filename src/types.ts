@@ -27,6 +27,8 @@ export interface Bullet {
   gravity?: number; mountId?: string; barrelIndex?: number;
 }
 export interface GameEvent {
+  /** Fixed simulation tick of the event, so deferred rendering cannot replay old muzzle flashes. */
+  tick?: number;
   id: number; type: 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'end' | 'splash' | 'reload-start' | 'reload-complete' | 'reinforcement' | 'heal';
   position: Vector3; owner: number; target?: number; targetKind?: 'aircraft' | 'ship'; team?: Team; amount?: number;
 }

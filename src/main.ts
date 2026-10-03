@@ -10,7 +10,7 @@ import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
-import type { GameEvent, GameState } from "./types";
+import type { GameEvent, GameMode, GameState } from "./types";
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const node = document.getElementById(id);
@@ -20,7 +20,8 @@ function el<T extends HTMLElement = HTMLElement>(id: string): T {
 const app = el("app"),
   canvas = el<HTMLCanvasElement>("flight"),
   overlay = el<HTMLCanvasElement>("markers");
-let state = createGame();
+let selectedMode: GameMode = "easy";
+let state = createGame(undefined, selectedMode);
 let screen: "home" | "playing" | "paused" | "result" = "home";
 let scene: KaisenScene | null = null;
 let graphicsReady = false;
@@ -37,7 +38,31 @@ const controls = new FlightControls(
   },
   () => screen === "playing" && state.phase === "playing",
 );
-controls.setMode("easy");
+controls.setMode(selectedMode);
+function modeName(mode: GameMode): string { return mode === "easy" ? "イージー" : "ノーマル"; }
+function syncMode() {
+  app.dataset.mode = state.mode;
+  controls.setMode(state.mode);
+  el("normal-controls").hidden = state.mode !== "normal";
+  el("hud-mode").textContent = modeName(state.mode);
+  el("result-mode").textContent = modeName(state.mode);
+  el("mode-guide").textContent = state.mode === "easy"
+    ? "照準円内・1.2km以内へ自動射撃 · 右下で宙返り"
+    : "照準補助なし・手動射撃 · 加速・減速・宙返りをボタンで操作";
+  el("keyboard-guide").textContent = state.mode === "easy"
+    ? "キーボード：矢印で操縦 · Lで宙返り"
+    : "キーボード：矢印で操縦 · Spaceで射撃 · W/Sで加速/減速 · Lで宙返り";
+}
+syncMode();
+for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="game-mode"]')) {
+  radio.addEventListener("change", () => {
+    if (screen !== "home" || !radio.checked) return;
+    selectedMode = radio.value === "normal" ? "normal" : "easy";
+    state = createGame(undefined, selectedMode);
+    syncMode();
+    scene?.render(state, false);
+  });
+}
 const pauseReasons = new Set<string>();
 let accumulator = 0,
   lastFrame = 0,
@@ -118,7 +143,8 @@ function begin() {
   audio.resetFlight();
   controls.clear();
   pauseReasons.clear();
-  state = createGame();
+  state = createGame(undefined, selectedMode);
+  syncMode();
   startGame(state);
   accumulator = 0;
   lastFrame = 0;
@@ -137,7 +163,8 @@ function home() {
   pendingLoop = false;
   generation++;
   audio.resetFlight();
-  state = createGame();
+  state = createGame(undefined, selectedMode);
+  syncMode();
   pauseReasons.clear();
   accumulator = 0;
   setScreen("home");
@@ -215,6 +242,7 @@ function updateHUD() {
   el("reload-status").hidden = !reloading;
   el("reload-status").textContent = reloading ? `再装填中 あと${(state.player.reloadTicksRemaining / 60).toFixed(1)}秒` : "";
   el("reload-status").dataset.progress = String(1 - state.player.reloadTicksRemaining / 360);
+  positionReloadStatus();
   el("ship-count").textContent = String(
     state.ships.filter((s) => s.health > 0).length,
   );
@@ -236,6 +264,16 @@ function updateHUD() {
         : "すぐ使える";
   el("flight-tip").hidden = state.elapsed > 8;
   if (state.elapsed > announcementUntil) el("announcement").textContent = "";
+}
+function positionReloadStatus() {
+  if (state.mode === "normal" && scene) {
+    const sight = scene.gunSight(state);
+    el("reload-status").style.top = `${sight.y + 30}px`;
+    el("reload-status").style.left = `${sight.x}px`;
+  } else {
+    el("reload-status").style.removeProperty("top");
+    el("reload-status").style.removeProperty("left");
+  }
 }
 function frame() {
   // Sample callback execution time, not a possibly queued vsync timestamp.
@@ -309,6 +347,7 @@ function frame() {
   }
   if (scene && !contextLost) {
     scene.render(state, screen === "playing" || screen === "paused", dt);
+    if (screen === "paused") positionReloadStatus();
     if (scene.diagnostics().queue.status === "failed") {
       renderStatus = "failed";
       if (screen === "home") preparationFailed(new Error("GPU frame completion unavailable"));
@@ -420,6 +459,10 @@ if (import.meta.env.DEV) {
       JSON.parse(
         JSON.stringify({
           phase: state.phase,
+          mode: state.mode,
+          selectedMode,
+          config: state.config,
+          gunSight: state.mode === "normal" ? scene?.gunSight(state) : null,
           graphicsReady,
           screen,
           tick: state.tick,

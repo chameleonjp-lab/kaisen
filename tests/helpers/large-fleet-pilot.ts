@@ -1,12 +1,13 @@
 import {createGame,startGame,stepGame} from '../../src/simulation';
 import {desiredFlightInput,forwardOf} from '../../src/flight';
 import {targetAimPoint} from '../../src/flight-assist';
+import type {GameState} from '../../src/types';
 
 const neutral={turn:0,climb:0,fire:false,loop:false};
 const clamp=(n:number,a=-1,b=1)=>Math.max(a,Math.min(b,n));
 
 // Ship approach uses the observed hull's fore/aft axis and genuine flight controls.
-export function flyLargeFleetMission(shipCount: 5 | 7) {
+export function flyLargeFleetMission(shipCount: 5 | 7, observe?: (state: GameState) => void) {
  const weave = .3, altitude = 650, stageDistance = 1100, airLead = .6;
  const state=createGame(undefined,{shipCount});startGame(state);
  let targetId:number|null=null,extensionTicks=0,waypoint=state.player.position.clone();
@@ -38,6 +39,7 @@ export function flyLargeFleetMission(shipCount: 5 | 7) {
   const controls=desiredFlightInput(state.player,aim);
   const w=evasive?weave:0;
   stepGame(state,{...neutral,turn:clamp(controls.turn+w*Math.sin(state.elapsed*2*Math.PI/2)),climb:clamp(controls.climb*.62/.95+w*.6*Math.cos(state.elapsed*2*Math.PI/2))});
+  observe?.(state);
   for (const event of state.events) if (event.type === 'reload-start' || event.type === 'reload-complete') reloads.push({ type:event.type, tick:state.tick, t:state.elapsed, hp:state.player.health, mg:state.player.mg, cannon:state.player.cannon, remaining:state.player.reloadTicksRemaining });
   minAltitude=Math.min(minAltitude,state.player.position.y);
  }

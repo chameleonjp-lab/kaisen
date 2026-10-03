@@ -4,7 +4,7 @@ import type { Aircraft, GameMode, MissionConfig, Ship, Team } from './types';
 import { CRUISE_SPEED, updateQuaternion } from './flight';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-naval-2';
+export const RULES_VERSION = 'kaisen-modes-3';
 export const FIXED_DT = 1 / 60;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 3, mode: 'easy' });
 export const MAX_BULLETS = 2048;
