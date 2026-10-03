@@ -1,4 +1,4 @@
-import { createFeedbackEasyPilot } from '../tests/helpers/feedback-easy-pilot';
+import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -66,7 +66,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
     touchPoints: [{ ...origin, id: 1 }],
   });
   let fleetCaptured = false, lastSample = -6;
-  const pilot = createFeedbackEasyPilot();
+  const pilot = createBrowserMissionPilot();
   while (true) {
     const s = await state(page);
     if (s.phase === "ended") break;

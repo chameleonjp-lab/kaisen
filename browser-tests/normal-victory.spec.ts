@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createNormalMissionPilot } from '../tests/helpers/normal-mission-pilot';
+import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 
 // This route verifies mixed real input: CDP touch steering plus the ordinary
@@ -13,10 +13,10 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
-  const cdp = await context.newCDPSession(page), pilot = createNormalMissionPilot();
+  const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
   const origin = { x: 150, y: 590 };
   let fireHeld = false, accelerateHeld = false, brakeHeld = false, lastSample = -6, sawReload = false, completedReload = false, won = false;
-  const samples: { tick: number; turn: number; climb: number; fire: boolean }[] = [];
+  const samples: unknown[] = [];
   await page.goto('/');
   await expect(page.locator('#start')).toBeEnabled();
   await page.locator('input[value="normal"]').check();
@@ -54,7 +54,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         if (input.brake) await page.keyboard.down('s'); else await page.keyboard.up('s');
         brakeHeld = Boolean(input.brake);
       }
-      samples.push({ tick: state.tick, turn: input.turn, climb: input.climb, fire: input.fire });
+      samples.push({ tick: state.tick, requested: input, previousInput: state.controlsInput, player: {position:state.player.position,yaw:state.player.yaw,pitch:state.player.pitch,speed:state.player.speed,health:state.player.health} });
     }
     await page.keyboard.up('Space'); fireHeld = false; await page.keyboard.up('w'); await page.keyboard.up('s'); accelerateHeld = brakeHeld = false;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
