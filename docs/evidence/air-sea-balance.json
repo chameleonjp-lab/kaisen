@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T08:15:44.761Z",
+  "generatedAt": "2026-10-03T08:47:15.776Z",
   "note": "Default seed, actual fixed60Hz simulation with legal circular-stick inputs held6ticks. Counts are actual emitted projectiles/contact HP after attenuation; airDamage includes friendly-fire contacts. Dividing by route time includes manoeuvre/reload/nonfiring time and is not theoretical weapon DPS. Not browser/iPhone or human hit-rate evidence.",
   "sources": {
     "src/aircraft-damage.ts": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83",
@@ -12,7 +12,7 @@
     "src/naval-damage.ts": "4d1cfa18e24fc46f4dca9cea2282c43dbc0cf7fde165848901fec6985091e70e",
     "src/ordnance.ts": "293e436ccea2daa8a2496b8a3dfacf5615130f76bc0cb797b414d6cdd0bd3f53",
     "src/ship-wreck.ts": "ae76873890da33d69504ef240e1cf6441f46ae0420802e4c4d5e005c67630ee3",
-    "tests/helpers/mission-browser-pilot.ts": "51713815ae8229a4fa17c954bd0961ab5eb3f14df86560ab495017e3f28ba103"
+    "tests/helpers/mission-browser-pilot.ts": "f7689442c2f40d9cc0bd2517e9c4e33d912c6412713b1ce262c736a683ffdcbe"
   },
   "records": [
     {

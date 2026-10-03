@@ -33,8 +33,9 @@ async function capture(page: Page, name: string, inspectPausedScene = false) {
   });
 }
 const errors: string[] = [];
+const samples: unknown[] = [];
 test.beforeEach(async ({ page }) => {
-  errors.length = 0;
+  errors.length = 0; samples.length = 0;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
@@ -45,7 +46,7 @@ test.afterEach(async ({ page }, info) => {
   const snapshot = await state(page).catch(() => null);
   await writeFile(
     "test-results/evidence/touch-victory-state.json",
-    JSON.stringify({ status: info.status, errors, snapshot }, null, 2),
+    JSON.stringify({ status: info.status, errors, snapshot, samples }, null, 2),
   );
   if (info.status !== "passed")
     await page
@@ -119,6 +120,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
     const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
     lastSample=accepted.tick;
+    samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
     if(accepted.phase!=='playing')break;
     if(request.bomb) { await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb');payloadPresses++; }
 

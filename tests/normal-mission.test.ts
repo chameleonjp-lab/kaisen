@@ -49,3 +49,22 @@ test('Normal default fleet clears through manual fire and circular input with si
     if (reloads[1]) assert.equal(reloads[1].tick - reloads[0].tick, 360, 'full fixed-tick six-second reload');
   }
 });
+
+
+test('bombing pilot extends after an overhead pass with payloads still available at high altitude', async () => {
+  const {updateQuaternion}=await import('../src/flight');
+  for(const mode of ['easy','normal'] as const) for(const bombs of [1,2]) {
+    const state=createGame(undefined,mode),pilot=createNormalMissionPilot(),ship=state.ships[0];
+    for(const e of state.enemies)e.health=0;for(const s of state.ships.slice(1))s.health=0;
+    const stern=ship.velocity.clone().normalize().negate();
+    state.player.position.copy(ship.position).addScaledVector(stern,1800);state.player.position.y=900;
+    state.player.yaw=ship.yaw;state.player.pitch=state.player.bank=0;updateQuaternion(state.player);
+    pilot(state); // Reach the ordinary staging waypoint and start the bombing run.
+    state.tick=600;state.elapsed=10;state.player.bombs=bombs;
+    state.player.position.copy(ship.position).addScaledVector(stern,180);state.player.position.y=900;
+    assert.ok(state.player.position.distanceTo(ship.position)>900,'3D distance cannot trigger a240m overhead escape');
+    const before=JSON.stringify(state),command=pilot(state);assert.equal(JSON.stringify(state),before);
+    assert.ok(command.climb>.2,'ordinary climbing extension creates another attack run');
+    assert.equal(command.bomb,false);assert.equal(command.fire,false);
+  }
+});

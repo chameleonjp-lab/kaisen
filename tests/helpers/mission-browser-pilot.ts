@@ -117,7 +117,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       else {
         if (shipPhase === 'escape') shipPhase = 'stage';
         if (shipPhase === 'stage' && player.position.distanceTo(stage) < 180) shipPhase = 'attack';
-        if (shipPhase === 'attack' && (distance < 240 || player.position.y < 100 || player.bombs === 0)) {
+        if (shipPhase === 'attack' && (Math.hypot(player.position.x-target.position.x,player.position.z-target.position.z) < 240 || player.position.y < 100 || player.bombs === 0)) {
           shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
           waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
           waypoint.y = Math.max(900, player.position.y + 220); aim = waypoint; evasive = true;
