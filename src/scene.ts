@@ -505,11 +505,11 @@ export class KaisenScene {
       c.moveTo(sight.x, sight.y - radius - 6); c.lineTo(sight.x, sight.y - radius + 5);
       c.moveTo(sight.x, sight.y + radius - 5); c.lineTo(sight.x, sight.y + radius + 6);
       // A dark outline keeps the manual bore sight readable over bright sky/sea.
-      c.strokeStyle = "rgba(3,25,39,.9)";
-      c.lineWidth = 4;
+      c.strokeStyle = "rgba(3,25,39,.65)";
+      c.lineWidth = 2;
       c.stroke();
       c.strokeStyle = aimColor;
-      c.lineWidth = 1.5;
+      c.lineWidth = 1;
     }
     c.stroke();
     if (state.player.reloadTicksRemaining > 0) {
@@ -531,7 +531,17 @@ export class KaisenScene {
         const x = (p.x * .5 + .5) * w, y = (-p.y * .5 + .5) * h;
         c.strokeStyle = "#b7efce"; c.fillStyle = "#d1ffe3"; c.lineWidth = 1.5;
         c.beginPath(); c.moveTo(x - 8, y); c.lineTo(x + 8, y); c.moveTo(x, y - 8); c.lineTo(x, y + 8); c.stroke();
-        c.font = "10px system-ui"; c.textAlign = "center"; c.fillText("爆弾の落下目安", x, y + 19);
+        // Keep the physical impact cross fixed, offset only its explanation
+        // away from the central propeller, with a small contrast backplate.
+        c.save(); c.font = "600 10px system-ui"; c.textAlign = "left";
+        const label = "爆弾の落下目安", labelWidth = Math.ceil(c.measureText(label).width) + 12;
+        const labelX = x + 32 + labelWidth < w - 12 ? x + 32 : x - 32 - labelWidth;
+        const labelY = Math.max(76, Math.min(h - 60, y - 36));
+        c.strokeStyle = "rgba(183,239,206,.55)"; c.lineWidth = .75;
+        c.beginPath(); c.moveTo(x + (labelX > x ? 9 : -9), y);
+        c.lineTo(labelX > x ? labelX : labelX + labelWidth, labelY + 19); c.stroke();
+        c.fillStyle = "rgba(4,24,34,.78)"; c.fillRect(labelX, labelY, labelWidth, 20);
+        c.fillStyle = "#d1ffe3"; c.fillText(label, labelX + 6, labelY + 14); c.restore();
       }
     }
     const targets = [...state.allies, ...state.enemies, ...state.ships];

@@ -19,7 +19,7 @@ function plane(aircraft: Aircraft): Aircraft {
  * It tracks observed motion and held throttle duration to tolerate delayed browser input.
  * A completion proves the exercised path, not novice or device usability.
  */
-export function createBrowserMissionPilot() {
+export function createBrowserMissionPilot(preferAircraft = false) {
 
   let recovering = false, targetProgressAt = 0, observedTargetHealth = Infinity;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
@@ -77,7 +77,8 @@ export function createBrowserMissionPilot() {
     const alternativeAir = air.filter(enemy => enemy.id !== current?.id).sort((a,b)=>score(a)-score(b))[0];
     const recoveryTarget = staleAir && alternativeAir?.generation === 'reinforcement' ? alternativeAir : current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
       : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
-    const target = (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    const gunPracticeTarget = preferAircraft ? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? current : bestAir) : null;
+    const target = gunPracticeTarget ?? (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false, bomb:false,torpedo:false,accelerate:false,brake:false };
     if (targetId !== target.id) { shipPhase = 'stage'; targetProgressAt = snapshot.elapsed; }
     targetId = target.id; observedTargetHealth = target.health;

@@ -15,7 +15,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
   const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
-  const origin = { x: 150, y: 590 };
+  const origin = { x: 180, y: 500 };
   let payloadPresses = 0;
   let fireHeld = false, accelerateHeld = false, brakeHeld = false, lastSample = -6, sawReload = false, completedReload = false, won = false;
   const samples: unknown[] = [];

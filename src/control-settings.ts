@@ -23,8 +23,8 @@ const DEFAULT_LAYOUT: ControlLayout = {
   loop: { x: 0.83, y: 0.66, size: 72, opacity: 0.78 },
   accelerate: { x: 0.17, y: 0.84, size: 76, opacity: 0.82 },
   brake: { x: 0.17, y: 0.66, size: 76, opacity: 0.82 },
-  bomb: { x: 0.39, y: 0.77, size: 56, opacity: 0.88 },
-  torpedo: { x: 0.58, y: 0.77, size: 56, opacity: 0.88 },
+  bomb: { x: 0.39, y: 0.72, size: 56, opacity: 0.88 },
+  torpedo: { x: 0.58, y: 0.72, size: 56, opacity: 0.88 },
 };
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));

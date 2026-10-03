@@ -3,6 +3,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
 const read=(page:any)=>page.evaluate(()=>(window as any).__kaisenReadState());
 
+test.afterEach(async({page},info)=>{
+  await mkdir('test-results/evidence',{recursive:true});
+  await writeFile('test-results/evidence/naval-payload-final-state.json',JSON.stringify({status:info.status,snapshot:await read(page).catch(()=>null)},null,2));
+});
+
+
 test('payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock',async({page,context})=>{
   test.setTimeout(90000);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
@@ -15,7 +21,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await page.locator('#torpedo').tap();
   await expect(page.locator('#announcement')).toContainText('魚雷');
   expect((await read(page)).player.torpedoes).toBe(1);
-  const cdp=await context.newCDPSession(page),origin={x:90,y:570};
+  const cdp=await context.newCDPSession(page),origin={x:180,y:500};
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   await steerAndObserve(page,cdp,origin,0,0);
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);

@@ -1,13 +1,27 @@
 # 空海戦追加候補の検査（2026-10-03）
 
-現在のローカル最終候補は**182単体pass・fail/skipなし、TypeScript/Vite build pass**。2026-10-03 07:51 UTC確認。24件のPlaywright検査は列挙/構文読込まで済み、実ブラウザ実行はこれから。過去版の画像・CIを新候補の成功と扱わない。作業branch `feat/kaisen-air-sea-combat`、main c63bff8、前保存a4390f4から対艦・描画・音・検査・記録をまとめて提出する。
+現在のローカル修正候補は**183単体pass・fail/skipなし、TypeScript/Vite build pass**。2026-10-03 08:16 UTC確認。24件のPlaywright検査は列挙/構文読込まで済み、実ブラウザ実行はこれから。過去版の画像・CIを新候補の成功と扱わない。作業branch `feat/kaisen-air-sea-combat`、main c63bff8、前保存a4390f4から対艦・描画・音・検査・記録をまとめて提出する。
 
 - 作業単位: N01–N13の空海戦を一つの成立したコアとして統合し、判定レビューの3件と入力再生の2件を修正してから全件を集約。小コミットごとの全件CIは起動していない
-- `npm test`最終182/182、`npm run build`型/本番bundle成功。JS745.02kB/gzip199.18kB、CSS20.39kB/gzip5.56kB。従来からの500kB警告を隠す設定変更はしていない
+- `npm test`最終183/183、`npm run build`型/本番bundle成功。JS745.75kB/gzip199.46kB、CSS20.39kB/gzip5.56kB。従来からの500kB警告を隠す設定変更はしていない
 - `prepare-pages.mjs`の入口/アセット/NOTICE/開発hook除去の構造検査はローカル成功。未コミット候補なのでローカルの仮manifestのcommit文字列を完全SHA照合と呼ばず、PRの実headでCIが再build/照合する
 - 原機体/カメラのSHAは不変。新しい数値集計にruntimeと検査操縦11ファイルのSHA-256を保存し、同じ候補の武器別実発射/損傷を[air-sea-balance.json](evidence/air-sea-balance.json)で照合。lockfile SHA-256 `5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78`、固定Node24/npm11/同じ依存
 - default6tick: Easy191.8667秒、Normal215.65秒、双方全滅/HP80。Normal6/7tick383.5833秒、12tick316.2167秒。過去CI19/20/21からの不均等入力と1/5tick配送遅延も全滅。実GUIでの入力待ちとGPU画面は次のCIで別に確認
 - `not_run/blocked`: 実ブラウザ24件と新候補画像は未実行。既知のlocalhost拒否/ローカルChromium制限/クラウドWebGL無効を迂回せず、許可されたGitHub CIを使う。物理iPhone17Pro/Safari、実聴、持続GPU/熱は未実施。マージ/公開はまだ行っていない
+
+### CI24（712fcda）と修正バッチ
+
+[CI24/run37108104169](https://github.com/chameleonjp-lab/kaisen/actions/runs/37108104169) はhead `712fcda0bfba4091a6ed86bd7ecdb2a573afe41b` / tree `f7ef4469a996bfa447a746f7f56c58a65d56860e` に対し182単体・型/build・完全SHA付き成果物検査pass、実ブラウザ19pass/5fail（2026-10-03 08:07 UTC、再試行なし）。設定3入口・復旧・複数指・3サイズ・海面死亡・40/80秒補充・10回再出撃・音停止・公開hook除去は成功した。
+
+- 横568×320: 魚雷と音ボタンが実際に重なる。新兵装の既定Yを0.77→0.72にし、縦横の全ボタンの44px/画面内/重なりなしのassertを保持。操作を始める検査位置もボタン上から空いている画面へ修正
+- 投下/Normal全滅/Easy全滅: 検査器がCDPのtouchEndへ「残す操縦指」を送り、実状態では操縦指が消え爆弾の指だけ保持された。弾数は2のまま、ゲームはplaying、コンソールエラー0。使用中のChromiumの[CreateWebTouchEvents](https://github.com/chromium/chromium/blob/main/content/browser/devtools/protocol/input_handler.cc)は終了の明示IDを解放する。解除対象を爆弾側へ修正し、押下・解放・操縦指継続・実弾数減少をそれぞれ読む。製品への疑似clickや状態書込で補わない
+- 再装填: ブラウザ検査が爆撃用のmission pilotへ追従しながら爆弾操作を送らず、145秒にMG12発/機関砲0で止まった。装填経路だけ航空機を優先する通常操縦に分けた。新しい不均等入力再生で66.85秒/52.90秒、384発消費、実360tick装填完了を確認
+- 実画像を実装者と別担当が確認。前景艦は通常画面を横切る幅になり、海/航跡と船体が見える。海の規則的な楕円模様を風向きに沿う細長い波の反射へ調整し、実際の波面高さを維持。爆弾の説明だけを自機からずらして小さい背景を付け、物理予測の十字は移動しない
+- 利用者の新しいNormal線幅フィードバックに合わせ、元作側の表示候補と同じ1px前景/合計2px半透明haloへ変更。円の中心/半径・11px tick・中心点・色/投影/弾道/カメラ、Easyの補助は維持。元作側のEasy弾補助の別調査を本候補へ無断混入しない
+
+artifact `11268693068`、6,719,023bytes、SHA256 `4580c972749ef516c97eaf921a754f0587cfad0d957b0e1639b2e17bcdf5a4db` を取得・照合。期限2026-10-10。画像の停止時は通常操作で停止し、撮影時だけ停止メニューを隠すことをJSONへ明記。世界/時計/姿勢は注入していない。
+
+この修正バッチは入力検査・既定配置・描画の見え方・関連記録だけを集約し、武器/HP/飛行/AI/勝敗はCI24と同一。183単体と型/buildを再度まとめて実行した。新しい完全headの24ブラウザと実画像は次のCIで確定する。
 
 以下は統合途中の失敗と修正の履歴。現在の合否は上記と提出PRの完全SHA/Checksを正本とする。
 
