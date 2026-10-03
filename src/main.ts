@@ -46,6 +46,9 @@ function syncMode() {
   el("normal-controls").hidden = state.mode !== "normal";
   el("hud-mode").textContent = modeName(state.mode);
   el("result-mode").textContent = modeName(state.mode);
+  el("flight-tip").textContent = state.mode === "normal"
+    ? "ドラッグで操縦"
+    : "触れた位置からドラッグして操縦";
   el("mode-guide").textContent = state.mode === "easy"
     ? "照準円内・1.2km以内へ自動射撃 · 右下で宙返り"
     : "照準補助なし・手動射撃 · 加速・減速・宙返りをボタンで操作";

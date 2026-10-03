@@ -535,6 +535,12 @@ export class KaisenScene {
       c.moveTo(sight.x + 8, sight.y); c.lineTo(sight.x + 19, sight.y);
       c.moveTo(sight.x, sight.y - 19); c.lineTo(sight.x, sight.y - 8);
       c.moveTo(sight.x, sight.y + 8); c.lineTo(sight.x, sight.y + 19);
+      // A dark outline keeps the manual bore sight readable over bright sky/sea.
+      c.strokeStyle = "rgba(3,25,39,.9)";
+      c.lineWidth = 4;
+      c.stroke();
+      c.strokeStyle = "#fff1d2";
+      c.lineWidth = 1.5;
     }
     c.stroke();
     if (state.player.reloadTicksRemaining > 0) {

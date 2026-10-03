@@ -857,7 +857,7 @@ p {
 #app[data-mode="normal"] .loop-button { width: 72px; height: 72px; margin-left: auto; }
 #app[data-mode="normal"] .sound-button { position: fixed; bottom: calc(22px + var(--safe-bottom)); left: calc(50% - 28.5px); }
 #app[data-mode="normal"] .flight-tip { left: 104px; bottom: calc(79px + var(--safe-bottom)); max-width: calc(100% - 230px); }
-#app[data-mode="normal"] .announcement { bottom: calc(221px + var(--safe-bottom)); }
+#app[data-mode="normal"] .announcement { top: calc(68px + var(--safe-top)); bottom: auto; }
 @media (orientation: landscape) and (max-height: 600px) {
   .mode-picker { margin-bottom: 8px; }
   .mode-picker legend { margin-bottom: 3px; }
@@ -868,5 +868,5 @@ p {
   #app[data-mode="normal"] .loop-button { width: 64px; height: 64px; }
   #app[data-mode="normal"] .sound-button { bottom: calc(12px + var(--safe-bottom)); }
   #app[data-mode="normal"] .flight-tip { left: 165px; bottom: 65px; max-width: calc(100% - 330px); }
-  #app[data-mode="normal"] .announcement { bottom: calc(91px + var(--safe-bottom)); }
+  #app[data-mode="normal"] .announcement { bottom: auto; }
 }
