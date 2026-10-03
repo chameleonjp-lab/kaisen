@@ -20,6 +20,7 @@ function plane(aircraft: Aircraft): Aircraft {
  */
 export function createBrowserMissionPilot() {
 
+  let recovering = false;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
   let waypoint = new Vector3();
@@ -65,7 +66,13 @@ export function createBrowserMissionPilot() {
     // Clear the finite fleet before chasing endlessly replenished aircraft.
     // This is the external test pilot's strategy, never a product AI change.
     const weakestShip = ships.filter(s=>s.health>0).sort((a,b)=>a.health-b.health || player.position.distanceTo(a.position)-player.position.distanceTo(b.position))[0];
-    const target = snapshot.mode === 'easy' ? airFirst : weakestShip ?? (current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    // Recover through the real reinforcement kill bonus before another naval pass.
+    // Retain a recovery target until the observed HP has recovered.
+    if (player.health < 70) recovering = true;
+    else if (player.health >= 90) recovering = false;
+    const recoveryTarget = current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
+      : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
+    const target = snapshot.mode === 'easy' ? airFirst : (recovering ? recoveryTarget : null) ?? weakestShip ?? (current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false };
     if (targetId !== target.id) { shipPhase = 'stage'; }
     targetId = target.id;
@@ -104,13 +111,17 @@ export function createBrowserMissionPilot() {
       else {
         if (shipPhase === 'escape') shipPhase = 'stage';
         if (shipPhase === 'stage' && player.position.distanceTo(stage) < 180) shipPhase = 'attack';
-        if (shipPhase === 'attack' && (distance < 240 || player.position.y < 100)) {
+        if (shipPhase === 'attack' && (distance < 240 || player.position.y < 100 || (snapshot.mode === 'normal' && player.reloadTicksRemaining > 0))) {
           shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
           waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
           waypoint.y = Math.max(350, player.position.y + 220); aim = waypoint; evasive = true;
         } else if (shipPhase === 'stage') { aim = stage; evasive = true; }
         else aim = targetAimPoint(target).addScaledVector(target.velocity, distance / (player.speed + 760));
       }
+    }
+    if (snapshot.mode === 'normal' && player.reloadTicksRemaining > 0 && target.kind === 'aircraft') {
+      aim = player.position.clone().addScaledVector(forwardOf(player),800);
+      aim.y = Math.max(400,player.position.y+200); evasive = true;
     }
     const controls = desiredFlightInput(player, aim), weave = evasive ? .3 : 0;
     const relative = aim.clone().sub(player.position);
@@ -138,7 +149,8 @@ export function createBrowserMissionPilot() {
     const alignment = forwardOf(player).angleTo(aim.clone().sub(player.position));
     if (target.kind !== 'aircraft' || distance < 500) fastChase = false;
     else if (distance > 800) fastChase = true;
-    const wantedSpeed = fastChase ? 141 : 85;
+    // Reposition and disengage at speed instead of loitering in the AA envelope.
+    const wantedSpeed = fastChase || evasive ? 141 : 85;
     trimDirection = snapshot.mode === 'easy' ? 0 : estimatedTrim < wantedSpeed - 1 ? 1 : estimatedTrim > wantedSpeed + 1 ? -1 : 0;
     return {turn,climb,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
 
