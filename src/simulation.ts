@@ -3,8 +3,9 @@ import { assignTargets, targetFor, updateAI } from './ai';
 import { autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
-import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, ENEMY_MG_DAMAGE, ENEMY_CANNON_DAMAGE, resolveMissionConfig } from './mission';
+import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, resolveMissionConfig } from './mission';
 import { beginPlayerReload, tickPlayerReload } from './ammunition';
+import { aircraftDamageMultiplier, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 import { aircraftSeaContact } from './sea-contact';
 import { oceanHeight } from './ocean';
 import { segmentNavalHullEntry, shipCollisionBoxes, stepNavalGuns } from './naval';
@@ -38,7 +39,13 @@ function emit(state: GameState, type: GameEvent['type'], position: Vector3, owne
     const cosmetic = state.events.findIndex(e => e.type === 'shot' || e.type === 'hit' || e.type === 'splash');
     state.events.splice(Math.max(0, cosmetic), 1);
   }
-  const event = { id: meta.nextEventId++, tick: state.tick, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, team };
+  const event: GameEvent = { id: meta.nextEventId++, tick: state.tick, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, targetTeam: target?.team, team };
+  if (type === 'kill' || type === 'ally-respawn') {
+    const ownerSlot = state.allies.findIndex(ally => ally.id === owner);
+    const targetSlot = state.allies.findIndex(ally => ally.id === target?.id);
+    if (ownerSlot >= 0) event.ownerAllySlot = ownerSlot;
+    if (targetSlot >= 0) event.targetAllySlot = targetSlot;
+  }
   state.events.push(event);
   return event;
 }
@@ -206,7 +213,7 @@ function resolveContacts(state: GameState): void {
 
 function appendBullet(state: GameState, bullet: Omit<Bullet, 'id' | 'previous'>): boolean {
   if (state.bullets.length >= MAX_BULLETS) return false;
-  state.bullets.push({ ...bullet, id: metaFor(state).nextEntityId++, previous: bullet.position.clone() });
+  state.bullets.push({ ...bullet, id: metaFor(state).nextEntityId++, previous: bullet.position.clone(), distanceTravelled: 0 });
   if (bullet.owner === state.player.id) state.stats.shots += 1;
   emit(state, 'shot', bullet.position, bullet.owner, undefined, bullet.team);
   return true;
@@ -236,7 +243,7 @@ function fireAircraft(state: GameState, plane: Aircraft, firing: boolean, target
         direction.normalize();
       }
       appendBullet(state, { owner: plane.id, team: plane.team, kind, position, velocity: direction.multiplyScalar(speed), life: BULLET_LIFETIME,
-        damage: player ? (kind === 'mg' ? 5 : 25) : plane.team === 'friendly' ? (kind === 'mg' ? 3 : 12) : (kind === 'mg' ? ENEMY_MG_DAMAGE : ENEMY_CANNON_DAMAGE) });
+        damage: AIRCRAFT_BASE_DAMAGE[player ? 'player' : plane.team === 'friendly' ? 'ally' : 'enemy'][kind] });
     }
     if (player) plane[kind] -= 2;
     plane[clock] = player ? (kind === 'mg' ? 1 / 12 : 1 / 4) : (kind === 'mg' ? 0.28 : 0.95);
@@ -258,7 +265,8 @@ function fireShip(state: GameState, ship: Ship): void {
 
 function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, position: Vector3): void {
   if (target.health <= 0) return;
-  const damage = Math.min(target.health, bullet.damage); target.health -= damage;
+  const multiplier = bullet.kind === 'aa' ? 1 : aircraftDamageMultiplier(bullet.kind, bullet.distanceTravelled ?? 0);
+  const damage = Math.min(target.health, bullet.damage * multiplier); target.health -= damage;
   if (target === state.player) state.stats.damageTaken += damage;
   if (bullet.owner === state.player.id && target.team !== bullet.team) state.stats.hits += 1;
   if (state.mode === 'normal' && bullet.owner === state.player.id && target.team === 'friendly') {
@@ -295,6 +303,8 @@ function updateBullets(state: GameState): void {
       const hit = candidate.kind === 'ship' ? sweptShipHitTime(bullet, candidate, 0, travel / FIXED_DT) : sweptAircraftHitTime(bullet, candidate, travel / FIXED_DT);
       if (hit !== null && (hit < first || (hit === first && target !== null && candidate.id < target.id))) { target = candidate; first = hit; }
     }
+    const segmentDistance = bullet.previous.distanceTo(bullet.position);
+    bullet.distanceTravelled = (bullet.distanceTravelled ?? 0) + segmentDistance * (Number.isFinite(first) ? first : 1);
     if (target) {
       const point = bullet.previous.clone().lerp(bullet.position, first);
       if (target.team !== bullet.team || (state.mode === 'normal' && bullet.owner === state.player.id && target.kind === 'aircraft' && bullet.team === 'friendly')) damageTarget(state, target, bullet, point);

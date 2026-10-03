@@ -24,6 +24,8 @@ export type CombatTarget = Aircraft | Ship;
 export interface Bullet {
   id: number; owner: number; team: Team; position: Vector3; previous: Vector3;
   velocity: Vector3; life: number; damage: number; kind: 'mg' | 'cannon' | 'aa';
+  /** Accumulated world-space flight path from muzzle; undefined is a fresh legacy test round. */
+  distanceTravelled?: number;
   gravity?: number; mountId?: string; barrelIndex?: number;
 }
 export interface GameEvent {
@@ -31,6 +33,8 @@ export interface GameEvent {
   tick?: number;
   id: number; type: 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'end' | 'splash' | 'reload-start' | 'reload-complete' | 'reinforcement' | 'ally-respawn' | 'heal';
   position: Vector3; owner: number; target?: number; targetKind?: 'aircraft' | 'ship'; team?: Team; amount?: number;
+  /** Captured when emitted, before a slot can be replaced with a new entity ID. */
+  targetTeam?: Team; ownerAllySlot?: number; targetAllySlot?: number;
 }
 export interface FlightInput {
   turn: number; climb: number; fire: boolean; loop: boolean;

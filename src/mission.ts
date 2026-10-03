@@ -2,15 +2,16 @@ import { Quaternion, Vector3 } from 'three';
 import { createNavalMounts } from './naval';
 import type { Aircraft, GameMode, MissionConfig, Ship, Team } from './types';
 import { CRUISE_SPEED, updateQuaternion } from './flight';
+import { AIRCRAFT_HEALTH, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
+export { AIRCRAFT_HEALTH } from './aircraft-damage';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-feedback-4';
+export const RULES_VERSION = 'kaisen-aircraft-range-5';
 export const FIXED_DT = 1 / 60;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 4, mode: 'easy' });
 export const MAX_BULLETS = 2048;
 export const MAX_EVENTS_PER_STEP = 1024;
 export const LOW_ALTITUDE_WARNING = 65;
-export const AIRCRAFT_HEALTH = 100;
 export const AI_DECISION_TICKS = 6;
 /** Tunable gameplay load, equivalent to 12 seconds at the inherited firing rates. */
 export const PLAYER_MG_CAPACITY = 288;
@@ -25,8 +26,8 @@ export const ALLY_RESPAWN_TICKS = 40 * 60;
 export const FRIENDLY_DAMAGE_PENALTY = 10;
 export const FRIENDLY_KILL_PENALTY = 1500;
 /** Enemy airborne rounds are weaker than even the 1 HP light naval round. */
-export const ENEMY_MG_DAMAGE = 0.4;
-export const ENEMY_CANNON_DAMAGE = 0.8;
+export const ENEMY_MG_DAMAGE = AIRCRAFT_BASE_DAMAGE.enemy.mg;
+export const ENEMY_CANNON_DAMAGE = AIRCRAFT_BASE_DAMAGE.enemy.cannon;
 
 export function resolveMissionConfig(config: Partial<MissionConfig> | GameMode = {}): Readonly<MissionConfig> {
   const supplied = typeof config === 'string' ? { mode: config } : config;

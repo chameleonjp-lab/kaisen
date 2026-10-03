@@ -67,7 +67,7 @@ test('each 40-second boundary tops up only missing enemies, preserves survivors 
   resumeGame(s); stepGame(s, neutral);
   const added = s.enemies.filter(e => e.generation === 'reinforcement');
   assert.equal(added.length, 4); assert.equal(s.enemies.length, 5); assert.equal(initial.health, 57);
-  assert.ok(added.every(e => !ids.has(e.id) && e.health === 100));
+  assert.ok(added.every(e => !ids.has(e.id) && e.health === 80));
   assert.equal(s.events.find(e => e.type === 'reinforcement')?.amount, 4);
   // A full wave at 80 seconds emits no alert and changes no identities.
   const fullIds = s.enemies.map(e => e.id); s.tick = REINFORCEMENT_TICK * 2 - 1; s.elapsed = s.tick * FIXED_DT;
@@ -90,7 +90,7 @@ test('all-clear wins immediately before and on a replenishment boundary; ended m
   assert.equal(createGame().reinforcementsSpawned, false);
 });
 test('only player reinforcement kills heal once, capped at max HP; reinforcement kills award no points', () => {
-  for (const [generation, owner, hp, expected] of [['reinforcement', 1, 50, 65], ['reinforcement', 1, 95, 100], ['initial', 1, 50, 50], ['reinforcement', 2, 50, 50]] as const) {
+  for (const [generation, owner, hp, expected] of [['reinforcement', 1, 50, 65], ['reinforcement', 1, 75, 80], ['initial', 1, 50, 50], ['reinforcement', 2, 50, 50]] as const) {
     const s = isolated(); s.player.health = hp; killable(s, generation, owner);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
     const events = s.events.filter(e => e.type === 'heal');

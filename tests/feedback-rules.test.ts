@@ -40,7 +40,7 @@ test('each allied slot returns 40 seconds after its own destruction with fresh i
   assert.equal(s.allyRespawnAt[a.id],firstTick+ALLY_RESPAWN_TICKS);assert.equal(s.allyRespawnAt[b.id],secondTick+ALLY_RESPAWN_TICKS);
   s.tick=firstTick+ALLY_RESPAWN_TICKS-2;s.elapsed=s.tick*FIXED_DT;stepGame(s,neutral);assert.equal(s.allies[0],a);
   pauseGame(s);const frozen=JSON.stringify(s);stepGame(s,neutral,.25);assert.equal(JSON.stringify(s),frozen);resumeGame(s);
-  stepGame(s,neutral);assert.notEqual(s.allies[0].id,a.id);assert.equal(s.allies[0].health,100);assert.equal(s.allies[1],b);
+  stepGame(s,neutral);assert.notEqual(s.allies[0].id,a.id);assert.equal(s.allies[0].health,80);assert.equal(s.allies[1],b);
   s.tick=secondTick+ALLY_RESPAWN_TICKS-1;s.elapsed=s.tick*FIXED_DT;stepGame(s,neutral);assert.notEqual(s.allies[1].id,b.id);
   assert.equal(s.allies.length,4);assert.equal(Object.keys(s.allyRespawnAt).length,0);assert.equal(s.player.id,1);
   s.player.health=0;stepGame(s,neutral);const ended=JSON.stringify(s);stepGame(s,neutral,.25);assert.equal(JSON.stringify(s),ended);
@@ -62,7 +62,7 @@ test('allied AI rounds preserve team protection in both modes and pass on to an 
     ally.health=100;ally.position.set(100,1000,0);ally.previous.copy(ally.position);
     enemy.health=100;enemy.position.set(0,1000,-130);enemy.previous.copy(enemy.position);
     s.bullets.push(shot(owner.id,'friendly',0,200),shot(owner.id,'friendly',100,200));stepGame(s,neutral);
-    assert.equal(s.player.health,100);assert.equal(ally.health,100);assert.equal(enemy.health,0);
+    assert.equal(s.player.health,80);assert.equal(ally.health,100);assert.equal(enemy.health,0);
     assert.equal(s.stats.score,0);assert.equal(s.stats.friendlyDamage,0);assert.equal(s.stats.allyAircraftKills,1);
   }
 });

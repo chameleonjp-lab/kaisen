@@ -55,7 +55,7 @@ export function createBrowserMissionPilot() {
     const targets = [...enemies, ...ships].filter(target => target.health > 0);
     const nearest = targets.slice().sort((a, b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
     const pick = nearest?.kind === 'aircraft' ? nearest : targets.filter(target => target.kind === 'ship').sort((a, b) => a.health - b.health || player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
-    const healTarget = player.health < 95 ? enemies.filter(e => e.health > 0 && e.generation === 'reinforcement').sort((a,b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0] : null;
+    const healTarget = player.health < player.maxHealth * .95 ? enemies.filter(e => e.health > 0 && e.generation === 'reinforcement').sort((a,b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0] : null;
     const current = targets.find(target => target.id === targetId);
     const air = enemies.filter(e => e.health > 0);
     const score = (enemy:Aircraft) => player.position.distanceTo(enemy.position) + forwardOf(player).angleTo(enemy.position.clone().sub(player.position)) * 220 + enemy.health * 3;
@@ -68,8 +68,8 @@ export function createBrowserMissionPilot() {
     const weakestShip = ships.filter(s=>s.health>0).sort((a,b)=>a.health-b.health || player.position.distanceTo(a.position)-player.position.distanceTo(b.position))[0];
     // Recover through the real reinforcement kill bonus before another naval pass.
     // Retain a recovery target until the observed HP has recovered.
-    if (player.health < 70) recovering = true;
-    else if (player.health >= 90) recovering = false;
+    if (player.health < player.maxHealth * .7) recovering = true;
+    else if (player.health >= player.maxHealth * .9) recovering = false;
     const recoveryTarget = current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
       : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
     const target = snapshot.mode === 'easy' ? airFirst : (recovering ? recoveryTarget : null) ?? weakestShip ?? (current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);

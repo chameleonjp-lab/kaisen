@@ -164,7 +164,7 @@ test('allied final ship kill is credited once even when the salvo has multiple r
 
 test('friendly aircraft crossings are harmless while enemy contact ends the player flight', () => {
   const state = quietState(), ally = state.allies[0]; ally.health = 100; ally.position.copy(state.player.position); ally.previous.copy(ally.position);
-  stepGame(state, neutral); assert.equal(state.player.health, 100); assert.equal(ally.health, 100); assert.equal(state.phase, 'playing');
+  stepGame(state, neutral); assert.equal(state.player.health, 80); assert.equal(ally.health, 100); assert.equal(state.phase, 'playing');
   const enemy = state.enemies[0]; enemy.health = 100; enemy.position.copy(state.player.position); enemy.previous.copy(enemy.position);
   stepGame(state, neutral); assert.equal(state.endReason, 'collision'); assert.equal(state.player.health, 0);
 });

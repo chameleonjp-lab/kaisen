@@ -947,3 +947,18 @@ p {
 #friendly-fire-result { font-size:11px; margin:4px 0; color:var(--muted); }
 .score-readout { margin-top:5px; font-size:11px; color:#f0e4ca; }
 @media(max-height:500px) { .settings-shell {padding-top:7px} .settings-header {min-height:44px} .settings-footer {padding-top:5px} }
+
+/* A separate, non-interactive lane keeps ally news from replacing reload/wave alerts. */
+.ally-announcements {
+  position: absolute; top: calc(100px + var(--safe-top)); right: max(18px, env(safe-area-inset-right));
+  width: min(220px, calc(100% - 164px)); white-space: pre-line; text-align: right;
+  font-size: 11px; line-height: 1.65; color: #cef0ff; text-shadow: 0 1px 4px #001c2c, 0 1px 9px #001c2c;
+  pointer-events: none;
+}
+.ally-announcements:not(:empty) { background: #082637b8; border-radius: 4px; padding: 5px 7px; }
+.ally-report { margin-top: 16px; text-align: left; color: #c6dce3; font-size: 11px; line-height: 1.8; }
+.ally-report summary { cursor: pointer; min-height: 44px; padding: 10px 0; }
+#ally-report-lines { white-space: pre-line; margin: 0; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .ally-announcements { top: calc(94px + var(--safe-top)); width: 205px; }
+}

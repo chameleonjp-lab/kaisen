@@ -9,6 +9,7 @@ import {
 import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
+import { AllyAnnouncements } from "./ally-announcements";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
 import type { GameEvent, GameMode, GameState } from "./types";
@@ -29,6 +30,7 @@ let graphicsReady = false;
 let contextLost = false;
 const audio = new FlightAudio();
 audio.enabled = false;
+const allyAnnouncements = new AllyAnnouncements();
 const buttons = {
     fire: el<HTMLButtonElement>("fire"),
     loop: el<HTMLButtonElement>("loop"),
@@ -158,6 +160,8 @@ function begin() {
     return;
   generation++;
   announcementUntil = 0; announcementPriority = 0;
+  allyAnnouncements.clear();
+  el("ally-announcements").textContent = "";
   pendingLoop = false;
   audio.resetFlight();
   controls.clear();
@@ -179,6 +183,8 @@ function begin() {
   updateHUD();
 }
 function home() {
+  allyAnnouncements.clear();
+  el("ally-announcements").textContent = "";
   pendingLoop = false;
   generation++;
   audio.resetFlight();
@@ -252,6 +258,9 @@ function finish() {
   el("ally-kills").textContent =
     `${r.allyAircraftKills}機 · ${r.allyShipKills}隻`;
   el("survivors").textContent = `${r.alliesSurvived}機`;
+  const allySummary = allyAnnouncements.summary();
+  el("ally-report").hidden = allySummary.length === 0;
+  el("ally-report-lines").textContent = allySummary.join("\n");
 }
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
@@ -273,8 +282,9 @@ function updateHUD() {
   el("allies-count").textContent = String(
     state.allies.filter((p) => p.health > 0).length,
   );
-  el("health").textContent = String(Math.ceil(state.player.health));
-  el("health-bar").style.width = `${Math.max(0, state.player.health)}%`;
+  const healthPercent = Math.max(0, Math.min(100, state.player.health / state.player.maxHealth * 100));
+  el("health").textContent = String(Math.ceil(healthPercent));
+  el("health-bar").style.width = `${healthPercent}%`;
   el("altitude").textContent = `${Math.round(state.player.position.y)}m`;
   el("speed").textContent = `${Math.round(state.player.speed * 3.6)}km/h`;
   el("warning").hidden =
@@ -288,6 +298,8 @@ function updateHUD() {
         : "すぐ使える";
   el("flight-tip").hidden = state.elapsed > 8;
   if (state.elapsed > announcementUntil) el("announcement").textContent = "";
+  const allyText = allyAnnouncements.update(state.elapsed).join("\n");
+  if (el("ally-announcements").textContent !== allyText) el("ally-announcements").textContent = allyText;
 }
 function positionReloadStatus() {
   if (state.mode === "normal" && scene) {
@@ -340,6 +352,7 @@ function frame() {
     updateTimes.push(performance.now() - begin);
     if (updateTimes.length > 3600) updateTimes.shift();
     scene?.events(events, state.elapsed);
+    allyAnnouncements.record(events);
     for (const e of events) {
       const relates =
         e.owner === state.player.id || e.target === state.player.id;
@@ -348,12 +361,12 @@ function frame() {
       if (e.type === "reload-start") announce("弾切れ · 6秒後に再装填", 2);
       if (e.type === "reload-complete") announce("再装填完了", 1.5);
       if (e.type === "reinforcement") announce(`敵${e.amount ?? 0}機が復活 · 撃破でHP回復`, 4, 3);
-      if (e.type === "ally-respawn") announce("僚機が戦線へ復帰", 2, 1);
       if (e.type === "heal") announce(`復活敵撃破 · HP +${e.amount ?? 0}`, 2.5);
       if (
         e.type === "kill" &&
         e.target !== state.player.id &&
-        e.team === "friendly" && !state.allies.some(p => p.id === e.target)
+        e.team === "friendly" && e.targetTeam === "enemy" &&
+        (e.owner === state.player.id || e.targetKind === "ship")
       )
         announce(e.targetKind === "ship" ? "敵艦撃沈" : "敵機撃墜", 1.5);
     }
@@ -504,6 +517,7 @@ if (import.meta.env.DEV) {
           stats: state.stats,
           deathCause: state.deathCause,
           allyRespawnAt: state.allyRespawnAt,
+          allyActivity: allyAnnouncements.snapshot(),
           controlsInput: controls.peek(),
           settingsOpen: settings.isOpen,
           render: scene?.diagnostics(),
