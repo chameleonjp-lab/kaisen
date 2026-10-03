@@ -13,7 +13,7 @@ import { AllyAnnouncements } from "./ally-announcements";
 import { checkTorpedoRelease } from "./ordnance";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
-import type { GameEvent, GameMode, GameState } from "./types";
+import type { FlightInput, GameEvent, GameMode, GameState } from "./types";
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const node = document.getElementById(id);
@@ -88,6 +88,8 @@ let lastInterruption: { reason: string; gap: number; render: unknown } | null = 
 let renderStatus: "ready" | "pending" | "stalled" | "failed" = "ready";
 let frameIntervals: number[] = [];
 let updateTimes: number[] = [];
+let inputAudit: {tick:number;input:FlightInput}[] = [];
+let inputAuditSignature = "", inputAuditDropped = 0;
 
 for (const [id, allowBoth] of [["home-controls", true], ["pause-controls", false], ["result-controls", true]] as const) {
   const button = el<HTMLButtonElement>(id);
@@ -178,6 +180,7 @@ function begin() {
   lastFrame = 0;
   frameIntervals = [];
   updateTimes = [];
+  if (import.meta.env.DEV) { inputAudit=[];inputAuditSignature="";inputAuditDropped=0; }
   setScreen("playing");
   syncAudio();
   void audio.unlock().then(() => syncAudio());
@@ -354,6 +357,17 @@ function frame() {
     let first = true;
     const begin = performance.now();
     while (accumulator + 1e-9 >= FIXED_DT && state.phase === "playing") {
+      if (import.meta.env.DEV) {
+        // Record the input actually consumed by a fixed step. A later DOM read
+        // only bounds handler arrival and cannot reconstruct separate key/payload timing.
+        const consumed = { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo };
+        const signature = JSON.stringify(consumed);
+        if (signature !== inputAuditSignature) {
+          if (inputAudit.length < 20000) inputAudit.push({tick:state.tick+1,input:consumed});
+          else inputAuditDropped++;
+          inputAuditSignature=signature;
+        }
+      }
       stepGame(state, { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo }, FIXED_DT);
       events.push(...state.events);
       accumulator -= FIXED_DT;
@@ -523,9 +537,9 @@ try {
 // Development-only, deeply copied observation. No mutation or result injection API.
 if (import.meta.env.DEV) {
   Object.defineProperty(window, "__kaisenReadState", {
-    value: () =>
+    value: (includePerformanceHistory: boolean | 'audit' = true) =>
       JSON.parse(
-        JSON.stringify({
+        JSON.stringify(includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
           phase: state.phase,
           mode: state.mode,
           selectedMode,
@@ -557,12 +571,12 @@ if (import.meta.env.DEV) {
             voices: audio.activeEffectVoiceCount,
             sources: audio.activeEffectSourceCount,
           },
-          frameIntervals,
+          frameIntervals: includePerformanceHistory ? frameIntervals : undefined,
           lastFrameGap,
           lastInterruption,
           renderStatus,
           pauseReasons: [...pauseReasons],
-          updateTimes,
+          updateTimes: includePerformanceHistory ? updateTimes : undefined,
         }),
       ),
     configurable: true,

@@ -13,6 +13,13 @@ test('aircraft tracers keep CSS width at high DPR and orientation changes in act
   await expect.poll(async()=>(await read()).render.aircraftTracers.segments).toBeGreaterThanOrEqual(4);
   await page.locator('#pause').tap();await page.keyboard.up('Space');
   await expect.poll(async()=>(await read()).phase).toBe('paused');
+  const observation=await page.evaluate(()=>{
+    const full=(window as any).__kaisenReadState(),compact=(window as any).__kaisenReadState(false);
+    return {fullHasHistories:Array.isArray(full.frameIntervals)&&Array.isArray(full.updateTimes),
+      compactHasHistories:'frameIntervals' in compact||'updateTimes' in compact,
+      sameWorld:JSON.stringify([full.tick,full.player,full.enemies,full.ships,full.controlsInput])===JSON.stringify([compact.tick,compact.player,compact.enemies,compact.ships,compact.controlsInput])};
+  });
+  expect(observation).toEqual({fullHasHistories:true,compactHasHistories:false,sameWorld:true});
   await mkdir('test-results/evidence',{recursive:true});
   const records=[];
   for(const size of [{width:393,height:852},{width:852,height:393}]) {

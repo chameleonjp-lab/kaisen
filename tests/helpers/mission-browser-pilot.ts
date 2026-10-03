@@ -111,10 +111,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         }
       } else aim.addScaledVector(velocity, lead);
       const closing = -target.position.clone().sub(player.position).dot(forwardOf(target).multiplyScalar(target.speed).sub(forwardOf(player).multiplyScalar(player.speed))) / Math.max(1,distance);
-      // Once Easy has eliminated naval fire, a blanket 250m exit prevented
+      // Once naval fire is eliminated, a blanket 250m exit prevented
       // close firing on passing targets indefinitely. Keep real collision-course
       // dodges above and the 80m/low-altitude escape in the final air engagement.
-      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < ((snapshot.mode === 'normal' || weakestShip) && closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
+      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (weakestShip && closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
         extensionUntil = snapshot.tick + 180;
         waypoint = player.position.clone().addScaledVector(forwardOf(player), 500);
         waypoint.y = player.position.y > 400 && target.position.y > player.position.y ? player.position.y - 250 : Math.max(350, player.position.y + 250);

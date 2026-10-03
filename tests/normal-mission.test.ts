@@ -88,10 +88,10 @@ test('Easy bombing pilot counters retained downward steering with ordinary upwar
   assert.equal(JSON.stringify(s),before);
 });
 
-test('Easy final air engagement retains collision avoidance without fleeing every safe 250m pass', async()=>{
+test('final air engagement retains collision avoidance without fleeing every safe 250m pass in both modes', async()=>{
   const {updateQuaternion}=await import('../src/flight');
-  for(const offset of [0,60]) {
-    const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot();
+  for(const mode of ['easy','normal'] as const) for(const offset of [0,60]) {
+    const s=createGame(undefined,mode),pilot=createNormalMissionPilot();
     for(const ship of s.ships)ship.health=0;for(const enemy of s.enemies.slice(1))enemy.health=0;
     const enemy=s.enemies[0];s.player.position.set(0,500,0);enemy.position.set(offset,500,-190);
     enemy.yaw=Math.PI;enemy.speed=110;updateQuaternion(enemy);updateQuaternion(s.player);

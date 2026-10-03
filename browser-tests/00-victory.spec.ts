@@ -11,7 +11,7 @@ async function state(page: Page) {
 }
 async function pilotState(page: Page) {
   return page.evaluate(() => {
-    const {frameIntervals,updateTimes,...snapshot}=(window as any).__kaisenReadState();
+    const snapshot=(window as any).__kaisenReadState(false);
     // CI26's two 3,600-entry histories made each feedback message 156kB.
     // The pilot needs live entities/input, not a repeated performance archive.
     // Full snapshots remain in screenshots/final evidence; no game state changes.
@@ -55,7 +55,8 @@ test.afterEach(async ({ page }, info) => {
   const snapshot = await state(page).catch(() => null);
   await writeFile(
     "test-results/evidence/touch-victory-state.json",
-    JSON.stringify({ status: info.status, errors, snapshot, samples }, null, 2),
+    JSON.stringify({ status: info.status, errors, snapshot, samples,
+      consumedInputs:await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null) }, null, 2),
   );
   if (info.status !== "passed")
     await page
@@ -139,6 +140,9 @@ test("physical circular-stick inputs reach the victory screen", async ({
     touchPoints: [],
   });
   const result = await state(page);
+  const consumedInputs = await page.evaluate(()=>(window as any).__kaisenReadState('audit'));
+  expect(consumedInputs.dropped).toBe(0);expect(consumedInputs.entries[0].tick).toBe(1);
+  expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
   expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
   expect(payloadPresses, "Actual touch buttons launch the anti-ship payloads").toBeGreaterThan(0);
   expect(result.result?.outcome).toBe("victory");

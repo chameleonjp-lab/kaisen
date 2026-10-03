@@ -14,9 +14,11 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
+  const observePilot = () => page.evaluate(() => (window as any).__kaisenReadState(false));
   const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
   const origin = { x: 180, y: 500 };
   let payloadPresses = 0;
+  let consumedInputs: any = null;
   let fireHeld = false, accelerateHeld = false, brakeHeld = false, lastSample = -6, sawReload = false, completedReload = false, won = false;
   const samples: unknown[] = [];
   await page.goto('/');
@@ -27,10 +29,10 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   try {
     while (true) {
       if (lastSample >= 0) await page.waitForFunction(next => {
-        const state = (window as any).__kaisenReadState();
+        const state = (window as any).__kaisenReadState(false);
         return state.phase !== 'playing' || state.tick >= next;
       }, lastSample + 6, { polling: 'raf' });
-      const state = await read();
+      const state = await observePilot();
       expect(state.mode).toBe('normal');
       if (state.player.reloadTicksRemaining > 0) sawReload = true;
       else if (sawReload) completedReload = true;
@@ -64,6 +66,10 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     await page.keyboard.up('Space'); fireHeld = false; await page.keyboard.up('w'); await page.keyboard.up('s'); accelerateHeld = brakeHeld = false;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     const result = await read();
+    consumedInputs = await page.evaluate(()=>(window as any).__kaisenReadState('audit'));
+    expect(consumedInputs.dropped).toBe(0);
+    expect(consumedInputs.entries[0].tick).toBe(1);
+    expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
     expect(payloadPresses).toBeGreaterThan(0);
     expect(result.result?.outcome).toBe('victory');
     expect(result.enemies.every((target: any) => target.health <= 0)).toBe(true);
@@ -81,7 +87,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     await page.screenshot({ path: 'test-results/evidence/normal-result-victory.png' });
     await writeFile('test-results/evidence/normal-result-victory.json', JSON.stringify({
       note: 'Chromium touch emulation plus ordinary Space-key manual fire, W/S throttle, and simultaneous touch bomb-button input. Read-only snapshots, no world/health/time injection. Not iPhone hardware or human playability evidence.',
-      snapshot: await read(), samples, sawReload, completedReload, payloadPresses,
+      snapshot: await read(), samples, sawReload, completedReload, payloadPresses, consumedInputs,
     }, null, 2));
     won = true;
     await page.locator('#retry').tap();
@@ -97,6 +103,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     await mkdir('test-results/evidence', { recursive: true });
     await writeFile('test-results/evidence/normal-victory-route-state.json', JSON.stringify({
       won, sawReload, completedReload, errors, samples, snapshot: await read().catch(() => null),
+      consumedInputs: consumedInputs ?? await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null),
     }, null, 2));
     if (!won) await page.screenshot({ path: 'test-results/evidence/normal-victory-route-failure.png' }).catch(() => {});
   }
