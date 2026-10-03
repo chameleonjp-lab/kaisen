@@ -14,7 +14,7 @@
     <title>カイセン</title>
   </head>
   <body>
-    <main id="app" data-screen="home">
+    <main id="app" data-screen="home" data-mode="easy">
       <canvas id="flight" tabindex="0" aria-label="海上の航空戦闘画面"></canvas>
       <canvas id="markers" aria-hidden="true"></canvas>
       <div class="vignette" aria-hidden="true"></div>
@@ -46,13 +46,18 @@
               ><em>初期構成</em>
             </div>
           </div>
+          <fieldset class="mode-picker">
+            <legend>操作モード</legend>
+            <label><input type="radio" name="game-mode" value="easy" checked /><span>イージー</span></label>
+            <label><input type="radio" name="game-mode" value="normal" /><span>ノーマル</span></label>
+          </fieldset>
           <button id="start" class="primary" disabled>
             画面を準備しています
           </button>
           <p class="controls-guide">
-            <span>画面をドラッグ</span>で操縦<br />照準円内・1.2km以内へ自動射撃
-            · 右下で宙返り<br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復
+            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 右下で宙返り</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復
           </p>
+          <p id="keyboard-guide" class="keyboard-guide">キーボード：矢印で操縦 · Lで宙返り</p>
           <p id="startup-error" class="error" role="alert" hidden></p>
           <button id="reload" class="secondary" hidden>再読み込み</button>
         </div>
@@ -66,7 +71,7 @@
       <section id="hud" aria-label="飛行中の情報" hidden>
         <div class="hud-top">
           <div class="time-block">
-            <span>作戦経過</span><strong id="timer">00:00.00</strong>
+            <span>作戦経過 · <b id="hud-mode">イージー</b></span><strong id="timer">00:00.00</strong>
           </div>
           <div class="targets">
             <div>敵機 <b id="enemy-count">5</b><small id="enemy-total">/ 5</small></div>
@@ -105,9 +110,10 @@
             ><small id="loop-status">すぐ使える</small>
           </button>
         </div>
-        <div hidden>
-          <button id="fire">射撃</button><button id="accelerate">加速</button
-          ><button id="brake">減速</button>
+        <div id="normal-controls" hidden>
+          <button id="fire" class="flight-button fire-button" aria-label="射撃（長押し）">射撃</button>
+          <button id="accelerate" class="flight-button throttle-button" aria-label="加速（長押し）">加速</button>
+          <button id="brake" class="flight-button throttle-button" aria-label="減速（長押し）">減速</button>
         </div>
       </section>
       <section
@@ -137,6 +143,7 @@
         <div class="panel result-panel">
           <p id="result-kicker" class="eyebrow">MISSION REPORT</p>
           <h2 id="result-title">作戦終了</h2>
+          <p id="result-mode" class="mode-label">イージー</p>
           <p id="result-reason"></p>
           <div class="result-time">
             <span id="result-time-label">経過時間</span

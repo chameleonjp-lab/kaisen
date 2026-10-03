@@ -254,10 +254,17 @@ export function stepNavalGuns(ship: NavalShip, friendlies: readonly Aircraft[], 
     gun.cooldown = Math.max(-dt, gun.cooldown - dt);
     let target = friendlies.find(p => p.id === gun.targetId), aim = target ? aimFor(ship, definition, gun, target) : null;
     if (!aim || (tick + index) % 12 === 0) {
+      const currentTarget = target, currentAim = aim;
       const candidates = friendlies.filter(p => p.health > 0).slice().sort((a, b) =>
         a.position.distanceToSquared(ship.position) - b.position.distanceToSquared(ship.position) || a.id - b.id);
       target = undefined; aim = null;
       for (const candidate of candidates) { const solution = aimFor(ship, definition, gun, candidate); if (solution) { target = candidate; aim = solution; break; } }
+      // Keep a legal firing solution through small distance crossings. Re-aim only
+      // when another target is at least 20% closer; invalid targets release immediately.
+      if (currentTarget && currentAim && target && target.id !== currentTarget.id &&
+          target.position.distanceToSquared(ship.position) > .8 ** 2 * currentTarget.position.distanceToSquared(ship.position)) {
+        target = currentTarget; aim = currentAim;
+      }
       gun.targetId = target?.id ?? null;
     }
     if (!aim || !target) continue;

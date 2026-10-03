@@ -37,7 +37,7 @@ function emit(state: GameState, type: GameEvent['type'], position: Vector3, owne
     if (type !== 'end' && type !== 'kill') return;
     state.events.shift();
   }
-  state.events.push({ id: meta.nextEventId++, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, team });
+  state.events.push({ id: meta.nextEventId++, tick: state.tick, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, team });
 }
 
 export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | GameMode = {}): GameState {

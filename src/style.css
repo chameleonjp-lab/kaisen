@@ -148,7 +148,7 @@ p {
 }
 .briefing {
   margin-top: auto;
-  padding-top: clamp(64px, 19vh, 180px);
+  padding-top: clamp(24px, 8vh, 70px);
   width: 100%;
   max-width: 420px;
   align-self: center;
@@ -631,7 +631,7 @@ p {
     margin-top: 20px;
   }
   .briefing {
-    padding-top: 60px;
+    padding-top: 24px;
   }
   .home-screen {
     padding-left: 22px;
@@ -805,3 +805,68 @@ p {
 }
 .ammo { margin-top: 7px; font-size: .65rem; color: #e1ded0; }
 .ammo b { font-variant-numeric: tabular-nums; color: #fff0c2; }
+
+.mode-picker {
+  display: flex;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  margin: 0 0 12px;
+  min-width: 0;
+}
+.mode-picker legend { font-size: 11px; color: var(--muted); margin-bottom: 7px; }
+.mode-picker label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #abc6c55c;
+  border-radius: 3px;
+  background: #071e2b80;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mode-picker label:has(input:checked) { border-color: var(--gold); color: #ffedc3; background: #e4c88b1c; }
+.mode-picker input { margin: 0; accent-color: var(--gold); }
+.mode-picker label:focus-within { outline: 3px solid #ffe2a4; outline-offset: 2px; }
+.keyboard-guide { color: var(--muted); text-align: center; font-size: 10px; line-height: 1.8; margin: 8px 0; }
+#hud-mode { font-weight: 500; letter-spacing: 0; }
+.panel .mode-label { color: var(--gold); margin: -6px 0 14px; }
+.flight-button {
+  position: absolute;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 1px solid #e4c88b99;
+  background: radial-gradient(circle at 50% 20%, #ecd7a52b, #112e3fe6);
+  color: #f2e0b5;
+  touch-action: none;
+  user-select: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.flight-button[aria-pressed="true"], .flight-button:active { background: #d8c59366; }
+.fire-button { right: max(22px, env(safe-area-inset-right)); bottom: calc(22px + var(--safe-bottom)); width: 90px; height: 90px; }
+.throttle-button { left: max(22px, env(safe-area-inset-left)); width: 72px; height: 72px; }
+#accelerate { bottom: calc(22px + var(--safe-bottom)); }
+#brake { bottom: calc(104px + var(--safe-bottom)); }
+#app[data-mode="normal"] .bottom-controls { right: max(22px, env(safe-area-inset-right)); bottom: calc(122px + var(--safe-bottom)); }
+#app[data-mode="normal"] .loop-button { width: 72px; height: 72px; margin-left: auto; }
+#app[data-mode="normal"] .sound-button { position: fixed; bottom: calc(22px + var(--safe-bottom)); left: calc(50% - 28.5px); }
+#app[data-mode="normal"] .flight-tip { left: 104px; bottom: calc(79px + var(--safe-bottom)); max-width: calc(100% - 230px); }
+#app[data-mode="normal"] .announcement { top: calc(68px + var(--safe-top)); bottom: auto; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .mode-picker { margin-bottom: 8px; }
+  .mode-picker legend { margin-bottom: 3px; }
+  .fire-button { bottom: calc(12px + var(--safe-bottom)); width: 64px; height: 64px; }
+  .throttle-button { bottom: calc(12px + var(--safe-bottom)) !important; width: 60px; height: 60px; }
+  #brake { left: calc(max(22px, env(safe-area-inset-left)) + 70px); }
+  #app[data-mode="normal"] .bottom-controls { bottom: calc(12px + var(--safe-bottom)); right: calc(max(22px, env(safe-area-inset-right)) + 74px); }
+  #app[data-mode="normal"] .loop-button { width: 64px; height: 64px; }
+  #app[data-mode="normal"] .sound-button { bottom: calc(12px + var(--safe-bottom)); }
+  #app[data-mode="normal"] .flight-tip { left: 165px; bottom: 65px; max-width: calc(100% - 330px); }
+  #app[data-mode="normal"] .announcement { bottom: auto; }
+}

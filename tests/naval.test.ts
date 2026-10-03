@@ -58,6 +58,44 @@ test('turret movement, including dispersion and branch-cut crossings, never exce
   }
 });
 
+test('legal AA targets survive near-distance crossings but a target 20% closer wins the next decision', () => {
+  const ship = shipAtOrigin(), current = targetAt(700, 180, -200, 2), challenger = targetAt(720, 180, 200, 1);
+  const index = NAVAL_MOUNTS.findIndex(m => m.id === 'heavy-starboard-2'), gun = ship.guns[index];
+  const decisionTick = (12 - index % 12) % 12;
+  stepNavalGuns(ship, [challenger, current], 0, DT);
+  assert.equal(gun.targetId, current.id);
+  // The closer aircraft has the smaller ID too: neither sort order nor a minor
+  // distance advantage should discard the current mount's finite-speed tracking.
+  challenger.position.x = 690;
+  for (let tick = decisionTick; tick < decisionTick + 60; tick += 12) {
+    stepNavalGuns(ship, tick % 24 ? [current, challenger] : [challenger, current], tick, DT);
+    assert.equal(gun.targetId, current.id);
+  }
+  challenger.position.copy(current.position).multiplyScalar(.8);
+  stepNavalGuns(ship, [current, challenger], decisionTick + 60, DT);
+  assert.equal(gun.targetId, challenger.id, '20% distance boundary is inclusive');
+});
+
+test('AA retention immediately releases dead, out-of-range and out-of-arc targets', () => {
+  for (const invalidate of [
+    (p: ReturnType<typeof targetAt>) => { p.health = 0; },
+    (p: ReturnType<typeof targetAt>) => { p.position.set(4000, 180, 0); },
+    (p: ReturnType<typeof targetAt>) => { p.position.set(-500, 180, 0); },
+  ]) {
+    const ship = shipAtOrigin(), current = targetAt(500, 180, 0, 1), alternative = targetAt(700, 180, 200, 2);
+    const index = NAVAL_MOUNTS.findIndex(m => m.id === 'heavy-starboard-2'), gun = ship.guns[index];
+    stepNavalGuns(ship, [alternative, current], 0, DT); assert.equal(gun.targetId, current.id);
+    invalidate(current);
+    const nonDecisionTick = (13 - index % 12) % 12;
+    assert.notEqual((nonDecisionTick + index) % 12, 0);
+    stepNavalGuns(ship, [current, alternative], nonDecisionTick, DT);
+    assert.equal(gun.targetId, alternative.id);
+    alternative.health = 0;
+    stepNavalGuns(ship, [current, alternative], nonDecisionTick, DT);
+    assert.equal(gun.targetId, null);
+  }
+});
+
 test('same-tick twin/triple volleys originate at all real barrel ends without phantom grouped rounds', () => {
   const ship = shipAtOrigin(), target = targetAt(700);
   const kinds = new Set<string>();

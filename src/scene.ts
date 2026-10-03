@@ -24,10 +24,11 @@ import {
 } from "three";
 import { AircraftFactory, type AircraftVisual } from "./aircraft";
 import { targetAimPoint } from "./flight-assist";
+import { projectGunSight } from "./gun-sight";
 import { AircraftBatchFactory } from "./aircraft-batch";
 import { ShipFactory } from "./ships";
 import { RenderQueue } from "./render-queue";
-import { MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
+import { FIXED_DT, MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
 import { createOceanGeometry, oceanAnchor, OCEAN_GLSL } from "./ocean";
 import {
   FLIGHT_FOV,
@@ -38,7 +39,9 @@ import {
 import { Scene } from "three";
 import type { Aircraft, GameEvent, GameState } from "./types";
 
-const CAPACITY = 512;
+const EFFECT_CAPACITY = 240;
+const NAVAL_FLASH_CAPACITY = 252; // All 36 AA barrels on the maximum seven ships.
+const POINT_CAPACITY = EFFECT_CAPACITY + NAVAL_FLASH_CAPACITY + MAX_BULLETS;
 const TRACER_CAPACITY = MAX_BULLETS;
 const seaVertex = `
 uniform float uTime;
@@ -94,6 +97,7 @@ interface Particle {
   life: number;
   color: Color;
   size: number;
+  gravity?: number;
 }
 export class KaisenScene {
   readonly renderer: WebGLRenderer;
@@ -134,11 +138,12 @@ export class KaisenScene {
   private tracerColors = new Float32Array(TRACER_CAPACITY * 6);
   private tracers: LineSegments;
   private particleGeometry = new BufferGeometry();
-  private particlePositions = new Float32Array(240 * 3);
-  private particleColors = new Float32Array(240 * 3);
-  private particleSizes = new Float32Array(240);
-  private particleOpacity = new Float32Array(240);
+  private particlePositions = new Float32Array(POINT_CAPACITY * 3);
+  private particleColors = new Float32Array(POINT_CAPACITY * 3);
+  private particleSizes = new Float32Array(POINT_CAPACITY);
+  private particleOpacity = new Float32Array(POINT_CAPACITY);
   private particles: Particle[] = [];
+  private navalFlashes: Particle[] = [];
   private points: Points;
   private lastEvent = 0;
   private lastTime = 0;
@@ -218,7 +223,7 @@ export class KaisenScene {
         depthWrite: false,
         vertexColors: true,
         vertexShader:
-          "attribute float size;attribute float opacity;varying vec3 vColor;varying float vAlpha;void main(){vColor=color;vAlpha=opacity;vec4 p=modelViewMatrix*vec4(position,1.);gl_PointSize=clamp(size*450./max(1.,-p.z),1.,80.);gl_Position=projectionMatrix*p;}",
+          "attribute float size;attribute float opacity;varying vec3 vColor;varying float vAlpha;void main(){vColor=color;vAlpha=opacity;vec4 p=modelViewMatrix*vec4(position,1.);gl_PointSize=size<0.?-size:clamp(size*450./max(1.,-p.z),1.,80.);gl_Position=projectionMatrix*p;}",
         fragmentShader:
           "varying vec3 vColor;varying float vAlpha;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(vColor,pow(1.-d,1.7)*.8*vAlpha);}",
       }),
@@ -314,6 +319,7 @@ export class KaisenScene {
       this.scene.add(visual);
     }
     this.particles = [];
+    this.navalFlashes = [];
     this.wrecks.clear();
     this.lastEvent = 0;
     this.lastTime = state.elapsed;
@@ -324,6 +330,17 @@ export class KaisenScene {
     for (const e of events) {
       if (e.id <= this.lastEvent) continue;
       this.lastEvent = e.id;
+      if (e.type === "shot") {
+        const ship = this.current?.ships.find((s) => s.id === e.owner);
+        const born = (e.tick ?? Math.round(time / FIXED_DT)) * FIXED_DT;
+        // One flash per emitted barrel. No idle turret flashes or old shots replayed
+        // after a slow render frame; this never generates projectiles or damage.
+        if (ship && time - born < .16) this.navalFlashes.push({
+          p: e.position.clone(), v: ship.velocity.clone(), born, life: .16,
+          color: new Color(0xffedb0), size: 5, gravity: 0,
+        });
+        continue;
+      }
       if (e.type !== "hit" && e.type !== "kill" && e.type !== "splash")
         continue;
       if (
@@ -378,8 +395,11 @@ export class KaisenScene {
         });
       }
     }
-    if (this.particles.length > 240)
-      this.particles.splice(0, this.particles.length - 240);
+    if (this.particles.length > EFFECT_CAPACITY)
+      this.particles.splice(0, this.particles.length - EFFECT_CAPACITY);
+    this.navalFlashes = this.navalFlashes.filter(p => time - p.born < p.life);
+    if (this.navalFlashes.length > NAVAL_FLASH_CAPACITY)
+      this.navalFlashes.splice(0, this.navalFlashes.length - NAVAL_FLASH_CAPACITY);
   }
   render(state: GameState, showHUD: boolean, presentationDt = 0) {
     if (this.disposed) return false;
@@ -465,18 +485,31 @@ export class KaisenScene {
     this.particles = this.particles.filter(
       (p) => this.visualTime - p.born < p.life,
     );
-    for (let i = 0; i < this.particles.length; i++) {
-      const p = this.particles[i],
+    this.navalFlashes = this.navalFlashes.filter(p => this.visualTime - p.born < p.life);
+    const effects = [...this.particles, ...this.navalFlashes];
+    for (let i = 0; i < effects.length; i++) {
+      const p = effects[i],
         a = this.visualTime - p.born,
         pos = p.p.clone().addScaledVector(p.v, a);
-      pos.y -= a * a * 4;
+      pos.y -= a * a * (p.gravity ?? 4);
       const fade = 1 - a / p.life;
       this.particlePositions.set([pos.x, pos.y, pos.z], i * 3);
       this.particleColors.set([p.color.r, p.color.g, p.color.b], i * 3);
       this.particleOpacity[i] = fade;
       this.particleSizes[i] = p.size * (1 + a * 0.4);
     }
-    this.particleGeometry.setDrawRange(0, this.particles.length);
+    let pointCount = effects.length;
+    // Small screen-size light cores make the existing AA trajectories legible.
+    // Every point is a real live AA round and remains depth-tested by the scene.
+    for (const bullet of state.bullets) {
+      if (bullet.kind !== "aa") continue;
+      this.particlePositions.set(bullet.position.toArray(), pointCount * 3);
+      this.particleColors.set([1, .64, .22], pointCount * 3);
+      this.particleOpacity[pointCount] = .9;
+      this.particleSizes[pointCount] = -2.4;
+      pointCount++;
+    }
+    this.particleGeometry.setDrawRange(0, pointCount);
     for (const a of Object.values(this.particleGeometry.attributes))
       a.needsUpdate = true;
     this.renderer.render(this.scene, this.camera);
@@ -491,24 +524,37 @@ export class KaisenScene {
     c.shadowBlur = 0;
     c.clearRect(0, 0, w, h);
     if (!show) return;
-    const radius = Math.min(w, h) * 0.135;
+    const sight = state.mode === "normal" ? this.gunSight(state) : { x: w / 2, y: h / 2 };
+    const radius = state.mode === "normal" ? 13 : Math.min(w, h) * 0.135;
     c.strokeStyle = "rgba(243,236,210,.60)";
     c.lineWidth = 1;
     c.beginPath();
-    c.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
+    c.arc(sight.x, sight.y, radius, 0, Math.PI * 2);
+    if (state.mode === "normal") {
+      c.moveTo(sight.x - 19, sight.y); c.lineTo(sight.x - 8, sight.y);
+      c.moveTo(sight.x + 8, sight.y); c.lineTo(sight.x + 19, sight.y);
+      c.moveTo(sight.x, sight.y - 19); c.lineTo(sight.x, sight.y - 8);
+      c.moveTo(sight.x, sight.y + 8); c.lineTo(sight.x, sight.y + 19);
+      // A dark outline keeps the manual bore sight readable over bright sky/sea.
+      c.strokeStyle = "rgba(3,25,39,.9)";
+      c.lineWidth = 4;
+      c.stroke();
+      c.strokeStyle = "#fff1d2";
+      c.lineWidth = 1.5;
+    }
     c.stroke();
     if (state.player.reloadTicksRemaining > 0) {
       const progress = 1 - state.player.reloadTicksRemaining / PLAYER_RELOAD_TICKS;
       c.strokeStyle = "rgba(7,30,43,.8)";
       c.lineWidth = 5;
-      c.beginPath(); c.arc(w / 2, h / 2, radius + 7, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.arc(sight.x, sight.y, radius + 7, 0, Math.PI * 2); c.stroke();
       c.strokeStyle = "#ffd27a";
       c.lineWidth = 3;
-      c.beginPath(); c.arc(w / 2, h / 2, radius + 7, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2); c.stroke();
+      c.beginPath(); c.arc(sight.x, sight.y, radius + 7, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2); c.stroke();
       c.lineWidth = 1;
     }
     c.fillStyle = "#faf4da";
-    c.fillRect(w / 2 - 1, h / 2 - 1, 2, 2);
+    c.fillRect(sight.x - 1, sight.y - 1, 2, 2);
     const targets = [...state.allies, ...state.enemies, ...state.ships];
     c.shadowColor = "rgba(0,20,30,.9)";
     c.shadowBlur = 3;
@@ -629,6 +675,9 @@ export class KaisenScene {
     c.fillText("2.4km", 0, r + 13);
     c.restore();
   }
+  gunSight(state: GameState) {
+    return projectGunSight(state.player, [...state.enemies, ...state.ships], this.width, this.height);
+  }
   diagnostics() {
     return {
       queue: this.renderQueue.diagnostics(performance.now()),
@@ -637,6 +686,7 @@ export class KaisenScene {
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
       particles: this.particles.length,
+      navalFlashes: this.navalFlashes.length,
       planes: this.planes.size,
       ships: this.fleet.size,
       width: this.width,

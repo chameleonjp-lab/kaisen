@@ -16,6 +16,11 @@ async function started(page: Page) {
 }
 async function capture(page: Page, name: string, inspectPausedScene = false) {
   await mkdir("test-results/evidence", { recursive: true });
+  if (inspectPausedScene) {
+    const submitted = (await state(page)).render.queue.submittedCount;
+    await expect.poll(async () => (await state(page)).render.queue.completedCount)
+      .toBeGreaterThanOrEqual(submitted + 1);
+  }
   await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({
     note: inspectPausedScene ? "Real-input gameplay, explicitly paused. Only pause menu hidden for this screenshot; camera/world unchanged." : "Unmodified gameplay screen",
     snapshot: await state(page),
