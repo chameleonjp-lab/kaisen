@@ -4,7 +4,7 @@ import {
   ShaderMaterial, Vector3, type Material,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CAPITAL_SHIP, NAVAL_HULL_BOTTOM, NAVAL_HULL_BOTTOM_INSET, NAVAL_HULL_SECTIONS, NAVAL_MOUNTS, NAVAL_PLATFORM_PARTS, NAVAL_WEAPONS, navalBarrelOffset } from './naval';
+import { CAPITAL_SHIP, NAVAL_GUN_HOUSE_TRIANGLES, NAVAL_GUN_HOUSE_VERTICES, NAVAL_HULL_BOTTOM, NAVAL_HULL_BOTTOM_INSET, NAVAL_HULL_SECTIONS, NAVAL_MOUNTS, NAVAL_PLATFORM_PARTS, NAVAL_STRUCTURE_PARTS, NAVAL_WEAPONS, navalBarrelOffset } from './naval';
 import type { Ship } from './types';
 import { FIXED_DT } from './mission';
 import { OCEAN_GLSL } from './ocean';
@@ -111,6 +111,14 @@ void main(){
  #include <colorspace_fragment>
 }`;
 
+/** Angular gun house with a sloped face, normalized to exact unit XYZ bounds. */
+function createGunHouseGeometry(): BufferGeometry {
+  const geometry = new BufferGeometry(); geometry.setAttribute('position', new Float32BufferAttribute(NAVAL_GUN_HOUSE_VERTICES, 3));
+  geometry.setIndex([...NAVAL_GUN_HOUSE_TRIANGLES]);
+  // Flat armor panels, with one shared gun-house batch for all mount sizes.
+  const flat = geometry.toNonIndexed(); geometry.dispose(); flat.computeVertexNormals(); return flat;
+}
+
 /** Shared static geometry, gun batches and one fixed damage batch; every barrel is real. */
 export class ShipFactory {
   private geometries: BufferGeometry[] = [];
@@ -128,7 +136,7 @@ export class ShipFactory {
   private stripe = this.material(0xc2bfab, .74, .02);
   private box = this.keep(new BoxGeometry(1, 1, 1));
   private cylinder = this.keep(new CylinderGeometry(1, 1, 1, 10));
-  private turret = this.keep(new CylinderGeometry(.91, 1, 1, 8));
+  private turret = this.keep(createGunHouseGeometry());
   private barrel = this.keep(new CylinderGeometry(1, 1, 1, 6));
   private wakeGeometry = this.keep(createFoamGeometry());
   private damageGeometry = this.keep(new IcosahedronGeometry(1, 1));
@@ -165,36 +173,37 @@ export class ShipFactory {
     hullIndices.push(0, 1, 2, 2, 1, 3, last, last + 2, last + 1, last + 1, last + 2, last + 3);
     for (const [indices, material] of [[hullIndices, this.hull], [deckIndices, this.deck]] as const) {
       const geometry = new BufferGeometry(); geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
-      geometry.setIndex(indices); geometry.computeVertexNormals(); root.add(new Mesh(this.keep(geometry), material));
+      geometry.setIndex(indices); geometry.computeVertexNormals();
+      const mesh = new Mesh(this.keep(geometry), material); mesh.name = material === this.hull ? 'iowa-hull' : 'iowa-deck'; root.add(mesh);
     }
-    // The solid envelopes are shared with naval.ts. Insets and layered platforms refine the silhouette.
-    this.part(root, this.box, this.structure, [0, 13.5, 8.5], [18, 9, 67]);
-    this.part(root, this.box, this.structure, [0, 26, -16], [14, 16, 16]);
-    this.part(root, this.box, this.structure, [0, 35, -16], [10, 4, 12]);
-    this.part(root, this.box, this.structure, [0, 31, -16], [21, 4, 10]);
-    for (const y of [21, 25, 29, 33]) {
-      this.part(root, this.box, this.structure, [0, y, -16], [16.2, .5, 17]);
-      this.part(root, this.box, this.dark, [0, y - 1, -24.06], [12.6, .62, .16]);
+    // Long, low deckhouses, a forward fire-control tower, and two separated funnels.
+    for (const part of NAVAL_STRUCTURE_PARTS) {
+      this.part(root, part.shape === 'cylinder' ? this.cylinder : this.box, this.structure, part.position, part.size);
     }
-    // One large exhaust trunk, one aft director, a compact tripod mast and cross tree.
-    this.part(root, this.cylinder, this.structure, [0, 24, 8], [5, 12, 8]);
-    this.part(root, this.cylinder, this.dark, [0, 29.7, 8], [5.02, .6, 8.02]);
-    this.part(root, this.box, this.structure, [0, 23, 32.5], [8, 10, 7]);
-    this.part(root, this.cylinder, this.gun, [0, 34, 23], [.34, 16, .34]);
-    this.part(root, this.box, this.gun, [0, 39, 23], [17, .35, .45]);
-    this.part(root, this.box, this.stripe, [0, 41.5, 23], [2.4, .8, .6]);
-    for (const side of [-1, 1]) {
-      const leg = this.part(root, this.cylinder, this.gun, [side * 2.2, 29, 23], [.22, 14, .22]); leg.rotation.z = side * .25;
-      // Rails, anchor gear, aft handling rails. Pure geometry, no textures/network/assets.
-      for (const z of [-96, -42, 63, 98]) {
-        const railWidth = Math.abs(z) > 85 ? 11.5 : 17.9;
-        this.part(root, this.box, this.stripe, [side * railWidth, 10.1, z], [.16, .16, 14]);
-        for (const dz of [-6.5, 0, 6.5]) this.part(root, this.box, this.structure, [side * railWidth, 9.6, z + dz], [.13, 1.2, .13]);
+    for (const [z, top] of [[-2, 30], [34, 28]]) {
+      this.part(root, this.cylinder, this.dark, [0, top - .3, z], [4.22, .6, 6.02]);
+      for (const side of [-1, 1]) this.part(root, this.box, this.dark, [side * 4.05, top - 4, z], [.15, 3.1, 4]);
+    }
+    // Window bands and narrow platforms give human scale without a pagoda silhouette.
+    for (const [y, width, front] of [[22.2, 10.4, -32.6], [26.7, 9.3, -32.1]]) {
+      this.part(root, this.box, this.dark, [0, y, front], [width, .65, .13]);
+      for (let x = -4; x <= 4; x += 1.3) this.part(root, this.box, this.structure, [x, y, front - .08], [.15, .70, .08]);
+    }
+    // WWII lattice radar, directors and two masts; no modern missile/CIWS fittings.
+    for (const [z, base, height] of [[-14, 27, 15], [45, 22, 15]]) {
+      this.part(root, this.cylinder, this.gun, [0, base + height / 2, z], [.24, height, .24]);
+      this.part(root, this.box, this.gun, [0, base + height - 2.5, z], [10, .22, .25]);
+      for (const side of [-1, 1]) {
+        const leg = this.part(root, this.cylinder, this.gun, [side * 1.25, base + 4, z], [.14, 9, .14]); leg.rotation.z = side * .27;
       }
-      this.part(root, this.cylinder, this.dark, [side * 5, 9.5, -105], [1.1, .9, 1.1]);
-      this.part(root, this.box, this.dark, [side * 5, 9.15, -115], [.55, .18, 20]);
-      const handling = this.part(root, this.box, this.structure, [side * 9, 10.1, 106], [1.3, 1.0, 21]); handling.rotation.y = side * .55;
-      this.part(root, this.box, this.dark, [side * 6.5, 9.12, 106], [.25, .15, 28]);
+    }
+    for (const x of [-3, -1.5, 0, 1.5, 3]) this.part(root, this.box, this.gun, [x, 39.5, -14], [.12, 3.8, .15]);
+    for (const y of [37.6, 38.85, 40.1, 41.4]) this.part(root, this.box, this.gun, [0, y, -14], [6.2, .12, .15]);
+    for (const side of [-1, 1]) {
+      this.part(root, this.cylinder, this.dark, [side * 3.4, 9.5, -108], [1.0, .9, 1.0]);
+      this.part(root, this.box, this.dark, [side * 3.4, 9.15, -116], [.35, .18, 14]);
+      const handling = this.part(root, this.box, this.structure, [side * 6, 10.1, 108], [1.1, 1.0, 15]); handling.rotation.y = side * .35;
+      this.part(root, this.box, this.dark, [side * 5, 9.12, 106], [.25, .15, 24]);
     }
     // Human-scale guardrails follow the actual tapered deck, making a near pass legible.
     for (const side of [-1, 1]) {
@@ -209,18 +218,18 @@ export class ShipFactory {
           this.part(root, this.box, this.structure, [ax + dx * t, deckY + .5, az * L + dz * t], [.12, 1.0, .12]);
         }
       }
-      for (const z of [-12, 4, 22]) {
+      for (const z of [13]) {
         // Eight-metre boats and their cradles provide scale beside the large deckhouse.
-        this.part(root, this.cylinder, this.stripe, [side * 10.7, 11.3, z], [1.15, 1.2, 4]);
-        this.part(root, this.cylinder, this.dark, [side * 10.7, 11.94, z], [.75, .08, 3.2]);
-        for (const dz of [-2.3, 2.3]) this.part(root, this.box, this.structure, [side * 10.7, 10.1, z + dz], [2.8, 1.0, .5]);
+        this.part(root, this.cylinder, this.stripe, [side * 6.8, 19.7, z], [1.15, 1.2, 4]);
+        this.part(root, this.cylinder, this.dark, [side * 6.8, 20.34, z], [.75, .08, 3.2]);
+        for (const dz of [-2.3, 2.3]) this.part(root, this.box, this.structure, [side * 6.8, 19.0, z + dz], [2.8, 1.0, .5]);
       }
       for (const z of [-91, -39, 60, 94]) {
         this.part(root, this.box, this.dark, [side * 5, deckY + .16, z], [2.2, .32, 3.1]);
         this.part(root, this.box, this.structure, [side * 5, deckY + .4, z], [1.85, .20, 2.75]);
       }
-      // Four 1.7-metre bridge levels, with ladder rungs visible only on a close pass.
-      for (let y = 19; y < 34; y += .55) this.part(root, this.box, this.stripe, [side * 7.10, y, -14], [.12, .07, .8]);
+      // Human-height ladders on the forward tower.
+      for (let y = 19; y < 28; y += .55) this.part(root, this.box, this.stripe, [side * 5.60, y, -24], [.12, .07, .8]);
     }
     // The exact same platform/support definitions feed ship damage and gun self-occlusion.
     for (const part of NAVAL_PLATFORM_PARTS) {
@@ -315,8 +324,8 @@ export class ShipFactory {
       const kick = age >= 0 && age < .36 && !disabled ? Math.min(1, age / .04) * Math.pow(1 - age / .36, 2) : 0;
       const recoil = kick * (definition.weapon === 'heavy-aa' ? .42 : definition.weapon === 'light-aa' ? .11 : 1.1);
       this.position.set(...definition.pivot); this.position.y -= 1;
-      this.orientation.setFromAxisAngle(this.up, gun.yaw + Math.PI / 8);
-      this.scale.set(weapon.bodySize[0] / 2, weapon.bodySize[1], weapon.bodySize[2] / 2);
+      this.orientation.setFromAxisAngle(this.up, gun.yaw);
+      this.scale.set(...weapon.bodySize);
       this.matrix.compose(this.position, this.orientation, this.scale); visual.bodies.setMatrixAt(index, this.matrix);
       const shade = disabled ? .26 : .60 + .40 * Math.max(0, Math.min(1, gun.health / gun.maxHealth));
       visual.bodies.setColorAt(index, this.color.setRGB(shade, shade, shade));

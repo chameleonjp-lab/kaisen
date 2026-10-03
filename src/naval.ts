@@ -1,17 +1,35 @@
 import { Quaternion, Vector3 } from 'three';
 import type { Aircraft } from './types';
 
-/** Game-only, early-Yamato-inspired capital ship. Sources and limits: docs/NAVAL_REFERENCE.md. */
+/** Iowa-class proportions, with a reduced game AA fit. Sources/limits: docs/IOWA_REFERENCE.md. */
 export const NAVAL_GRAVITY = 9.80665;
-export const CAPITAL_SHIP = Object.freeze({ length: 263, width: 38.9, height: 42, deckHeight: 9 });
+export const CAPITAL_SHIP = Object.freeze({ length: 270.43, width: 32.97, height: 42, deckHeight: 9 });
 /** [longitudinal fraction, half-beam fraction]; shared exactly with the rendered hull. */
 export const NAVAL_HULL_SECTIONS: readonly (readonly [number, number])[] = Object.freeze([
-  [-.5, .01], [-.47, .10], [-.40, .28], [-.31, .41], [-.18, .49], [0, .5], [.27, .47], [.41, .37], [.48, .22], [.5, .14],
+  [-.5, .01], [-.46, .075], [-.39, .20], [-.30, .37], [-.19, .48], [-.07, .5], [.18, .5], [.33, .45], [.43, .32], [.48, .19], [.5, .11],
 ]);
 export const NAVAL_HULL_BOTTOM = -3;
 export const NAVAL_HULL_BOTTOM_INSET = .32;
 const RAD = Math.PI / 180;
 const EPS = 1e-8;
+/** Flat, sloped armor panels. Unit bounds are full XYZ dimensions, bow-facing is -Z. */
+export const NAVAL_GUN_HOUSE_VERTICES = Object.freeze(([-.5, .5] as const).flatMap(y =>
+  [[-.42, -.5], [.42, -.5], [.5, -.32], [.5, .32], [.30, .5], [-.30, .5], [-.5, .32], [-.5, -.32]]
+    .flatMap(([x, z]) => [x * (y > 0 ? .9 : 1), y, z * (y > 0 ? .9 : 1)])));
+export const NAVAL_GUN_HOUSE_TRIANGLES = Object.freeze([
+  ...Array.from({ length: 8 }, (_, i) => { const next = (i + 1) % 8; return [i, i + 8, next, next, i + 8, next + 8]; }).flat(),
+  ...Array.from({ length: 6 }, (_, i) => [0, i + 1, i + 2, 8, i + 10, i + 9]).flat(),
+]);
+/** Ten outward half-spaces from the same vertices used by the renderer, compiled once. */
+export const NAVAL_GUN_HOUSE_PLANES = Object.freeze([
+  [0, 1, 0, .5], [0, -1, 0, .5],
+  ...Array.from({ length: 8 }, (_, i) => {
+    const a = new Vector3().fromArray(NAVAL_GUN_HOUSE_VERTICES, i * 3);
+    const b = new Vector3().fromArray(NAVAL_GUN_HOUSE_VERTICES, (i + 8) * 3);
+    const c = new Vector3().fromArray(NAVAL_GUN_HOUSE_VERTICES, ((i + 1) % 8) * 3);
+    const normal = b.sub(a).cross(c.sub(a)).normalize(); return [...normal.toArray(), normal.dot(a)];
+  }),
+]);
 export type NavalWeaponKind = 'main' | 'secondary' | 'heavy-aa' | 'light-aa';
 export interface NavalWeapon {
   readonly kind: NavalWeaponKind; readonly caliberMm: number; readonly barrels: number;
@@ -23,18 +41,19 @@ export interface NavalWeapon {
   readonly bodySize: readonly [number, number, number];
 }
 export const NAVAL_WEAPONS: Readonly<Record<NavalWeaponKind, NavalWeapon>> = Object.freeze({
-  main: Object.freeze({ kind: 'main', caliberMm: 460, barrels: 3, muzzleSpeed: 780, roundsPerMinute: 1.8,
-    historicalMaxRange: 42000, range: 0, maxTargetAltitude: 0, life: 0, damage: 0,
-    magazine: 0, reloadSeconds: 0, dispersion: 0, barrelLength: 18, barrelRadius: .42, barrelSpacing: 2.8, bodySize: [15, 6, 17] as const }),
-  secondary: Object.freeze({ kind: 'secondary', caliberMm: 155, barrels: 3, muzzleSpeed: 0, roundsPerMinute: 0,
+  main: Object.freeze({ kind: 'main', caliberMm: 406.4, barrels: 3, muzzleSpeed: 0, roundsPerMinute: 0,
     historicalMaxRange: null, range: 0, maxTargetAltitude: 0, life: 0, damage: 0,
-    magazine: 0, reloadSeconds: 0, dispersion: 0, barrelLength: 7, barrelRadius: .20, barrelSpacing: 1.1, bodySize: [7, 3.8, 8] as const }),
+    magazine: 0, reloadSeconds: 0, dispersion: 0, barrelLength: 18, barrelRadius: .35, barrelSpacing: 2.6, bodySize: [12.5, 5.3, 14.5] as const }),
+  secondary: Object.freeze({ kind: 'secondary', caliberMm: 127, barrels: 2, muzzleSpeed: 0, roundsPerMinute: 0,
+    historicalMaxRange: null, range: 0, maxTargetAltitude: 0, life: 0, damage: 0,
+    magazine: 0, reloadSeconds: 0, dispersion: 0, barrelLength: 4.6, barrelRadius: .14, barrelSpacing: 1.1, bodySize: [5.8, 3.8, 6] as const }),
   'heavy-aa': Object.freeze({ kind: 'heavy-aa', caliberMm: 127, barrels: 2, muzzleSpeed: 720, roundsPerMinute: 10,
     historicalMaxRange: null, range: 2800, maxTargetAltitude: 2600, life: 4.5, damage: 4.8,
-    magazine: 0, reloadSeconds: 0, dispersion: .024, barrelLength: 4.6, barrelRadius: .14, barrelSpacing: 1.1, bodySize: [4.2, 2.7, 4.3] as const }),
-  'light-aa': Object.freeze({ kind: 'light-aa', caliberMm: 25, barrels: 3, muzzleSpeed: 900, roundsPerMinute: 220,
+    magazine: 0, reloadSeconds: 0, dispersion: .024, barrelLength: 4.6, barrelRadius: .14, barrelSpacing: 1.1, bodySize: [5.8, 3.8, 6] as const }),
+  // 120 rpm / four-round clips; game reload yields 82.5 rpm, retaining 4.4 HP/s per mount.
+  'light-aa': Object.freeze({ kind: 'light-aa', caliberMm: 40, barrels: 4, muzzleSpeed: 900, roundsPerMinute: 120,
     historicalMaxRange: null, range: 1250, maxTargetAltitude: 800, life: 1.7, damage: .8,
-    magazine: 15, reloadSeconds: 60 * 15 / 110 - 60 * 15 / 220, dispersion: .033, barrelLength: 1.5, barrelRadius: .065, barrelSpacing: .38, bodySize: [2.1, 1.4, 2.0] as const }),
+    magazine: 4, reloadSeconds: 10 / 11, dispersion: .033, barrelLength: 2.3, barrelRadius: .065, barrelSpacing: .42, bodySize: [2.6, 1.4, 2.4] as const }),
 });
 export interface NavalMountDefinition {
   readonly id: string; readonly weapon: NavalWeaponKind; readonly pivot: readonly [number, number, number];
@@ -50,14 +69,14 @@ function mount(id: string, weapon: NavalWeaponKind, pivot: readonly [number, num
 }
 /** All rendering, muzzle locations and mechanics use this one immutable layout. Bow is local -Z. */
 export const NAVAL_MOUNTS: readonly NavalMountDefinition[] = Object.freeze([
-  mount('main-fore-1', 'main', [0, 12.5, -80], 0),
-  mount('main-fore-2', 'main', [0, 16.5, -55], 0),
-  mount('main-aft', 'main', [0, 12.5, 77], Math.PI),
-  mount('secondary-fore', 'secondary', [0, 18, -31], 0),
-  mount('secondary-aft', 'secondary', [0, 17, 51], Math.PI),
-  ...([-1, 1] as const).map(side => mount(`secondary-${side < 0 ? 'port' : 'starboard'}`, 'secondary', [side * 13, 12.5, 2], -side * Math.PI / 2)),
-  ...([-1, 1] as const).flatMap(side => [-23, 18, 40].map((z, i) =>
-    mount(`heavy-${side < 0 ? 'port' : 'starboard'}-${i + 1}`, 'heavy-aa', [side * 17, 14.5, z], -side * Math.PI / 2))),
+  mount('main-fore-1', 'main', [0, 12.5, -75], 0),
+  mount('main-fore-2', 'main', [0, 16.5, -49], 0),
+  mount('main-aft', 'main', [0, 12.5, 80], Math.PI),
+  mount('secondary-fore', 'secondary', [-9, 18.5, -10], Math.PI / 2),
+  mount('secondary-aft', 'secondary', [9, 18.5, -10], -Math.PI / 2),
+  ...([-1, 1] as const).map(side => mount(`secondary-${side < 0 ? 'port' : 'starboard'}`, 'secondary', [side * 9, 18.5, 28], -side * Math.PI / 2)),
+  ...([-1, 1] as const).flatMap(side => [-28, 8, 44].map((z, i) =>
+    mount(`heavy-${side < 0 ? 'port' : 'starboard'}-${i + 1}`, 'heavy-aa', [side * 12.5, 14.5, z], -side * Math.PI / 2))),
   ...([-1, 1] as const).flatMap(side => [-18, -4, 12, 27].map((z, i) =>
     mount(`light-${side < 0 ? 'port' : 'starboard'}-${i + 1}`, 'light-aa', [side * 12, 22, z], -side * Math.PI / 2))),
 ]);
@@ -115,11 +134,26 @@ export interface NavalPlatformPart {
 function platform(shape: NavalPlatformPart['shape'], position: NavalPlatformPart['position'], size: NavalPlatformPart['size']): NavalPlatformPart {
   return Object.freeze({ shape, position: Object.freeze(position), size: Object.freeze(size) });
 }
+/** Major Iowa silhouette solids. The renderer and damage/self-occlusion share these volumes. */
+export const NAVAL_STRUCTURE_PARTS: readonly NavalPlatformPart[] = Object.freeze([
+  platform('box', [0, 12, 12], [16, 6, 100]),
+  platform('box', [0, 17, 10], [12, 4, 76]),
+  platform('box', [0, 20.5, -24], [11, 7, 17]),
+  platform('box', [0, 24.5, -25], [16, 1, 18]),
+  platform('box', [0, 26.5, -25], [10, 3, 14]),
+  platform('box', [0, 28.3, -25], [14, .6, 15]),
+  platform('box', [0, 31.5, -23], [6.2, 6, 8]),
+  platform('box', [0, 36, -23], [9.8, 3, 5]),
+  platform('cylinder', [0, 23.5, -2], [4.2, 13, 6]),
+  platform('cylinder', [0, 22.5, 34], [4.2, 11, 6]),
+  platform('box', [0, 21, 55], [7, 12, 9]),
+  platform('box', [0, 28, 55], [10, 2, 5]),
+]);
 /** Platform/support geometry shared with rendering; these are obstacles, not decorative-only fittings. */
 export const NAVAL_PLATFORM_PARTS: readonly NavalPlatformPart[] = Object.freeze(([-1, 1] as const).flatMap(side => [
-  ...[-23, 18, 40].flatMap(z => [
-    platform('cylinder', [side * 17, 11.9, z], [3, 2.7, 3]),
-    platform('box', [side * 12.5, 12, z], [10, 1, 5]),
+  ...[-28, 8, 44].flatMap(z => [
+    platform('cylinder', [side * 12.5, 11.9, z], [3, 2.7, 3]),
+    platform('box', [side * 9.5, 12, z], [6, 1, 5]),
   ]),
   ...[-18, -4, 12, 27].flatMap(z => [
     platform('cylinder', [side * 12, 20.3, z], [2.2, .7, 2.2]),
@@ -128,18 +162,13 @@ export const NAVAL_PLATFORM_PARTS: readonly NavalPlatformPart[] = Object.freeze(
   ]),
 ]));
 type NavalBox = readonly [readonly [number, number, number], readonly [number, number, number]];
-const PLATFORM_SAFETY_BOXES: readonly NavalBox[] = NAVAL_PLATFORM_PARTS.map(({ shape, position: [x, y, z], size: [sx, sy, sz] }) => {
+const SOLID_SAFETY_BOXES: readonly NavalBox[] = [...NAVAL_STRUCTURE_PARTS, ...NAVAL_PLATFORM_PARTS].map(({ shape, position: [x, y, z], size: [sx, sy, sz] }) => {
   const hx = shape === 'cylinder' ? sx : sx / 2, hz = shape === 'cylinder' ? sz : sz / 2;
   return [[x - hx, y - sy / 2, z - hz], [x + hx, y + sy / 2, z + hz]] as const;
 });
 /** Conservative safety boxes for visible deckhouse, bridge, funnel and AA platforms/supports. */
 export const NAVAL_OCCLUDERS: readonly (readonly [readonly [number, number, number], readonly [number, number, number]])[] = Object.freeze([
-  [[-9, 9, -25], [9, 18, 42]],
-  [[-7, 18, -24], [7, 37, -8]],
-  [[-10.5, 29, -21], [10.5, 33, -11]],
-  [[-5, 18, 0], [5, 30, 16]],
-  [[-4, 18, 29], [4, 28, 36]],
-  ...PLATFORM_SAFETY_BOXES,
+  ...SOLID_SAFETY_BOXES,
 ]);
 /** Broad phase encloses every physical platform and turret yaw, not only the hull beam. */
 export const NAVAL_COLLISION_BOUNDS = (() => {

@@ -4,6 +4,10 @@ export default defineConfig({
   timeout: 60000,
   expect: { timeout: 15000 },
   workers: 1,
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    { name: "webkit-ui", testMatch: /mobile-settings-ui\.spec\.ts/, use: { browserName: "webkit", launchOptions: {} } },
+  ],
   retries: 0,
   reporter: [
     ["list"],

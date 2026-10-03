@@ -3,6 +3,7 @@ import {test} from 'node:test';
 import {KaisenScene} from '../src/scene';
 import {createGame, startGame, stepGame} from '../src/simulation';
 import {FIXED_DT} from '../src/mission';
+import {MAX_NAVAL_SHOTS_PER_STEP} from '../src/naval';
 import type {GameEvent} from '../src/types';
 
 // Exercise the real event consumer without pretending a fake renderer proves pixels.
@@ -53,10 +54,11 @@ test('stale, aircraft and idle events cannot invent naval flashes; fixed pause t
 
 test('bounded flash storage shares a fixed particle batch and keeps the newest real events', () => {
   const {state, view} = effectConsumer();
-  const events: GameEvent[] = Array.from({length: 300}, (_, i) => ({
+  const events: GameEvent[] = Array.from({length: MAX_NAVAL_SHOTS_PER_STEP * 7 + 48}, (_, i) => ({
     id: i + 1, tick: 60, type: 'shot', owner: state.ships[0].id, position: state.ships[0].position.clone(),
   }));
   view.events(events, 1);
-  assert.equal(view.navalFlashes.length, 252);
+  assert.equal(view.navalFlashes.length, MAX_NAVAL_SHOTS_PER_STEP * 7);
+  assert.equal(view.navalFlashes.length, 308);
   assert.equal(view.particles.length, 1, 'one grouped muzzle-smoke plume for the same mount/tick volley');
 });

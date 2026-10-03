@@ -25,6 +25,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   await steerAndObserve(page,cdp,origin,0,0);
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);
+  await expect(page.locator('#bomb-ammo')).toHaveText('残り1発');
   await page.waitForFunction(()=>{const s=(window as any).__kaisenReadState();return s.player.payloadCooldown<=0;});
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);
   await expect.poll(async()=>(await read(page)).player.bombReloadTicks).toBeGreaterThan(0);

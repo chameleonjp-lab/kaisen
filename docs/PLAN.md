@@ -1,3 +1,7 @@
+# 現行の追加範囲（2026-10-04）
+
+PR9公開main8663af9bへの実機フィードバックは[REQUESTS.md](REQUESTS.md)のF01–F10が現在の作業範囲。アイオワ級の船型・AA構成は[IOWA_REFERENCE.md](IOWA_REFERENCE.md)、Easy発射補正の小幅増加は[EASY_ASSIST_TUNING.md](EASY_ASSIST_TUNING.md)。過去の263m船体、三連装25mm、25%/.020rad等の値はここで置換する。カメラ/飛行/ランキング条件は維持。以下は経緯を残す履歴。
+
 # 最新の追加採用範囲
 
 2026-10-03、公開main c63bff8以後の最新決定・未完了・実装段階は[NEXT_RELEASE.md](NEXT_RELEASE.md)、航空機の調整値と根拠は[AIRCRAFT_BALANCE.md](AIRCRAFT_BALANCE.md)。以下は初期計画からの履歴であり、旧「爆弾/魚雷を追加しない」「HP100」「180秒増援」等は最新採用/REQUESTSに置換されている。

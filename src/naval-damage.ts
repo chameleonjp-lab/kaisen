@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from 'three';
-import { CAPITAL_SHIP, NAVAL_MOUNTS, NAVAL_WEAPONS, segmentNavalHullEntry, shipCollisionBoxes } from './naval';
+import { CAPITAL_SHIP, NAVAL_GUN_HOUSE_PLANES, NAVAL_MOUNTS, NAVAL_WEAPONS, segmentNavalHullEntry, shipCollisionBoxes } from './naval';
 import type { Ship } from './types';
 
 export interface MountContact { index: number; fraction: number; }
@@ -33,23 +33,18 @@ export function exposedNavalMountPoint(ship: Ship, observer: Vector3): Vector3 |
   }
   return undefined;
 }
-/** Exact eight-sided tapered turret body used by ShipFactory, in hull-local space. */
+/** The same angular/sloped gun house as ShipFactory, in hull-local space. */
 export function segmentMountContact(start: Vector3, end: Vector3, ship: Pick<Ship, 'guns'>): MountContact | null {
   let first: MountContact | null = null;
   for (let index = 0; index < NAVAL_MOUNTS.length; index++) {
     const definition = NAVAL_MOUNTS[index], gun = ship.guns[index]; if (!gun) continue;
     const [width, height, length] = NAVAL_WEAPONS[definition.weapon].bodySize;
     const center = new Vector3(...definition.pivot); center.y -= 1;
-    const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -(gun.yaw + Math.PI / 8));
-    const a = start.clone().sub(center).applyQuaternion(rotation), b = end.clone().sub(center).applyQuaternion(rotation);
-    const planes: number[][] = [[0, 1, 0, height / 2], [0, -1, 0, height / 2]];
-    const c = Math.cos(Math.PI / 8);
-    for (let face = 0; face < 8; face++) {
-      const angle = (face + .5) * Math.PI / 4;
-      planes.push([Math.sin(angle) * 2 / width, c * .09 / height, Math.cos(angle) * 2 / length, c * .955]);
-    }
+    const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -gun.yaw);
+    const size = new Vector3(width, height, length);
+    const a = start.clone().sub(center).applyQuaternion(rotation).divide(size), b = end.clone().sub(center).applyQuaternion(rotation).divide(size);
     let enter = 0, exit = 1;
-    for (const [x, y, z, limit] of planes) {
+    for (const [x, y, z, limit] of NAVAL_GUN_HOUSE_PLANES) {
       const from = x * a.x + y * a.y + z * a.z - limit, to = x * b.x + y * b.y + z * b.z - limit;
       if (from > 0 && to > 0) { enter = 2; break; }
       if (from <= 0 && to <= 0) continue;

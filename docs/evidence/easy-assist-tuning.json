@@ -1,0 +1,2719 @@
+{
+  "recordedAtUtc": "2026-10-03T23:25:13Z",
+  "baseCommit": "8663af9b",
+  "baselineCorrection": {
+    "strength": 0.25,
+    "maxAngleRadians": 0.02,
+    "predictionGateRadians": 0.16
+  },
+  "candidateCorrection": {
+    "strength": 0.35,
+    "maxAngleRadians": 0.028,
+    "predictionGateRadians": 0.16
+  },
+  "scope": "Player Easy projectile launch only. Same prediction and auto-fire gate. Full source snapshot A/B differs in two constants only; product also updates its provenance comment. File hashes below identify the isolated A/B snapshots, not unrelated concurrent edits in the combined release candidate.",
+  "files": {
+    "src/flight.ts": {
+      "baselineSha256": "8fe62d521bc2cfa11b0ab8cb3c0609c54a3d80355eff15a72257eea1aa4770a5",
+      "candidateSha256": "8fe62d521bc2cfa11b0ab8cb3c0609c54a3d80355eff15a72257eea1aa4770a5"
+    },
+    "src/flight-view.ts": {
+      "baselineSha256": "1f9b7e040c2270de5838f24bad93c7ac1c75c7827ba3c1b58591ef6271a20363",
+      "candidateSha256": "1f9b7e040c2270de5838f24bad93c7ac1c75c7827ba3c1b58591ef6271a20363"
+    },
+    "src/gun-sight.ts": {
+      "baselineSha256": "436c9e7c6a6864513489de6d8172d85d97bd1bf685b60678890f848a9acd2b71",
+      "candidateSha256": "436c9e7c6a6864513489de6d8172d85d97bd1bf685b60678890f848a9acd2b71"
+    },
+    "src/input.ts": {
+      "baselineSha256": "ff2e83c8aabe1867aa3e0406c1c96b26f070756270f7f6547de0a5725af7a5fe",
+      "candidateSha256": "ff2e83c8aabe1867aa3e0406c1c96b26f070756270f7f6547de0a5725af7a5fe"
+    },
+    "src/simulation.ts": {
+      "baselineSha256": "881dd78a9b19d3ccd40a861afe073cec856550e480c5e5e620176e7f25ea0ca2",
+      "candidateSha256": "881dd78a9b19d3ccd40a861afe073cec856550e480c5e5e620176e7f25ea0ca2"
+    },
+    "src/mission.ts": {
+      "baselineSha256": "4de7d51c8cf48e06027984ecc9dffe57c90515412e9f14ca767517796629170f",
+      "candidateSha256": "4de7d51c8cf48e06027984ecc9dffe57c90515412e9f14ca767517796629170f"
+    },
+    "src/ammunition.ts": {
+      "baselineSha256": "a8cafceea6d20183f7257c2a4036d36a92feba830d5050d98fb9c9a6d5271370",
+      "candidateSha256": "a8cafceea6d20183f7257c2a4036d36a92feba830d5050d98fb9c9a6d5271370"
+    },
+    "src/aircraft-damage.ts": {
+      "baselineSha256": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83",
+      "candidateSha256": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83"
+    }
+  },
+  "unchangedFlightAssistFunctionSuffixSha256": "71f315af52e4be92410e7ef626fa3368a98f68afdb08512aaf3adbb4e3c8a329",
+  "currentFlightAssistSha256": "f94a3f642a44e3cb056e48f41c681dac4282c54ace1033f073a6eb4d15fc0d32",
+  "baseline": [
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.25,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9d66ee041df209207596e92cd430c341bd184ca8c821a55e03f94f1b83725924"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 174,
+        "cannon": 60
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9ce12858ab54ace9d7214ce93e666c6e4ede2a3d5652cd25cc95eebf05f5f0c7"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.4,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9e3baed0bf3cf5c3c2cdd3affa033794adcd501766dfc2fe506ed10b9f050c9c"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.4,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 158,
+        "cannon": 54
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "d4a9c0f1c182f5876eb6b2591c11727155bba36e80807ebca023f1045e34f238"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.55,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 10,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "770cae3c2b70bf2d7a1410f45e686720e29bf7437bab51d6077d33f59d5ef919"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 194,
+        "cannon": 66
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "b0e48f67624604e4c7b23a9d7034d43aede13718d08de4ded8f88bf2f0879c80"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.733333333333334,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "c8b55218a99ea03eea8ded401cfdd3840efdb723e5193d8338117349cad7f936"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 162,
+        "cannon": 56
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "61c62acd30a3e442deeefdb618492c0bf8e8186a96ee12b3a7c984ffa8827fd2"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.55,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "61c24362d1600cbc399ea2a6f51bf41da9f2b397246652c16b3549d37ae145bb"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 86.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 188,
+        "cannon": 64
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "7ca537135f5ed1cf593be64302dd89152bb2645366deea81a2a3f62f21df3811"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.78333333333333,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37477d8464aa1815c2a36ce64378958473a72d757f52ea0d53297ad7c711ff7c"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 4,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 182,
+        "cannon": 62
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "05b32efbe0f538946a6ca2b639575dc12290b181494ffabae2346ac1f34fe3d3"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 14,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 1,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 41,
+      "trajectory": "1d54fb7ac6fc2eff6704f15e472aa407c021267eef359a380916e949a6c2f466"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 80,
+      "trajectory": "33c864cbf99e3ae150e3078f6ac1f4937813acd7d7c7d5e533ac85a930afeebe"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 1,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 64,
+      "trajectory": "03f9e6d4559f165b3034e9021506fdcffb15e81a1ad5f0e170362d3b9cf203ea"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 80,
+      "trajectory": "26f02a94529db20e3469c00f194b99447a650789dd18213c1bc6b487c30e62e8"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 48,
+      "trajectory": "40f4bc0e1a4176354e3f91ffb97a226cd0280e03b57acb22f447512a3575b54a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 1,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 64,
+      "trajectory": "6b4a8eca19d3872d8e233b9afac318a8d8ff3f57c28ed1cb1383e95f6ba66537"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 6,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 16,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 32,
+      "trajectory": "811a8181ad62eaf569ee17f281e8950c79da30105ad5fdf860c7d27bcf18a46a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 8,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 28,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 6,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 26,
+      "trajectory": "499c5009f3fe8c5cecbd183ab29275dc302b415545dae4458f05bf92cf2e4bfa"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 18,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 58,
+      "trajectory": "b35c144b548ae98d8892b7520aca06c9cb9826f7daecb281b69e74c0ddbdec11"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 32,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "d04a015804875357d3c9d9ee85794fe7b133c7217bd155d745252315d1ce83a0"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 16,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 60,
+      "trajectory": "c69eb471c572a6696561f1ae9a3652a34a680f3f45d9ec5e2087ce2df594d2cd"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 34,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 80,
+      "trajectory": "69f9c2de173c6d8b8791d1b64cfcb62c508805831be20a6b3aa332182a17965a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 14,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 56,
+      "trajectory": "8a9af7800c2bcfc29942e3a83f3ef44f7762f0f059fd3b60c26a6ba5f611b96f"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 6,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 30,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 5,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 47,
+      "trajectory": "f188a0215acd86d3174e89e92c7baecc5d050de78ca39e7b3a2f6b8460edbf7c"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 24,
+        "cannon": 8
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 74,
+      "trajectory": "2cb6d4647ad30dd50071e393d0e6e3473e1d5e1fe508b4c9d7d195c9f0899acf"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 36,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 74,
+      "trajectory": "8d4758e7a4064236b5b31af10d333b08bd3086c6735b8a63993330f36a70200c"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 22,
+        "cannon": 8
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "405c3f3c38290e071a69cf15f1dfa6c915fb9f8e927a06b8a91fbe0685ed9238"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "a28f5d1b6445ecfcd13d0dca6e21df3ccc1ec1305a7304243e3b6d46e7344d94"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 16.320000000000086,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 16.320000000000086,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 7,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 7,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 42,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 11.520000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 42,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 11.520000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 73,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 12.416000000000082,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 73,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 12.416000000000082,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 12345,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.648000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 12345,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.648000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    }
+  ],
+  "candidate": [
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.25,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9d66ee041df209207596e92cd430c341bd184ca8c821a55e03f94f1b83725924"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 174,
+        "cannon": 60
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9ce12858ab54ace9d7214ce93e666c6e4ede2a3d5652cd25cc95eebf05f5f0c7"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.4,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "9e3baed0bf3cf5c3c2cdd3affa033794adcd501766dfc2fe506ed10b9f050c9c"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 1,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.4,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 158,
+        "cannon": 54
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "d4a9c0f1c182f5876eb6b2591c11727155bba36e80807ebca023f1045e34f238"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 36.55,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 10,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "770cae3c2b70bf2d7a1410f45e686720e29bf7437bab51d6077d33f59d5ef919"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 7,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 194,
+        "cannon": 66
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "b0e48f67624604e4c7b23a9d7034d43aede13718d08de4ded8f88bf2f0879c80"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.733333333333334,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "c8b55218a99ea03eea8ded401cfdd3840efdb723e5193d8338117349cad7f936"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 42,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 162,
+        "cannon": 56
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "61c62acd30a3e442deeefdb618492c0bf8e8186a96ee12b3a7c984ffa8827fd2"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.55,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "61c24362d1600cbc399ea2a6f51bf41da9f2b397246652c16b3549d37ae145bb"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 86.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 188,
+        "cannon": 64
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "7ca537135f5ed1cf593be64302dd89152bb2645366deea81a2a3f62f21df3811"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 393,
+      "height": 852,
+      "time": 4.55,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "aac7fc6e12b930dfbfba1b76ad0a29425e177c22400a55823fdab263287853c1"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 393,
+      "height": 852,
+      "time": 35.78333333333333,
+      "result": "shot-down",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37477d8464aa1815c2a36ce64378958473a72d757f52ea0d53297ad7c711ff7c"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "ordinary-idle",
+      "width": 852,
+      "height": 393,
+      "time": 5.216666666666667,
+      "result": "sea",
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 6,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "37e99350bb61782fc6bac9601f4c31b58cb75dfa134703ea70d5c18a8aba307a"
+    },
+    {
+      "seed": 12345,
+      "mode": "easy",
+      "scenario": "airborne-idle",
+      "width": 852,
+      "height": 393,
+      "time": 46.31666666666666,
+      "result": "collision",
+      "projectileKills": 0,
+      "collisionKills": 1,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 182,
+        "cannon": 62
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 0,
+      "enemyHp": 80,
+      "trajectory": "05b32efbe0f538946a6ca2b639575dc12290b181494ffabae2346ac1f34fe3d3"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 4,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 14,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 38,
+      "trajectory": "1d54fb7ac6fc2eff6704f15e472aa407c021267eef359a380916e949a6c2f466"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 80,
+      "trajectory": "33c864cbf99e3ae150e3078f6ac1f4937813acd7d7c7d5e533ac85a930afeebe"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 12,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 48,
+      "trajectory": "03f9e6d4559f165b3034e9021506fdcffb15e81a1ad5f0e170362d3b9cf203ea"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 80,
+      "trajectory": "26f02a94529db20e3469c00f194b99447a650789dd18213c1bc6b487c30e62e8"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 60,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 8,
+        "cannon": 4
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 60,
+      "trajectory": "40f4bc0e1a4176354e3f91ffb97a226cd0280e03b57acb22f447512a3575b54a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 60,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 26,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 48,
+      "trajectory": "6b4a8eca19d3872d8e233b9afac318a8d8ff3f57c28ed1cb1383e95f6ba66537"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 6,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 16,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 4,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 32,
+      "trajectory": "811a8181ad62eaf569ee17f281e8950c79da30105ad5fdf860c7d27bcf18a46a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 8,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 28,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 6,
+        "cannon": 2
+      },
+      "hp": 80,
+      "enemyHp": 26,
+      "trajectory": "499c5009f3fe8c5cecbd183ab29275dc302b415545dae4458f05bf92cf2e4bfa"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 18,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 58,
+      "trajectory": "b35c144b548ae98d8892b7520aca06c9cb9826f7daecb281b69e74c0ddbdec11"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 32,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 74,
+      "trajectory": "d04a015804875357d3c9d9ee85794fe7b133c7217bd155d745252315d1ce83a0"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 90,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 16,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "c69eb471c572a6696561f1ae9a3652a34a680f3f45d9ec5e2087ce2df594d2cd"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 90,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 34,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "69f9c2de173c6d8b8791d1b64cfcb62c508805831be20a6b3aa332182a17965a"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 3,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 14,
+        "cannon": 6
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 56,
+      "trajectory": "8a9af7800c2bcfc29942e3a83f3ef44f7762f0f059fd3b60c26a6ba5f611b96f"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 300,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 7,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 30,
+        "cannon": 10
+      },
+      "hits": {
+        "mg": 6,
+        "cannon": 1
+      },
+      "hp": 80,
+      "enemyHp": 44,
+      "trajectory": "f188a0215acd86d3174e89e92c7baecc5d050de78ca39e7b3a2f6b8460edbf7c"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 24,
+        "cannon": 8
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 74,
+      "trajectory": "2cb6d4647ad30dd50071e393d0e6e3473e1d5e1fe508b4c9d7d195c9f0899acf"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 450,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 36,
+        "cannon": 12
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 74,
+      "trajectory": "8d4758e7a4064236b5b31af10d333b08bd3086c6735b8a63993330f36a70200c"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 393,
+      "height": 852,
+      "offset": 120,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 22,
+        "cannon": 8
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "405c3f3c38290e071a69cf15f1dfa6c915fb9f8e927a06b8a91fbe0685ed9238"
+    },
+    {
+      "seed": 73,
+      "mode": "easy",
+      "scenario": "manual",
+      "width": 852,
+      "height": 393,
+      "offset": 120,
+      "range": 650,
+      "time": 4,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 2,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 38,
+        "cannon": 14
+      },
+      "hits": {
+        "mg": 2,
+        "cannon": 0
+      },
+      "hp": 80,
+      "enemyHp": 76,
+      "trajectory": "a28f5d1b6445ecfcd13d0dca6e21df3ccc1ec1305a7304243e3b6d46e7344d94"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1262569811,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 16.320000000000086,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 1,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 16.320000000000086,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 7,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 7,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.824000000000083,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 42,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 11.520000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 42,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 11.520000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 73,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 12.416000000000082,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 73,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 12.416000000000082,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 12345,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 393,
+      "height": 852,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.648000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    },
+    {
+      "seed": 12345,
+      "mode": "normal",
+      "scenario": "normal-held-fire",
+      "width": 852,
+      "height": 393,
+      "time": 120,
+      "result": null,
+      "projectileKills": 0,
+      "collisionKills": 0,
+      "playerAircraftHits": 0,
+      "playerOtherHits": 0,
+      "shots": {
+        "mg": 2016,
+        "cannon": 672
+      },
+      "hits": {
+        "mg": 0,
+        "cannon": 0
+      },
+      "hp": 15.648000000000081,
+      "enemyHp": 80,
+      "trajectory": "4df6d04abba36a5490ab58569d052d709da05580a2638d1512d6a8a48e90d1d2"
+    }
+  ]
+}

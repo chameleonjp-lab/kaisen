@@ -83,9 +83,9 @@ test('capture failure and release over another control recover without restartin
  await page.mouse.move(180,500);await page.mouse.down();await page.mouse.move(150,500);
  expect((await read(page)).controlsInput.turn).toBeLessThan(-.7);await page.mouse.up();
  await page.locator('#pause').tap();await page.locator('#pause-controls').tap();
- const frozen=await read(page);await expect(page.locator('#control-cancel')).toBeFocused();
+ const frozen=await read(page);await expect(page.locator('#control-close')).toBeFocused();
  await page.keyboard.press('Space');expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
- // Space activates the focused native Cancel button; it must not fire the aircraft.
+ // Space activates the focused native Close button; it must not fire the aircraft.
  await expect(page.locator('#control-settings')).not.toBeVisible();await page.locator('#resume').tap();
  expect((await read(page)).controlsInput.steerPointer).toBe(null);
  await mkdir('test-results/evidence',{recursive:true});await writeFile('test-results/evidence/input-recovery.json',JSON.stringify({note:'Actual mouse path with simulated capture API failure; no world mutation; Safari cause remains unconfirmed',state:await read(page)},null,2));

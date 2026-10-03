@@ -54,12 +54,10 @@
           <button id="start" class="primary" disabled>
             画面を準備しています
           </button>
-          <p class="controls-guide">
-            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復<br />機銃は砲座を制圧 · 船体は爆弾・魚雷で攻撃<br />爆弾は落下予測の十字で投下 · 魚雷は低空で水平飛行（目安高度20〜80m）<br />僚機は撃墜から40秒で復帰
-          </p>
-          <p id="friendly-fire-guide" class="controls-guide" hidden>味方への誤射：損傷1HPにつき−10点<br />味方撃墜はさらに−1500点</p>
-          <button id="home-controls" class="text-button">操作ボタンの配置</button>
-          <p id="keyboard-guide" class="keyboard-guide">キーボード：矢印で操縦 · Lで宙返り</p>
+          <p class="controls-guide"><span id="input-guide">画面をドラッグして操縦</span><br /><span id="mode-guide">照準円内へ自動射撃 · 弾道を見て少し先を狙う</span></p>
+          <p id="friendly-fire-guide" class="controls-guide" hidden>味方への誤射：損傷1HPにつき−10点 · 撃墜はさらに−1500点</p>
+          <div class="home-actions"><button id="home-rules" class="secondary">ルールと操作方法</button><button id="home-controls" class="text-button">操作設定</button></div>
+          <p id="keyboard-guide" class="keyboard-guide" hidden></p>
           <p id="startup-error" class="error" role="alert" hidden></p>
           <button id="reload" class="secondary" hidden>再読み込み</button>
         </div>
@@ -75,13 +73,14 @@
           <div class="time-block">
             <span>作戦経過 · <b id="hud-mode">イージー</b></span><strong id="timer">00:00.00</strong>
           </div>
-          <div class="targets">
-            <div>敵機 <b id="enemy-count">5</b><small id="enemy-total">/ 5</small></div>
-            <div>敵艦 <b id="ship-count">4</b><small>/ 4</small></div>
+          <div class="targets" aria-label="編隊全体の累計撃破と現在の敵残数">
+            <div class="target-tally"><span>敵機撃墜</span><b id="enemy-count">0</b><small id="enemy-total">残り5機</small></div>
+            <div class="hud-actions">
+              <button id="game-sound" class="icon-button sound-button" aria-label="音をオンにする" aria-pressed="false">音 OFF</button>
+              <button id="pause" class="icon-button" aria-label="一時停止">Ⅱ</button>
+            </div>
+            <div class="target-tally"><span>敵艦撃沈</span><b id="ship-count">0</b><small id="ship-total">残り4隻</small></div>
           </div>
-          <button id="pause" class="icon-button" aria-label="一時停止">
-            Ⅱ
-          </button>
         </div>
         <div class="flight-data">
           <div class="health-label">
@@ -101,18 +100,11 @@
         <p id="warning" class="warning" role="status" hidden>
           低空注意 · 機首を上げて
         </p>
-        <button id="bomb" class="flight-button payload-button" aria-label="爆弾を投下">爆弾 2</button>
-        <button id="torpedo" class="flight-button payload-button" aria-label="魚雷を投下">魚雷 1</button>
+        <button id="bomb" class="flight-button payload-button" aria-label="爆弾を投下"><span class="payload-name">爆弾</span><small id="bomb-ammo">残り2発</small></button>
+        <button id="torpedo" class="flight-button payload-button" aria-label="魚雷を投下"><span class="payload-name">魚雷</span><small id="torpedo-ammo">残り1発</small></button>
         <p id="flight-tip" class="flight-tip">触れた位置からドラッグして操縦</p>
         <div class="bottom-controls">
-          <button
-            id="game-sound"
-            class="icon-button sound-button"
-            aria-label="音をオンにする"
-            aria-pressed="false"
-          >
-            音 OFF</button
-          ><button id="loop" class="loop-button">
+          <button id="loop" class="loop-button">
             <span aria-hidden="true">↻</span><b>宙返り</b
             ><small id="loop-status">すぐ使える</small>
           </button>
@@ -139,7 +131,8 @@
           <button id="resume" class="primary">飛行を再開</button
           ><button id="pause-restart" class="secondary">はじめから出撃</button
           ><button id="pause-home" class="text-button">ホームへ戻る</button>
-          <button id="pause-controls" class="secondary">操作ボタンの配置</button>
+          <button id="pause-rules" class="secondary">ルールと操作方法</button>
+          <button id="pause-controls" class="secondary">操作設定</button>
         </div>
       </section>
       <section
@@ -175,7 +168,7 @@
           </dl>
           <button id="retry" class="primary">もう一度出撃</button
           ><button id="result-home" class="secondary">ホームへ戻る</button>
-          <button id="result-controls" class="text-button">操作ボタンの配置</button>
+          <button id="result-controls" class="text-button">操作設定</button>
           <details id="ally-report" class="ally-report" hidden>
             <summary>僚機の交戦記録</summary>
             <p id="ally-report-lines"></p>

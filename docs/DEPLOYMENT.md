@@ -1,3 +1,9 @@
+# 最新公開の確認（2026-10-03 15:03:58 UTC）
+
+利用者がPR9を14:56:55 UTCにマージ。main `8663af9b67c31b01c7b7b0b16a605fd0b9b32770` は検査済みhead9adeb05とtree7d876ad6が一致し、[Pages run37131825873](https://github.com/chameleonjp-lab/kaisen/actions/runs/37131825873)で公開した。統合mainの202単体・型/build・成果物検査とdeploy成功。公開ページのJS index-BFEt2XH3.js/CSS index-DWkLjsCm.css、両モード、爆弾/魚雷を含む配置設定・音ON/OFFを確認。配布artifact11277022330の216238bytes/SHA256 c3b62ca4c81a4a81b644592d866b5faba91fdea29f67be748fdf31bca8bc04e9と内部4ファイルを照合した。
+
+公開JS本文への直接アクセスはERR_BLOCKED_BY_CLIENT、cloud WebGLはDisabledのため公開応答全文hashと実飛行は未確認。制限を別経路で迂回していない。今回F01–F10の実機修正候補は未公開。2026-10-03 23:36 UTCの公開DOM再読取でも上記アセット名が一致した。
+
 # GitHub Pagesへの配備
 
 ## 現在の公開版（2026-10-03 05:32 UTC）
