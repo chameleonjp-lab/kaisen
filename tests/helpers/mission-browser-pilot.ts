@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from 'three';
-import { desiredFlightInput, forwardOf } from '../../src/flight';
-import { targetAimPoint, getFlightAssist } from '../../src/flight-assist';
+import { forwardOf } from '../../src/flight';
+import { getFlightAssist } from '../../src/flight-assist';
 import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
 
@@ -26,9 +26,13 @@ export function createBrowserMissionPilot(preferAircraft = false) {
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
   let waypoint = new Vector3();
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
+  let slowInput = false;
   let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1;
   return (snapshot: GameState): FlightInput => {
     const sampleDt = Math.max(1/60, snapshot.elapsed - lastTime); lastTime = snapshot.elapsed;
+    // Once delayed delivery is observed, retain the damped response. Alternating
+    // fast/slow gains at each jittered sample creates another source of oscillation.
+    if (sampleDt > .15) slowInput = true;
     estimatedTrim = Math.max(65,Math.min(141,estimatedTrim + trimDirection * 18 * sampleDt));
     const player = plane(snapshot.player);
     const enemies = snapshot.enemies.map(plane);
@@ -78,22 +82,25 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     const recoveryTarget = staleAir && alternativeAir?.generation === 'reinforcement' ? alternativeAir : current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
       : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
     const gunPracticeTarget = preferAircraft ? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? current : bestAir) : null;
-    const target = gunPracticeTarget ?? (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    const target = gunPracticeTarget ?? (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (snapshot.mode === 'normal' && bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false, bomb:false,torpedo:false,accelerate:false,brake:false };
     if (targetId !== target.id) { shipPhase = 'stage'; targetProgressAt = snapshot.elapsed; }
     targetId = target.id; observedTargetHealth = target.health;
     let aim = target.position.clone(), evasive = false, bomb = false;
     const distance = player.position.distanceTo(aim);
     if (target.kind === 'aircraft') {
-      // The pilot leads the target by steering the bore; Normal bullets still
-      // receive no target or direction correction from the product.
+      // Both modes now require manual lead. Easy has a small launch correction;
+      // this external test pilot still steers the bore through ordinary input.
       const velocity = forwardOf(target).multiplyScalar(target.speed);
       const relative = aim.clone().sub(player.position);
-      const a = velocity.lengthSq() - (player.speed + 700) ** 2;
+      // Easy no longer fully corrects either bore. Lead the faster MG while it
+      // has rounds, then the cannon. Normal retains its verified cannon lead.
+      const muzzleSpeed = snapshot.mode === 'easy' && player.mg > 0 ? 820 : 700;
+      const a = velocity.lengthSq() - (player.speed + muzzleSpeed) ** 2;
       const b = 2 * relative.dot(velocity), c = relative.lengthSq();
       const discriminant = b * b - 4 * a * c;
       const time = discriminant >= 0 ? (-b - Math.sqrt(discriminant)) / (2 * a) : 0;
-      const lead = snapshot.mode === 'normal' ? Math.max(0, Math.min(1.5, time)) : 0;
+      const lead = Math.max(0, Math.min(1.5, time));
       if (angular.has(target.id)) {
         const rate = angular.get(target.id)!;
         for(let i=0;i<10;i++) {
@@ -104,7 +111,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         }
       } else aim.addScaledVector(velocity, lead);
       const closing = -target.position.clone().sub(player.position).dot(forwardOf(target).multiplyScalar(target.speed).sub(forwardOf(player).multiplyScalar(player.speed))) / Math.max(1,distance);
-      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
+      // Once Easy has eliminated naval fire, a blanket 250m exit prevented
+      // close firing on passing targets indefinitely. Keep real collision-course
+      // dodges above and the 80m/low-altitude escape in the final air engagement.
+      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < ((snapshot.mode === 'normal' || weakestShip) && closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
         extensionUntil = snapshot.tick + 180;
         waypoint = player.position.clone().addScaledVector(forwardOf(player), 500);
         waypoint.y = player.position.y > 400 && target.position.y > player.position.y ? player.position.y - 250 : Math.max(350, player.position.y + 250);
@@ -140,7 +150,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       aim = player.position.clone().addScaledVector(forwardOf(player),800);
       aim.y = Math.max(400,player.position.y+200); evasive = true;
     }
-    const controls = desiredFlightInput(player, aim), weave = evasive ? .3 : 0;
+    const weave = evasive ? .3 : 0;
     const relative = aim.clone().sub(player.position);
     const targetVelocity = !evasive ? target.kind === 'aircraft' ? forwardOf(target).multiplyScalar(target.speed) : target.velocity.clone() : new Vector3();
     const velocity = targetVelocity.sub(forwardOf(player).multiplyScalar(player.speed));
@@ -157,10 +167,18 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     const yawAuthority = .82 * lowAuthority * highLoad * yawResponse;
     const desiredYaw = Math.atan2(-relative.x,-relative.z);
     const error = Math.atan2(Math.sin(desiredYaw-player.yaw),Math.cos(desiredYaw-player.yaw));
-    let turn = snapshot.mode === 'normal'
-      ? clamp(-(yawRate + error * 3.5) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI))
-      : clamp(controls.turn * 8 - yawRate / .82 + weave * Math.sin(snapshot.elapsed * Math.PI));
+    // CI26 delivered Easy input 7 ticks late at a median 15-tick interval.
+    // Its old 8/.7 gain saturated alternate directions and never staged a bomb
+    // run. Use the same authority-aware damped heading controller as Normal.
+    const headingGain = snapshot.mode === 'easy' && !slowInput ? Math.max(3.5,Math.min(8*.82/.7,.75/sampleDt)) : 3.5;
+    let turn = clamp(-(yawRate + error * headingGain) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI));
     let climb = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
+    if (snapshot.mode === 'easy' && target.kind === 'ship' && climb > -.35 && climb < .06) {
+      // A small deliberate upward stick opposes the retained Easy nose-down
+      // pull. Above the staging height, a deliberate .35 descent suppresses
+      // that pull while correcting altitude. These are ordinary pilot inputs.
+      climb = player.position.y > 1000 && climb < 0 ? -.35 : .06;
+    }
     const norm = Math.hypot(turn, climb);
     if (norm > 1) { turn /= norm; climb /= norm; }
     const alignment = forwardOf(player).angleTo(aim.clone().sub(player.position));

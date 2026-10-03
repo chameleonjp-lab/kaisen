@@ -6,8 +6,9 @@ import { AIRCRAFT_HEALTH, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 export { AIRCRAFT_HEALTH } from './aircraft-damage';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-air-sea-6';
+export const RULES_VERSION = 'kaisen-air-sea-7';
 export const FIXED_DT = 1 / 60;
+export const AIRCRAFT_BULLET_LIFETIME = 1.5;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 4, mode: 'easy' });
 export const MAX_BULLETS = 2048;
 export const MAX_EVENTS_PER_STEP = 1024;

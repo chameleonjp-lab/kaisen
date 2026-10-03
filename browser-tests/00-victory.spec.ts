@@ -9,6 +9,15 @@ test.use({ trace: "off" });
 async function state(page: Page) {
   return page.evaluate(() => (window as any).__kaisenReadState());
 }
+async function pilotState(page: Page) {
+  return page.evaluate(() => {
+    const {frameIntervals,updateTimes,...snapshot}=(window as any).__kaisenReadState();
+    // CI26's two 3,600-entry histories made each feedback message 156kB.
+    // The pilot needs live entities/input, not a repeated performance archive.
+    // Full snapshots remain in screenshots/final evidence; no game state changes.
+    return snapshot;
+  });
+}
 async function opened(page: Page) {
   await page.goto("/");
   await expect(page.locator("#start")).toBeEnabled();
@@ -71,7 +80,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
   let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
   const pilot = createBrowserMissionPilot();
   while (true) {
-    const s = await state(page);
+    const s = await pilotState(page);
     if (s.phase === "ended") break;
     expect(s.phase, "Unexpected pause during real touch flight").toBe(
       "playing",

@@ -1,13 +1,24 @@
 # 空海戦追加候補の検査（2026-10-03）
 
-現在のローカル修正候補は**184単体pass・fail/skipなし、型/build pass**。2026-10-03 08:48 UTC確認。24件のPlaywright検査は列挙/構文読込まで済み、実ブラウザ実行はこれから。過去版の画像・CIを新候補の成功と扱わない。作業branch `feat/kaisen-air-sea-combat`、main c63bff8、前保存a4390f4から対艦・描画・音・検査・記録をまとめて提出する。
+現在の共有補正候補は**193単体pass・fail/skipなし、型/build pass**。2026-10-03 09:53 UTC確認。Easyの実全滅を先頭にした25件のPlaywright検査は列挙/構文読込まで済み、現候補の実ブラウザはこれから。基点main c63bff8、前保存2d45214からN14/N15と遅延入力の回帰を一つにまとめる。過去のCIや画像を現候補の成功へ転用しない。
 
-- 作業単位: N01–N13の空海戦を一つの成立したコアとして統合し、判定レビューの3件と入力再生の2件を修正してから全件を集約。小コミットごとの全件CIは起動していない
-- `npm test`最終184/184、`npm run build`型/本番bundle成功。JS745.75kB/gzip199.46kB、CSS20.39kB/gzip5.56kB。従来からの500kB警告を隠す設定変更はしていない
-- `prepare-pages.mjs`の入口/アセット/NOTICE/開発hook除去の構造検査はローカル成功。未コミット候補なのでローカルの仮manifestのcommit文字列を完全SHA照合と呼ばず、PRの実headでCIが再build/照合する
-- 原機体/カメラのSHAは不変。新しい数値集計にruntimeと検査操縦11ファイルのSHA-256を保存し、同じ候補の武器別実発射/損傷を[air-sea-balance.json](evidence/air-sea-balance.json)で照合。lockfile SHA-256 `5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78`、固定Node24/npm11/同じ依存
-- default6tick: Easy191.8667秒、Normal215.65秒、双方全滅/HP80。Normal6/7tick383.5833秒、12tick316.2167秒。過去CI19/20/21からの不均等入力と1/5tick配送遅延も全滅。実GUIでの入力待ちとGPU画面は次のCIで別に確認
-- `not_run/blocked`: 実ブラウザ24件と新候補画像は未実行。既知のlocalhost拒否/ローカルChromium制限/クラウドWebGL無効を迂回せず、許可されたGitHub CIを使う。物理iPhone17Pro/Safari、実聴、持続GPU/熱は未実施。マージ/公開はまだ行っていない
+- 作業単位: 承認されたFF共通のEasy発射補正/航空機弾道を、カメラ・飛行・AI・艦砲を維持して移植。別レビューで重大指摘なし、15関連pass。独立レビューを通常ミッション/実機の合格とは呼ばない
+- 関連24件と、最終`npm test`193/193・型/buildがpass。JS775.21kB/gzip207.78kB、CSS20.39kB/gzip5.56kB。500kB警告は保持。Node24/npm11、依存・lockfile・assetsは不変
+- ローカルの`prepare-pages.mjs`は入口/アセット/NOTICE/開発hook除去の構造検査のみ。仮の前head文字列を現候補の完全SHA照合と呼ばず、新しいPR headでCIが再build/照合する
+- 原機体/飛行/カメラ/AI/威力/艦砲/魚雷の7ファイルと`getFlightAssist`のSHA同一性は[easy-aim-comparison.json](evidence/easy-aim-comparison.json)。runtime/検査操縦のSHAと現在の武器別実測は[air-sea-balance.json](evidence/air-sea-balance.json)。lockfile SHA-256 `5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78`
+- Easyは通常6tick196.10秒/HP80、6/7tick177.03秒/HP78.064、過去不均等入力359.7833秒/HP80、実CI26の要求/受付列417.6333秒/HP77.92で全滅。Normalの6/7/12tickとCI19/20/21列も全滅。再装填は実384発/360tickを保持。短い固定操作でも隔離空戦で3命中/22HP損傷。ただし世界を詳しく観測する自動試験操縦と、人の試遊・実機を区別する
+- 試験操縦の高いゲイン/瞬間ごとの強弱切替、MGと機関砲の先読み混同、標的の即時取り戻し、爆撃中の下向き補助、艦隊全滅後の過剰離脱を修正。製品の補助を緩める修正ではない。過去の失敗は下記に保存し、条件/検査を省略せず新候補へ反映
+- `not_run/blocked`: 現候補の実ブラウザ25件と画像は次のCI。既知のlocalhost拒否/ローカルChromium制限/クラウドWebGL無効を迂回しない。物理iPhone17Pro/Safari、実聴、持続GPU/熱は未実施。マージ/公開は行っていない
+
+### CI26（2d45214）と承認後の共通弾道修正
+
+[CI26/run37111005541](https://github.com/chameleonjp-lab/kaisen/actions/runs/37111005541) はhead `2d45214cf35ab72751b311c4234719f090522a85` / tree `5c261ca7321304236df664e59e98ead2752719e8` に対し184単体・型/build・成果物pass、実ブラウザ23pass/1fail、2026-10-03 09:08 UTC完了。Normal全滅・魚雷/爆弾・再装填・設定・復帰はpass、Easyの600秒条件はfail。
+
+Easyの実記録は2388sample、要求間隔中央値15tick、受付遅延中央値7tick。世界はplaying・エラー0・ポインター所有正常で、試験操縦が左右の最大入力を反復し、爆弾投下0/艦撃破0だった。旧検査のEasyヨー係数8/.7と配送遅延の組合せを保存したfixtureで再現し、操縦の遅延耐性を修正する。製品のカメラや飛行補助の弱化で検査を通さない。
+
+artifact `11269818963`、4,906,138bytes、SHA256 `4cae42f3eacb17ed90838c3a1d4401be015abb5d265fb30b5ac20f87f2a1e0de` を取得・照合、期限2026-10-10。
+
+この実行中に利用者が元作のEasy発射補正25%/最大0.02radと航空機の太い弾道を明示採用した。新しい実装/検査境界は[AIM_FEEDBACK.md](AIM_FEEDBACK.md)。CI26を停止せず結果まで保存した。新候補では関連検査→実遅延の回帰→最終全件の順でまとめ、Easyの実完走を先頭に置く。旧版の23passを新しい補正の成功へ流用しない。
 
 ### CI24（712fcda）と修正バッチ
 

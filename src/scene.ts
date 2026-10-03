@@ -27,6 +27,7 @@ import { targetAimPoint } from "./flight-assist";
 import { projectGunSight } from "./gun-sight";
 import { AIM_COLORS, aimIndicator, aimRadius } from "./aim-indicator";
 import { AircraftBatchFactory } from "./aircraft-batch";
+import { AircraftTracers } from "./aircraft-tracers";
 import { ShipFactory } from "./ships";
 import { OrdnanceView } from "./ordnance-view";
 import { shipWreckPose, isShipObstacle } from "./ship-wreck";
@@ -66,6 +67,7 @@ export class KaisenScene {
   private scene = new Scene();
   private aircraft = new AircraftFactory();
   private aircraftBatches = new AircraftBatchFactory();
+  private aircraftTracers = new AircraftTracers();
   private teamBandGeometry = new CylinderGeometry(0.34, 0.39, 0.6, 14, 1, true);
   private teamMaterials = {
     friendly: new MeshBasicMaterial({ color: 0x27aaa4 }),
@@ -141,7 +143,7 @@ export class KaisenScene {
     const sun = new DirectionalLight(0xffe9b5, 3.1);
     sun.position.set(-600, 700, -350);
     this.scene.add(sun);
-    this.scene.add(this.sea, this.sky, this.ordnanceView.root);
+    this.scene.add(this.sea, this.sky, this.ordnanceView.root, this.aircraftTracers.root);
     this.tracersGeometry.setAttribute(
       "position",
       new BufferAttribute(this.tracerPositions, 3),
@@ -224,9 +226,11 @@ export class KaisenScene {
       for (const attribute of Object.values(geometry.attributes)) attribute.needsUpdate = true;
     this.tracersGeometry.setDrawRange(0, 2);
     this.particleGeometry.setDrawRange(0, 1);
+    this.aircraftTracers.prime(sample);
     this.renderer.render(this.scene, this.camera);
     this.tracersGeometry.setDrawRange(0, 0);
     this.particleGeometry.setDrawRange(0, 0);
+    this.aircraftTracers.update([]);
     this.renderer.render(this.scene, this.camera);
     this.renderQueue.submit(performance.now());
     // A linked program or a returned draw call is not a visible-frame barrier.
@@ -435,16 +439,18 @@ export class KaisenScene {
     this.sea.position.z = oceanAnchor(state.player.position.z);
     this.seaMaterial.uniforms.uTime.value = state.elapsed;
     this.ordnanceView.update(state.ordnance, state.elapsed);
-    const n = Math.min(TRACER_CAPACITY, state.bullets.length);
-    for (let i = 0; i < n; i++) {
-      const b = state.bullets[i],
-        tail = b.position.clone().addScaledVector(b.velocity, -0.025);
+    this.aircraftTracers.update(state.bullets);
+    let n = 0;
+    for (const b of state.bullets) {
+      if (b.kind !== 'aa') continue;
+      if (n >= TRACER_CAPACITY) break;
+      const tail = b.position.clone().addScaledVector(b.velocity, -0.025);
       this.tracerPositions.set(
         [tail.x, tail.y, tail.z, b.position.x, b.position.y, b.position.z],
-        i * 6,
+        n * 6,
       );
       const c = b.team === "friendly" ? [1, 0.83, 0.42] : [1, 0.32, 0.11];
-      this.tracerColors.set([...c, ...c], i * 6);
+      this.tracerColors.set([...c, ...c], n++ * 6);
     }
     this.tracersGeometry.setDrawRange(0, n * 2);
     this.tracersGeometry.attributes.position.needsUpdate = true;
@@ -681,6 +687,7 @@ export class KaisenScene {
       width: this.width,
       height: this.height,
       pixelRatio: this.renderer.getPixelRatio(),
+      aircraftTracers: this.aircraftTracers.diagnostics(),
     };
   }
   dispose() {
@@ -690,6 +697,7 @@ export class KaisenScene {
     for (const plane of this.planes.values()) this.scene.remove(plane.root);
     this.planes.clear();
     this.aircraftBatches.dispose();
+    this.aircraftTracers.dispose();
     this.aircraft.dispose();
     this.teamBandGeometry.dispose();
     this.teamMaterials.friendly.dispose();

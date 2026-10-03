@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
-import { autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
+import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
 import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
@@ -18,7 +18,7 @@ export { FIXED_DT } from './mission';
 const EPSILON = 1e-8;
 const SHIP_PART_MIN = new Vector3().fromArray(NAVAL_COLLISION_BOUNDS.min);
 const SHIP_PART_MAX = new Vector3().fromArray(NAVAL_COLLISION_BOUNDS.max);
-const BULLET_LIFETIME = 1.5;
+import { AIRCRAFT_BULLET_LIFETIME as BULLET_LIFETIME } from './mission';
 const HIT_SPHERES = [
   { center: new Vector3(0, 0, -3.8), radius: 3 },
   { center: new Vector3(0, 0, 0), radius: 4.6 },
@@ -246,7 +246,8 @@ function fireAircraft(state: GameState, plane: Aircraft, firing: boolean, target
       const offset = kind === 'mg' ? new Vector3(side * 0.3, 0.52, -4.25) : new Vector3(side * 2.5, 0, -2.4);
       const position = plane.position.clone().add(offset.applyQuaternion(plane.quaternion));
       const speed = plane.speed + (kind === 'mg' ? 820 : 700);
-      const direction = target ? predictedShotDirection(position, forward, target, speed, BULLET_LIFETIME, navalAim) : forward;
+      const prediction = target ? predictedShotDirection(position, forward, target, speed, BULLET_LIFETIME, navalAim) : forward;
+      const direction = player && state.mode === 'easy' ? applyEasyShotCorrection(forward, prediction) : prediction;
       if (!player) {
         // AI gunnery is finite-accuracy, even when its steering solution is ideal.
         const spread = plane.team === 'enemy' ? 0.022 : 0.012;

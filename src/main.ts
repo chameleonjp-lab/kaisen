@@ -57,7 +57,7 @@ function syncMode() {
     ? "ドラッグで操縦"
     : "触れた位置からドラッグして操縦";
   el("mode-guide").textContent = state.mode === "easy"
-    ? "照準円内・1.2km以内へ自動射撃 · 右下で宙返り"
+    ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"
     : "照準補助なし・手動射撃 · 加速・減速・宙返りをボタンで操作";
   el("keyboard-guide").textContent = state.mode === "easy"
     ? "キーボード：矢印で操縦 · L宙返り · Z爆弾 · X魚雷"

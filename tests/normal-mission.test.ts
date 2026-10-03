@@ -68,3 +68,35 @@ test('bombing pilot extends after an overhead pass with payloads still available
     assert.equal(command.bomb,false);assert.equal(command.fire,false);
   }
 });
+
+test('Easy bombing pilot counters retained downward steering with ordinary upward input', async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  const {getFlightAssist}=await import('../src/flight-assist');
+  const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot(),ship=s.ships[0];
+  for(const enemy of s.enemies)enemy.health=0;for(const other of s.ships.slice(1))other.health=0;
+  const stern=ship.velocity.clone().normalize().negate();
+  s.player.position.copy(ship.position).addScaledVector(stern,1800);s.player.position.y=900;
+  s.player.yaw=ship.yaw;s.player.pitch=s.player.bank=0;updateQuaternion(s.player);pilot(s);
+  s.player.position.copy(ship.position).addScaledVector(stern,800);s.player.position.y=900;
+  const enemy=s.enemies[0];enemy.health=enemy.maxHealth;
+  enemy.position.copy(s.player.position).addScaledVector(stern,-1000);enemy.position.y=600;
+  s.tick=600;s.elapsed=10;const before=JSON.stringify(s),command=pilot(s);
+  const neutral={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  assert.ok(getFlightAssist(s.player,[ship,enemy],neutral,'easy').climb<-.1,'a visible lower aircraft pulls a neutral bombing approach downward');
+  assert.ok(command.climb>.05);
+  assert.equal(getFlightAssist(s.player,[ship,enemy],{...command,viewAspect:393/852},'easy').climb,command.climb);
+  assert.equal(JSON.stringify(s),before);
+});
+
+test('Easy final air engagement retains collision avoidance without fleeing every safe 250m pass', async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  for(const offset of [0,60]) {
+    const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot();
+    for(const ship of s.ships)ship.health=0;for(const enemy of s.enemies.slice(1))enemy.health=0;
+    const enemy=s.enemies[0];s.player.position.set(0,500,0);enemy.position.set(offset,500,-190);
+    enemy.yaw=Math.PI;enemy.speed=110;updateQuaternion(enemy);updateQuaternion(s.player);
+    const command=pilot(s);
+    if(offset===0)assert.equal(Math.abs(command.climb),1,'actual collision course is still dodged');
+    else assert.ok(Math.abs(command.climb)<.1,'a passing aircraft can be engaged instead of a mandatory three-second climb');
+  }
+});
