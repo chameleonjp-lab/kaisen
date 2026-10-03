@@ -22,6 +22,7 @@ function plane(aircraft: Aircraft): Aircraft {
  */
 export function createBrowserMissionPilot(preferAircraft = false) {
 
+  let previousLead: {id:number,t:number,point:Vector3,muzzleSpeed:number}|null=null;
   let recovering = false, targetProgressAt = 0, observedTargetHealth = Infinity;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
@@ -92,7 +93,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       const canLeadAndFire = (enemy: Aircraft) => {
         const velocity = forwardOf(enemy).multiplyScalar(enemy.speed);
         const relative = enemy.position.clone().sub(player.position);
-        const speed = player.speed + (player.mg > 0 ? 820 : 700);
+        const speed = player.speed + (player.cannon > 0 ? 700 : 820);
         const a = velocity.lengthSq() - speed * speed, b = 2 * relative.dot(velocity), c = relative.lengthSq();
         const discriminant = b * b - 4 * a * c;
         if (discriminant < 0 || relative.length() > EASY_AUTO_FIRE_RANGE) return false;
@@ -129,9 +130,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       // this external test pilot still steers the bore through ordinary input.
       const velocity = forwardOf(target).multiplyScalar(target.speed);
       const relative = aim.clone().sub(player.position);
-      // Easy no longer fully corrects either bore. Lead the faster MG while it
-      // has rounds, then the cannon. Normal retains its verified cannon lead.
-      const muzzleSpeed = snapshot.mode === 'easy' && player.mg > 0 ? 820 : 700;
+      // Lead the higher-damage cannon while loaded. Its slower rounds cannot
+      // follow an MG intercept after the shared correction was weakened.
+      // Easy uses the remaining MG velocity only after the cannon runs dry.
+      const muzzleSpeed = snapshot.mode === 'easy' && player.cannon <= 0 ? 820 : 700;
       const a = velocity.lengthSq() - (player.speed + muzzleSpeed) ** 2;
       const b = 2 * relative.dot(velocity), c = relative.lengthSq();
       const discriminant = b * b - 4 * a * c;
@@ -188,7 +190,17 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     }
     const weave = evasive ? .3 : 0;
     const relative = aim.clone().sub(player.position);
-    const targetVelocity = !evasive ? target.kind === 'aircraft' ? forwardOf(target).multiplyScalar(target.speed) : target.velocity.clone() : new Vector3();
+    let targetVelocity = !evasive ? target.kind === 'aircraft' ? forwardOf(target).multiplyScalar(target.speed) : target.velocity.clone() : new Vector3();
+    if (snapshot.mode === 'easy' && target.kind === 'aircraft' && !evasive) {
+      // The curved lead point moves faster sideways than the target's current
+      // velocity alone predicts. Track observed lead-point motion; reset across
+      // target/weapon switches, evasion, repeated times and long observation gaps.
+      const leadDt = previousLead ? snapshot.elapsed - previousLead.t : 0;
+      const muzzleSpeed = player.cannon > 0 ? 700 : 820;
+      if (previousLead?.id === target.id && previousLead.muzzleSpeed === muzzleSpeed && leadDt > 0 && leadDt < .5)
+        targetVelocity = aim.clone().sub(previousLead.point).divideScalar(leadDt);
+      previousLead = {id:target.id,t:snapshot.elapsed,point:aim.clone(),muzzleSpeed};
+    } else previousLead = null;
     const velocity = targetVelocity.sub(forwardOf(player).multiplyScalar(player.speed));
     const h2 = relative.x ** 2 + relative.z ** 2, h = Math.sqrt(h2);
     const yawRate = h2 > 1 ? (relative.z * velocity.x - relative.x * velocity.z) / h2 : 0;

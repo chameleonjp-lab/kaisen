@@ -7,7 +7,7 @@ import { pointerOffsetForControls } from './helpers/touch-reload-pilot';
 import type { FlightInput } from '../src/types';
 
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/browser-input-components-ci28.json',import.meta.url),'utf8'));
-for(const scenario of fixture.cases) test(`${scenario.mode} clears with CI28 component delivery timing from a fresh mission`,context=>{
+for(const scenario of fixture.cases) test(`${scenario.mode} clears with ${scenario.source??"CI28"} component delivery timing from a fresh mission`,context=>{
   const state=createGame(scenario.seed,scenario.config),pilot=createBrowserMissionPilot();startGame(state);
   let index=0,next=scenario.startTick;
   let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};

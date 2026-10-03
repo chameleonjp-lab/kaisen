@@ -151,3 +151,28 @@ test('Easy completes a begun bombing pass before switching to recovery, then sti
   assert.ok(exit.climb>.2,'commitment still ends at the normal overhead escape');
   assert.equal(exit.bomb,false);assert.equal(exit.fire,false);
 });
+
+test('Easy leads the loaded cannon and keeps repeated observation times finite',async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  const commands:FlightInput[]=[];
+  for(const cannon of [96,0]) {
+    const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot(true);
+    for(const ship of s.ships)ship.health=0;for(const enemy of s.enemies.slice(1))enemy.health=0;
+    s.player.position.set(0,500,0);s.player.cannon=cannon;updateQuaternion(s.player);
+    const target=s.enemies[0];target.position.set(10,500,-600);target.yaw=-.4;target.speed=110;updateQuaternion(target);
+    const before=JSON.stringify(s),command=pilot(s);commands.push(command);
+    for(let i=0;i<2;i++) {
+      const repeated=pilot(s);
+      assert.ok(Number.isFinite(repeated.turn)&&Number.isFinite(repeated.climb));
+      assert.ok(Math.hypot(repeated.turn,repeated.climb)<=1+1e-9);
+    }
+    assert.equal(JSON.stringify(s),before);
+    if(cannon>0) {
+      s.player.cannon=0;s.tick=6;s.elapsed=.1;
+      const switched=pilot(s),fresh=createNormalMissionPilot(true)(s);
+      assert.ok(Math.abs(switched.turn-fresh.turn)<1e-9,'changing muzzle speed must not be interpreted as sideways target motion');
+      assert.ok(Math.abs(switched.climb-fresh.climb)<1e-9);
+    }
+  }
+  assert.ok(commands[0].turn>commands[1].turn,'slower cannon rounds require a farther lateral lead than the remaining MG');
+});
