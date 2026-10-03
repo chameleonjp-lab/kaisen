@@ -6,6 +6,18 @@ import { EASY_AIM_RADIUS, FLIGHT_CAMERA_BANK_FACTOR, FLIGHT_FOV, projectFlightTa
 export const PLAYER_MAX_PITCH = 0.95;
 export const EASY_AUTO_FIRE_RANGE = 1200;
 export const OFFSCREEN_RESPONSE_MULTIPLIER = 1.65;
+/** Shared with Faitofuraito PR13. Changes projectile launch only, never the camera or stick. */
+export const EASY_SHOT_CORRECTION_STRENGTH = 0.25;
+export const EASY_SHOT_MAX_ANGLE = 0.02;
+export const EASY_SHOT_PREDICTION_GATE = 0.16;
+
+export function applyEasyShotCorrection(forward: Vector3, predicted: Vector3): Vector3 {
+  const angle = forward.angleTo(predicted);
+  if (angle > EASY_SHOT_PREDICTION_GATE || angle < 1e-8) return forward.clone();
+  const correction = Math.min(angle * EASY_SHOT_CORRECTION_STRENGTH, EASY_SHOT_MAX_ANGLE);
+  return forward.clone().multiplyScalar(Math.sin(angle - correction) / Math.sin(angle))
+    .addScaledVector(predicted, Math.sin(correction) / Math.sin(angle)).normalize();
+}
 
 /** Authoritative aim/marker point. Returns a copy so consumers cannot move entities. */
 export function targetAimPoint(target: CombatTarget): Vector3 {
@@ -141,9 +153,9 @@ export function autoFireTarget(player: Aircraft, enemies: readonly CombatTarget[
 }
 
 /** Straight flight prediction; maneuvers after launch can still evade the shot. */
-export function predictedShotDirection(origin: Vector3, forward: Vector3, target: CombatTarget, bulletSpeed: number, lifetime: number): Vector3 {
+export function predictedShotDirection(origin: Vector3, forward: Vector3, target: CombatTarget, bulletSpeed: number, lifetime: number, aimPoint?: Vector3): Vector3 {
   const velocity = target.kind === 'ship' ? target.velocity.clone() : new Vector3(0, 0, -1).applyQuaternion(target.quaternion).multiplyScalar(target.speed);
-  const relative = targetAimPoint(target).sub(origin);
+  const relative = (aimPoint?.clone() ?? targetAimPoint(target)).sub(origin);
   const a = velocity.lengthSq() - bulletSpeed * bulletSpeed;
   const b = 2 * relative.dot(velocity);
   const c = relative.lengthSq();
@@ -156,4 +168,3 @@ export function predictedShotDirection(origin: Vector3, forward: Vector3, target
   // A small firing gate plus this limit prevents wide-angle automatic hits.
   return forward.angleTo(direction) <= 0.16 ? direction : forward.clone();
 }
-

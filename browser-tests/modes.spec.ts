@@ -41,7 +41,7 @@ for (const viewport of [{ width: 393, height: 852 }, { width: 852, height: 393 }
     await page.setViewportSize(viewport); await openNormal(page);
     await expect(page.locator('#hud-mode')).toHaveText('ノーマル');
     // One active-screen read captures actual hit ownership before the modal covers it.
-    const boxes = await page.evaluate(() => ['fire', 'loop', 'accelerate', 'brake', 'game-sound', 'pause'].map(id => {
+    const boxes = await page.evaluate(() => ['fire', 'loop', 'accelerate', 'brake', 'bomb', 'torpedo', 'game-sound', 'pause'].map(id => {
       const box = document.getElementById(id)!.getBoundingClientRect();
       return { id, x: box.x, y: box.y, width: box.width, height: box.height,
         owner: document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('button')?.id };
@@ -73,6 +73,7 @@ for (const viewport of [{ width: 393, height: 852 }, { width: 852, height: 393 }
     await expect(page.locator('#accelerate')).toBeHidden();
     await expect(page.locator('#brake')).toBeHidden();
     await expect(page.locator('#loop')).toBeVisible();
+    await expect(page.locator('#bomb')).toBeVisible();await expect(page.locator('#torpedo')).toBeVisible();
   });
 }
 

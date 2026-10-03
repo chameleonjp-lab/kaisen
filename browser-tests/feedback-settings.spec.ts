@@ -2,11 +2,49 @@ import { test, expect } from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
 const read=(page:any)=>page.evaluate(()=>(window as any).__kaisenReadState());
 
+async function reachSeaResult(page:any, viewport:{width:number;height:number}) {
+  const recoveries:unknown[]=[];
+  const deadline=Date.now()+45000;
+  await page.keyboard.down('ArrowDown');
+  try {
+    while(Date.now()<deadline) {
+      const s=await page.evaluate(()=>(window as any).__kaisenReadState(false));
+      if(s.phase==='ended')break;
+      if(s.phase==='paused') {
+        // CI28 reached the visible recovered-GPU dialog. The held key was
+        // correctly cleared by Pause; continuing to wait cannot fly the plane.
+        // Exercise the actual recovery button once, without changing the game.
+        expect(s.pauseReasons).toEqual(['render']);
+        expect(recoveries.length,'Repeated render interruptions remain a failure').toBe(0);
+        await page.keyboard.up('ArrowDown');
+        await expect(page.locator('#pause-reason')).toHaveText('描画が復帰しました。操作して再開できます');
+        await expect(page.locator('#resume')).toBeEnabled();
+        const frozen=(await read(page)).tick;
+        await page.waitForTimeout(100);expect((await read(page)).tick).toBe(frozen);
+        recoveries.push({tick:frozen,snapshot:await read(page)});
+        await page.locator('#resume').tap();
+        await expect.poll(async()=>(await read(page)).phase).toBe('playing');
+        await page.keyboard.down('ArrowDown');
+      } else expect(s.phase).toBe('playing');
+      await page.waitForTimeout(50);
+    }
+    await expect(page.locator('#result')).toBeVisible();
+  } finally {
+    await page.keyboard.up('ArrowDown');
+    await mkdir('test-results/evidence',{recursive:true});
+    await writeFile(`test-results/evidence/settings-flight-${viewport.width}x${viewport.height}.json`,JSON.stringify({recoveries,snapshot:await read(page).catch(()=>null)},null,2));
+  }
+}
+
 for(const viewport of [{width:393,height:852},{width:568,height:320}]) {
  test(`control layout settings save cancel and restore across screens ${viewport.width}x${viewport.height}`,async({page})=>{
   test.setTimeout(90000);await page.setViewportSize(viewport);await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
   await page.locator('#home-controls').tap();await expect(page.locator('#control-settings')).toBeVisible();
-  await page.locator('#control-mode').selectOption('normal');await page.locator('#control-target').selectOption('fire');
+  await page.locator('#control-mode').selectOption('normal');
+  await expect(page.locator('#control-target option')).toHaveCount(6);
+  await expect(page.locator('#control-target option[value="bomb"]')).toHaveText('爆弾');
+  await expect(page.locator('#control-target option[value="torpedo"]')).toHaveText('魚雷');
+  await page.locator('#control-target').selectOption('fire');
   await page.locator('#control-x').focus();await page.keyboard.press('ArrowLeft');
   const wanted=await page.locator('#control-x').inputValue();await page.locator('#control-save').tap();
   await expect(page.locator('#control-settings')).not.toBeVisible();
@@ -19,9 +57,11 @@ for(const viewport of [{width:393,height:852},{width:568,height:320}]) {
   expect((await read(page)).tick).toBe(paused.tick);await expect(page.locator('#pause-screen')).toBeVisible();
   await page.locator('#pause-controls').tap();await expect(page.locator('#control-x')).toHaveValue(wanted);
   await mkdir('test-results/evidence',{recursive:true});
+  const submitted=(await read(page)).render.queue.submittedCount;
+  await expect.poll(async()=>(await read(page)).render.queue.completedCount).toBeGreaterThanOrEqual(submitted+1);
   await page.screenshot({path:`test-results/evidence/settings-${viewport.width}x${viewport.height}.png`});
   await page.locator('#control-close').tap();await page.locator('#resume').tap();
-  await page.keyboard.down('ArrowDown');await expect(page.locator('#result')).toBeVisible({timeout:30000});await page.keyboard.up('ArrowDown');
+  await reachSeaResult(page,viewport);
   await expect(page.locator('#result-reason')).toContainText('海面');await page.locator('#result-controls').tap();
   await expect(page.locator('#control-mode')).toBeEnabled();await page.locator('#control-close').tap();
   await page.locator('#result-home').tap();await page.reload();await expect(page.locator('#start')).toBeEnabled();

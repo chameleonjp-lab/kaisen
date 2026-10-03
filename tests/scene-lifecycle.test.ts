@@ -13,7 +13,7 @@ test("late shader completion cannot revive a disposed renderer", async () => {
     renderQueue: { dispose() { releases++; } },
     disposed: false, planes: new Map(), scene: { remove() {} }, camera: {},
     renderer: { compileAsync: () => compilation, render() { draws++; }, dispose() { releases++; } },
-    aircraftBatches: resource(), aircraft: resource(), teamBandGeometry: resource(),
+    ordnanceView: resource(), aircraftTracers: resource(), aircraftBatches: resource(), aircraft: resource(), teamBandGeometry: resource(),
     teamMaterials: { friendly: resource(), enemy: resource() }, ships: resource(),
     sea: { geometry: resource() }, seaMaterial: resource(),
     sky: { geometry: resource(), material: resource() },

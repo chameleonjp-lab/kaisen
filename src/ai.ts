@@ -2,6 +2,7 @@ import { Vector3 } from 'three';
 import { clamp, desiredFlightInput, forwardOf } from './flight';
 import { AI_DECISION_TICKS } from './mission';
 import { targetAimPoint } from './flight-assist';
+import { predictBombImpact } from './ordnance';
 import type { Aircraft, CombatTarget, GameState } from './types';
 
 export function targetFor(state: GameState, id: number | null): CombatTarget | null {
@@ -49,6 +50,7 @@ function beginExtension(plane: Aircraft, target: CombatTarget): void {
 
 /** Decisions use only current/past world state. The same flight limits apply to every aircraft. */
 export function updateAI(state: GameState, plane: Aircraft, dt: number): void {
+  plane.aiBomb = false;
   plane.aiPhaseTime += dt;
   const target = targetFor(state, plane.targetId);
   if (!target) { plane.aiTurn = 0; plane.aiClimb = 0; plane.aiFire = false; return; }
@@ -77,7 +79,7 @@ export function updateAI(state: GameState, plane: Aircraft, dt: number): void {
       // Establish a straight run before descending. Diving throughout a U-turn
       // otherwise traps an aircraft in repeated low-altitude escapes.
       if (plane.aiPhase === 'approach' && linedUp && distance < 980 && distance > 330) plane.aiPhase = 'attack';
-      aim.y = plane.aiPhase === 'attack' ? targetAimPoint(target).y : 230;
+      aim.y = plane.role === 'strike' ? 230 : plane.aiPhase === 'attack' ? targetAimPoint(target).y : 230;
     } else {
       const lead = Math.min(0.75, distance / 930);
       aim = target.position.clone().addScaledVector(forwardOf(target), target.speed * lead);
@@ -86,6 +88,18 @@ export function updateAI(state: GameState, plane: Aircraft, dt: number): void {
     }
     const controls = desiredFlightInput(plane, aim);
     plane.aiTurn = controls.turn; plane.aiClimb = clamp(controls.climb, -1, 1);
+  }
+  if (target.kind === 'ship' && plane.role === 'strike' && plane.aiPhase !== 'extend' && !mustEscape
+      && plane.bombs > 0 && plane.bombReloadTicks === 0 && plane.payloadCooldown <= 0) {
+    const prediction = predictBombImpact(plane, target.position.y + 9);
+    if (prediction && prediction.time >= .35 && prediction.time <= 10) {
+      const futureCenter = target.position.clone().addScaledVector(target.velocity, prediction.time);
+      const offset = prediction.position.clone().sub(futureCenter).applyQuaternion(target.quaternion.clone().invert());
+      if (Math.abs(offset.x) < target.width * .34 && Math.abs(offset.z) < target.length * .34) {
+        plane.aiBomb = true;
+        beginExtension(plane, target);
+      }
+    }
   }
   const targetPoint = targetAimPoint(target);
   const toTarget = targetPoint.sub(plane.position);

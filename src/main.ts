@@ -9,9 +9,11 @@ import {
 import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
+import { AllyAnnouncements } from "./ally-announcements";
+import { checkTorpedoRelease } from "./ordnance";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
-import type { GameEvent, GameMode, GameState } from "./types";
+import type { FlightInput, GameEvent, GameMode, GameState } from "./types";
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const node = document.getElementById(id);
@@ -29,11 +31,14 @@ let graphicsReady = false;
 let contextLost = false;
 const audio = new FlightAudio();
 audio.enabled = false;
+const allyAnnouncements = new AllyAnnouncements();
 const buttons = {
     fire: el<HTMLButtonElement>("fire"),
     loop: el<HTMLButtonElement>("loop"),
     accelerate: el<HTMLButtonElement>("accelerate"),
     brake: el<HTMLButtonElement>("brake"),
+    bomb: el<HTMLButtonElement>("bomb"),
+    torpedo: el<HTMLButtonElement>("torpedo"),
 };
 for (const button of Object.values(buttons)) button.dataset.flightControl = "true";
 const settings = new ControlSettings(buttons);
@@ -52,11 +57,11 @@ function syncMode() {
     ? "ドラッグで操縦"
     : "触れた位置からドラッグして操縦";
   el("mode-guide").textContent = state.mode === "easy"
-    ? "照準円内・1.2km以内へ自動射撃 · 右下で宙返り"
+    ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"
     : "照準補助なし・手動射撃 · 加速・減速・宙返りをボタンで操作";
   el("keyboard-guide").textContent = state.mode === "easy"
-    ? "キーボード：矢印で操縦 · Lで宙返り"
-    : "キーボード：矢印で操縦 · Spaceで射撃 · W/Sで加速/減速 · Lで宙返り";
+    ? "キーボード：矢印で操縦 · L宙返り · Z爆弾 · X魚雷"
+    : "キーボード：矢印で操縦 · Space射撃 · W/S加減速 · L宙返り · Z爆弾 · X魚雷";
 }
 syncMode();
 for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="game-mode"]')) {
@@ -76,12 +81,15 @@ let accumulator = 0,
   generation = 0,
   announcementUntil = 0;
 let announcementPriority = 0;
-let pendingLoop = false;
+let pendingLoop = false, pendingBomb = false, pendingTorpedo = false;
+let lastArmorHintAt = -10;
 let lastFrameGap = 0;
 let lastInterruption: { reason: string; gap: number; render: unknown } | null = null;
 let renderStatus: "ready" | "pending" | "stalled" | "failed" = "ready";
 let frameIntervals: number[] = [];
 let updateTimes: number[] = [];
+let inputAudit: {tick:number;input:FlightInput}[] = [];
+let inputAuditSignature = "", inputAuditDropped = 0;
 
 for (const [id, allowBoth] of [["home-controls", true], ["pause-controls", false], ["result-controls", true]] as const) {
   const button = el<HTMLButtonElement>(id);
@@ -158,8 +166,11 @@ function begin() {
     return;
   generation++;
   announcementUntil = 0; announcementPriority = 0;
-  pendingLoop = false;
+  allyAnnouncements.clear();
+  el("ally-announcements").textContent = "";
+  pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   audio.resetFlight();
+  lastArmorHintAt = -10;
   controls.clear();
   pauseReasons.clear();
   state = createGame(undefined, selectedMode);
@@ -169,6 +180,7 @@ function begin() {
   lastFrame = 0;
   frameIntervals = [];
   updateTimes = [];
+  if (import.meta.env.DEV) { inputAudit=[];inputAuditSignature="";inputAuditDropped=0; }
   setScreen("playing");
   syncAudio();
   void audio.unlock().then(() => syncAudio());
@@ -179,7 +191,9 @@ function begin() {
   updateHUD();
 }
 function home() {
-  pendingLoop = false;
+  allyAnnouncements.clear();
+  el("ally-announcements").textContent = "";
+  pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   generation++;
   audio.resetFlight();
   state = createGame(undefined, selectedMode);
@@ -193,7 +207,7 @@ function home() {
 }
 function pause(reason: string) {
   if (state.phase !== "playing" && state.phase !== "paused") return;
-  pendingLoop = false;
+  pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   pauseReasons.add(reason);
   pauseGame(state);
   accumulator = 0;
@@ -235,6 +249,7 @@ function finish() {
   const causes = {
     'sea': '海面に機体が接触しました',
     'ship-collision': '戦艦の船体・構造物に衝突しました',
+    'ship-wreck-collision': '沈没中の艦の残骸に衝突しました',
     'aircraft-collision': '敵航空機と衝突しました',
     'naval-fire': '艦隊の対空砲撃で撃墜されました',
     'enemy-aircraft': '敵航空機の射撃で撃墜されました',
@@ -252,6 +267,9 @@ function finish() {
   el("ally-kills").textContent =
     `${r.allyAircraftKills}機 · ${r.allyShipKills}隻`;
   el("survivors").textContent = `${r.alliesSurvived}機`;
+  const allySummary = allyAnnouncements.summary();
+  el("ally-report").hidden = allySummary.length === 0;
+  el("ally-report-lines").textContent = allySummary.join("\n");
 }
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
@@ -260,6 +278,11 @@ function updateHUD() {
     state.enemies.filter((p) => p.health > 0).length,
   );
   el("enemy-total").textContent = `/ ${state.enemies.length}`;
+  el("bomb").textContent = state.player.bombReloadTicks > 0 ? `爆弾 ${(state.player.bombReloadTicks / 60).toFixed(1)}s` : `爆弾 ${state.player.bombs}`;
+  el("torpedo").textContent = state.player.torpedoReloadTicks > 0 ? `魚雷 ${(state.player.torpedoReloadTicks / 60).toFixed(1)}s` : `魚雷 ${state.player.torpedoes}`;
+  const torpedoCheck = checkTorpedoRelease(state.player, state.elapsed);
+  el("torpedo").dataset.ready = String(torpedoCheck.allowed && state.player.torpedoReloadTicks === 0);
+  el("payload-status").textContent = torpedoCheck.allowed ? "魚雷投下可能" : "";
   el("mg-ammo").textContent = String(state.player.mg);
   el("cannon-ammo").textContent = String(state.player.cannon);
   const reloading = state.player.reloadTicksRemaining > 0;
@@ -273,8 +296,9 @@ function updateHUD() {
   el("allies-count").textContent = String(
     state.allies.filter((p) => p.health > 0).length,
   );
-  el("health").textContent = String(Math.ceil(state.player.health));
-  el("health-bar").style.width = `${Math.max(0, state.player.health)}%`;
+  const healthPercent = Math.max(0, Math.min(100, state.player.health / state.player.maxHealth * 100));
+  el("health").textContent = String(Math.ceil(healthPercent));
+  el("health-bar").style.width = `${healthPercent}%`;
   el("altitude").textContent = `${Math.round(state.player.position.y)}m`;
   el("speed").textContent = `${Math.round(state.player.speed * 3.6)}km/h`;
   el("warning").hidden =
@@ -288,6 +312,8 @@ function updateHUD() {
         : "すぐ使える";
   el("flight-tip").hidden = state.elapsed > 8;
   if (state.elapsed > announcementUntil) el("announcement").textContent = "";
+  const allyText = allyAnnouncements.update(state.elapsed).join("\n");
+  if (el("ally-announcements").textContent !== allyText) el("ally-announcements").textContent = allyText;
 }
 function positionReloadStatus() {
   if (state.mode === "normal" && scene) {
@@ -325,39 +351,68 @@ function frame() {
     }
     accumulator += dt;
     const input = controls.sample();
-    pendingLoop ||= input.loop;
+    pendingLoop ||= input.loop; pendingBomb ||= Boolean(input.bomb); pendingTorpedo ||= Boolean(input.torpedo);
     input.viewAspect = scene?.camera.aspect ?? 1;
     const events: GameEvent[] = [];
     let first = true;
     const begin = performance.now();
     while (accumulator + 1e-9 >= FIXED_DT && state.phase === "playing") {
-      stepGame(state, { ...input, loop: first && pendingLoop }, FIXED_DT);
+      if (import.meta.env.DEV) {
+        // Record the input actually consumed by a fixed step. A later DOM read
+        // only bounds handler arrival and cannot reconstruct separate key/payload timing.
+        const consumed = { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo };
+        const signature = JSON.stringify(consumed);
+        if (signature !== inputAuditSignature) {
+          if (inputAudit.length < 20000) inputAudit.push({tick:state.tick+1,input:consumed});
+          else inputAuditDropped++;
+          inputAuditSignature=signature;
+        }
+      }
+      stepGame(state, { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo }, FIXED_DT);
       events.push(...state.events);
       accumulator -= FIXED_DT;
       first = false;
-      pendingLoop = false;
+      pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
     }
     updateTimes.push(performance.now() - begin);
     if (updateTimes.length > 3600) updateTimes.shift();
     scene?.events(events, state.elapsed);
+    allyAnnouncements.record(events);
     for (const e of events) {
       const relates =
         e.owner === state.player.id || e.target === state.player.id;
-      if (e.type === "kill") audio.event(e, e.target !== state.player.id);
+      if (e.type === "shot" && state.ships.some(ship => ship.id === e.owner)) audio.worldEvent(e, state.player, "naval-shot");
+      else if (e.type === "splash") audio.worldEvent(e, state.player, "splash");
+      else if (e.type === "ordnance-impact") audio.worldEvent(e, state.player, "ordnance-impact");
+      else if (e.type === "kill" && e.targetKind === "ship") audio.worldEvent(e, state.player, "ship-explosion");
+      else if (e.type === "hit" && e.targetKind === "ship") audio.worldEvent(e, state.player, "metal-hit");
+      else if (e.type === "kill") audio.event(e, e.target !== state.player.id);
       else if (relates) audio.event(e, true);
       if (e.type === "reload-start") announce("弾切れ · 6秒後に再装填", 2);
       if (e.type === "reload-complete") announce("再装填完了", 1.5);
       if (e.type === "reinforcement") announce(`敵${e.amount ?? 0}機が復活 · 撃破でHP回復`, 4, 3);
-      if (e.type === "ally-respawn") announce("僚機が戦線へ復帰", 2, 1);
+      if (e.type === "payload-release" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾投下" : "魚雷投下 · 80m航走で起爆可能", 2, 1);
+      if (e.type === "payload-rejected" && e.owner === state.player.id) {
+        const reasons: Record<string, string> = { altitude: "魚雷：高度20〜80mを目安に", speed: "魚雷：450km/h以下に減速", pitch: "魚雷：機首を水平に", bank: "魚雷：翼を水平に", reload: "兵装を再装填中", cooldown: "続けての投下は少し待って", capacity: "飛翔中の兵装が戻るまで待って", invalid: "この姿勢では投下できません" };
+        announce(reasons[e.detail ?? "invalid"], 2, 1);
+      }
+      if (e.type === "ordnance-dud" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾不発 · 投下直後の接触" : "魚雷不発 · 進入条件/航走距離を確認", 3, 1);
+      if (e.type === "ordnance-impact" && e.owner === state.player.id) announce(e.detail === "wreck" ? "沈没中の残骸に命中" : `${e.weapon === "bomb" ? "爆弾" : "魚雷"}命中 · 艦体損傷`, 2, 1);
+      if (e.type === "mount-destroyed" && e.owner === state.player.id) announce("敵砲座を破壊", 2, 1);
+      if (e.type === "hit" && e.armor && e.owner === state.player.id && state.elapsed - lastArmorHintAt > 5) {
+        lastArmorHintAt = state.elapsed; announce("艦の装甲には爆弾・魚雷を", 2.5);
+      }
       if (e.type === "heal") announce(`復活敵撃破 · HP +${e.amount ?? 0}`, 2.5);
       if (
         e.type === "kill" &&
         e.target !== state.player.id &&
-        e.team === "friendly" && !state.allies.some(p => p.id === e.target)
+        e.team === "friendly" && e.targetTeam === "enemy" &&
+        (e.owner === state.player.id || e.targetKind === "ship")
       )
         announce(e.targetKind === "ship" ? "敵艦撃沈" : "敵機撃墜", 1.5);
     }
     audio.update(state.player.speed);
+    audio.updatePasses([...state.allies, ...state.enemies], state.player, state.elapsed);
     updateHUD();
     if (state.result !== null) finish();
   }
@@ -482,9 +537,9 @@ try {
 // Development-only, deeply copied observation. No mutation or result injection API.
 if (import.meta.env.DEV) {
   Object.defineProperty(window, "__kaisenReadState", {
-    value: () =>
+    value: (includePerformanceHistory: boolean | 'audit' = true) =>
       JSON.parse(
-        JSON.stringify({
+        JSON.stringify(includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
           phase: state.phase,
           mode: state.mode,
           selectedMode,
@@ -500,10 +555,12 @@ if (import.meta.env.DEV) {
           enemies: state.enemies,
           ships: state.ships,
           bullets: state.bullets.length,
+          ordnance: state.ordnance,
           result: state.result,
           stats: state.stats,
           deathCause: state.deathCause,
           allyRespawnAt: state.allyRespawnAt,
+          allyActivity: allyAnnouncements.snapshot(),
           controlsInput: controls.peek(),
           settingsOpen: settings.isOpen,
           render: scene?.diagnostics(),
@@ -514,12 +571,12 @@ if (import.meta.env.DEV) {
             voices: audio.activeEffectVoiceCount,
             sources: audio.activeEffectSourceCount,
           },
-          frameIntervals,
+          frameIntervals: includePerformanceHistory ? frameIntervals : undefined,
           lastFrameGap,
           lastInterruption,
           renderStatus,
           pauseReasons: [...pauseReasons],
-          updateTimes,
+          updateTimes: includePerformanceHistory ? updateTimes : undefined,
         }),
       ),
     configurable: true,

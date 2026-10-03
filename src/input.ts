@@ -5,7 +5,10 @@ export type FlightControlButtons = {
   loop: HTMLButtonElement;
   accelerate: HTMLButtonElement;
   brake: HTMLButtonElement;
+  bomb?: HTMLButtonElement;
+  torpedo?: HTMLButtonElement;
 };
+export type KaisenControlButtons = FlightControlButtons & { bomb: HTMLButtonElement; torpedo: HTMLButtonElement };
 
 type ControlName = keyof FlightControlButtons;
 export type FlightMode = 'normal' | 'easy';
@@ -17,14 +20,15 @@ function neutralInput(steeringRevision = 0): FlightInput {
   return { turn: 0, climb: 0, fire: false, loop: false, accelerate: false, brake: false, steeringRevision };
 }
 
-/** Pointer and keyboard input for the four on-screen flight controls. */
+/** Pointer and keyboard input for flight controls and optional payload actions. */
 export class FlightControls {
   private steerPointer: number | null = null;
   private steerPointerType: string | null = null;
   private readonly buttonPointerTypes = new Map<number, string>();
   private readonly holds: Record<ControlName, Set<number>> = {
-    fire: new Set(), loop: new Set(), accelerate: new Set(), brake: new Set(),
+    fire: new Set(), loop: new Set(), accelerate: new Set(), brake: new Set(), bomb: new Set(), torpedo: new Set(),
   };
+  private readonly controlNames: ControlName[];
   private readonly keys = new Set<string>();
   private readonly clickBursts = new Set<ControlName>();
   private loopEdge = false;
@@ -44,6 +48,7 @@ export class FlightControls {
     private readonly buttons: FlightControlButtons,
     private readonly active: () => boolean,
   ) {
+    this.controlNames = (Object.keys(buttons) as ControlName[]).filter(name => Boolean(buttons[name]));
     const app = surface.closest<HTMLElement>('#app') ?? document.getElementById('app') ?? surface;
     let joystick = app.querySelector<HTMLElement>('#joystick');
     if (!joystick) {
@@ -64,8 +69,8 @@ export class FlightControls {
     surface.addEventListener('lostpointercapture', event => this.endSteering(event), opts);
     surface.addEventListener('contextmenu', event => event.preventDefault(), opts);
 
-    for (const name of Object.keys(buttons) as ControlName[]) {
-      const button = buttons[name];
+    for (const name of this.controlNames) {
+      const button = buttons[name]!;
       button.addEventListener('pointerdown', event => this.beginButton(name, button, event), opts);
       button.addEventListener('pointerup', event => this.endButton(name, button, event, true), opts);
       button.addEventListener('pointercancel', event => this.endButton(name, button, event, false), opts);
@@ -105,6 +110,7 @@ export class FlightControls {
     const accelerate = normal && (pressed('accelerate') || this.keys.has('KeyW') || this.clickBursts.has('accelerate'));
     const brake = normal && (pressed('brake') || this.keys.has('KeyS') || this.clickBursts.has('brake'));
     const loop = this.loopEdge;
+    const bomb = this.clickBursts.has('bomb'), torpedo = this.clickBursts.has('torpedo');
 
     this.loopEdge = false;
     this.clickBursts.clear();
@@ -112,7 +118,7 @@ export class FlightControls {
       turn: Math.max(-1, Math.min(1, turn)),
       climb: Math.max(-1, Math.min(1, climb)),
       fire,
-      loop,
+      loop, bomb, torpedo,
       accelerate,
       brake,
       steeringRevision: this.steeringRevision,
@@ -141,8 +147,8 @@ export class FlightControls {
     this.joystick.style.removeProperty('--joystick-y');
 
     if (steeringPointer !== null) this.releaseCapture(this.surface, steeringPointer);
-    for (const name of Object.keys(this.buttons) as ControlName[]) {
-      const button = this.buttons[name];
+    for (const name of this.controlNames) {
+      const button = this.buttons[name]!;
       for (const pointer of this.holds[name]) this.releaseCapture(button, pointer);
       this.holds[name].clear();
       button.classList.remove('is-pressed');
@@ -203,17 +209,17 @@ export class FlightControls {
       this.endSteering({ pointerId: id } as PointerEvent);
       this.releaseCapture(this.surface, id);
     }
-    for (const name of Object.keys(this.buttons) as ControlName[]) {
+    for (const name of this.controlNames) {
       for (const id of this.holds[name]) if (this.buttonPointerTypes.get(id) === pointerType) {
-        this.endButton(name, this.buttons[name], { pointerId: id } as PointerEvent, false);
-        this.releaseCapture(this.buttons[name], id);
+        this.endButton(name, this.buttons[name]!, { pointerId: id } as PointerEvent, false);
+        this.releaseCapture(this.buttons[name]!, id);
       }
     }
   }
 
   private endPointer(event: PointerEvent, completed: boolean): void {
     this.endSteering(event);
-    for (const name of Object.keys(this.buttons) as ControlName[]) this.endButton(name, this.buttons[name], event, completed);
+    for (const name of this.controlNames) this.endButton(name, this.buttons[name]!, event, completed);
   }
 
   private endSteering(event: PointerEvent): void {
@@ -230,7 +236,7 @@ export class FlightControls {
 
   private beginButton(name: ControlName, button: HTMLButtonElement, event: PointerEvent): void {
     if (!this.active() || (event.pointerType === 'mouse' && event.button !== 0)) return;
-    if (this.mode === 'easy' && name !== 'loop') return;
+    if (this.mode === 'easy' && name !== 'loop' && name !== 'bomb' && name !== 'torpedo') return;
     if (name === 'loop' && button.getAttribute('aria-disabled') === 'true') return;
     if (event.isPrimary) this.retireSameTypePointer(event.pointerType);
     event.preventDefault();
@@ -245,7 +251,10 @@ export class FlightControls {
     if (!this.holds[name].has(event.pointerId)) return;
     this.holds[name].delete(event.pointerId);
     this.buttonPointerTypes?.delete(event.pointerId);
-    if (name === 'loop' && completed && this.active() && button.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
+    if (completed && this.active() && button.getAttribute('aria-disabled') !== 'true') {
+      if (name === 'loop') this.loopEdge = true;
+      if (name === 'bomb' || name === 'torpedo') this.clickBursts.add(name);
+    }
     if (this.holds[name].size === 0) {
       button.classList.remove('is-pressed');
       button.setAttribute('aria-pressed', 'false');
@@ -253,7 +262,7 @@ export class FlightControls {
   }
 
   private activateOnce(name: ControlName): void {
-    if (this.mode === 'easy' && name !== 'loop') return;
+    if (this.mode === 'easy' && name !== 'loop' && name !== 'bomb' && name !== 'torpedo') return;
     if (name === 'loop') {
       if (this.buttons.loop.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
     } else {
@@ -264,11 +273,18 @@ export class FlightControls {
   private keyDown(event: KeyboardEvent): void {
     const allowed = STEERING_SHORTCUTS.has(event.code)
       || event.code === 'KeyL'
+      || (event.code === 'KeyZ' && Boolean(this.buttons.bomb))
+      || (event.code === 'KeyX' && Boolean(this.buttons.torpedo))
       || (this.mode === 'normal' && NORMAL_ACTION_SHORTCUTS.has(event.code));
     if (!this.active() || event.isComposing || !allowed || this.isTypingOrActivating(event.target)) return;
     event.preventDefault();
     if (STEERING_SHORTCUTS.has(event.code) && !this.keys.has(event.code)) this.steeringRevision += 1;
+    const wasDown = this.keys.has(event.code);
     this.keys.add(event.code);
+    if (!wasDown && !event.repeat) {
+      if (event.code === "KeyZ") this.clickBursts.add("bomb");
+      if (event.code === "KeyX") this.clickBursts.add("torpedo");
+    }
     if (event.code === 'KeyL' && !event.repeat && this.buttons.loop.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
   }
 

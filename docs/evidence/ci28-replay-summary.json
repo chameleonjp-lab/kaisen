@@ -1,0 +1,109 @@
+{
+  "sourceHead": "26b0a730d2692aed61848f6e719e308d31f0ec75",
+  "sourceRun": "https://github.com/chameleonjp-lab/kaisen/actions/runs/37117149155",
+  "note": "Replay of actual fixed-step consumed inputs, not a new winning pilot or physical-device test. Exact critical fields and bounded floating error for entities. Full input tuples are retained in tests/fixtures/consumed-inputs-ci28.json.",
+  "cases": {
+    "easy": {
+      "recordedTick": 7322,
+      "replayedTick": 7322,
+      "allFieldsExact": false,
+      "matches": {
+        "phase": true,
+        "mode": true,
+        "tick": true,
+        "elapsed": true,
+        "player": false,
+        "allies": false,
+        "enemies": false,
+        "ships": false,
+        "stats": true,
+        "result": true,
+        "deathCause": true,
+        "allyRespawnAt": true
+      },
+      "numericTolerance": 1e-07,
+      "maxNumericDifference": 1.1141310096718371e-11,
+      "outcome": "shot-down",
+      "cause": "naval-fire",
+      "hp": 0,
+      "stats": {
+        "playerAircraftKills": 1,
+        "playerShipKills": 1,
+        "allyAircraftKills": 7,
+        "allyShipKills": 0,
+        "shots": 410,
+        "hits": 51,
+        "loops": 0,
+        "damageTaken": 95.00000000000009,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 0
+      },
+      "damage": {
+        "mg": {
+          "hits": 151,
+          "hp": 43.44000000000002
+        },
+        "cannon": {
+          "hits": 46,
+          "hp": 27.840000000000014
+        },
+        "aa": {
+          "hits": 10,
+          "hp": 23.720000000000155
+        }
+      }
+    },
+    "normal": {
+      "recordedTick": 25229,
+      "replayedTick": 25229,
+      "allFieldsExact": false,
+      "matches": {
+        "phase": true,
+        "mode": true,
+        "tick": true,
+        "elapsed": true,
+        "player": false,
+        "allies": false,
+        "enemies": false,
+        "ships": false,
+        "stats": true,
+        "result": true,
+        "deathCause": true,
+        "allyRespawnAt": true
+      },
+      "numericTolerance": 1e-07,
+      "maxNumericDifference": 3.092281986027956e-11,
+      "outcome": "shot-down",
+      "cause": "enemy-aircraft",
+      "hp": 0,
+      "stats": {
+        "playerAircraftKills": 7,
+        "playerShipKills": 2,
+        "allyAircraftKills": 11,
+        "allyShipKills": 0,
+        "shots": 1156,
+        "hits": 148,
+        "loops": 0,
+        "damageTaken": 184.9999999999989,
+        "friendlyDamage": 48.72000000000018,
+        "friendlyKills": 1,
+        "score": -1987.2000000000016
+      },
+      "damage": {
+        "mg": {
+          "hits": 332,
+          "hp": 93.7679999999996
+        },
+        "cannon": {
+          "hits": 105,
+          "hp": 64.83200000000004
+        },
+        "aa": {
+          "hits": 23,
+          "hp": 26.400000000000006
+        }
+      }
+    }
+  }
+}

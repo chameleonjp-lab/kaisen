@@ -1,3 +1,4 @@
+import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
 import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
@@ -7,6 +8,15 @@ import { mkdir, writeFile } from "node:fs/promises";
 test.use({ trace: "off" });
 async function state(page: Page) {
   return page.evaluate(() => (window as any).__kaisenReadState());
+}
+async function pilotState(page: Page) {
+  return page.evaluate(() => {
+    const snapshot=(window as any).__kaisenReadState(false);
+    // CI26's two 3,600-entry histories made each feedback message 156kB.
+    // The pilot needs live entities/input, not a repeated performance archive.
+    // Full snapshots remain in screenshots/final evidence; no game state changes.
+    return snapshot;
+  });
 }
 async function opened(page: Page) {
   await page.goto("/");
@@ -32,8 +42,9 @@ async function capture(page: Page, name: string, inspectPausedScene = false) {
   });
 }
 const errors: string[] = [];
+const samples: unknown[] = [];
 test.beforeEach(async ({ page }) => {
-  errors.length = 0;
+  errors.length = 0; samples.length = 0;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
@@ -44,7 +55,8 @@ test.afterEach(async ({ page }, info) => {
   const snapshot = await state(page).catch(() => null);
   await writeFile(
     "test-results/evidence/touch-victory-state.json",
-    JSON.stringify({ status: info.status, errors, snapshot }, null, 2),
+    JSON.stringify({ status: info.status, errors, snapshot, samples,
+      consumedInputs:await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null) }, null, 2),
   );
   if (info.status !== "passed")
     await page
@@ -65,10 +77,11 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
-  let fleetCaptured = false, lastSample = -6;
+  let activityCaptured = false;
+  let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
   const pilot = createBrowserMissionPilot();
   while (true) {
-    const s = await state(page);
+    const s = await pilotState(page);
     if (s.phase === "ended") break;
     expect(s.phase, "Unexpected pause during real touch flight").toBe(
       "playing",
@@ -104,9 +117,22 @@ test("physical circular-stick inputs reach the victory screen", async ({
       lastSample = -6;
       continue;
     }
+    if (!activityCaptured && s.allyActivity.visible.length > 0) {
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await page.locator('#pause').tap();
+      await expect.poll(async ()=>(await state(page)).phase).toBe('paused');
+      await capture(page,'wingman-activity-paused',true);activityCaptured=true;
+      await page.locator('#resume').tap();
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
+      lastSample=-6;continue;
+    }
     const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
-    await cdp.send("Input.dispatchTouchEvent", {type:"touchMove",touchPoints:[{x:origin.x+stickX,y:origin.y+stickY,id:1}]});
+    const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
+    lastSample=accepted.tick;
+    samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
+    if(accepted.phase!=='playing')break;
+    if(request.bomb) { await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb');payloadPresses++; }
 
   }
   await cdp.send("Input.dispatchTouchEvent", {
@@ -114,12 +140,21 @@ test("physical circular-stick inputs reach the victory screen", async ({
     touchPoints: [],
   });
   const result = await state(page);
+  const consumedInputs = await page.evaluate(()=>(window as any).__kaisenReadState('audit'));
+  expect(consumedInputs.dropped).toBe(0);expect(consumedInputs.entries[0].tick).toBe(1);
+  expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
   expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
+  expect(payloadPresses, "Actual touch buttons launch the anti-ship payloads").toBeGreaterThan(0);
   expect(result.result?.outcome).toBe("victory");
   expect(result.enemies.every((t: any) => t.health <= 0)).toBe(true);
   expect(result.ships.every((t: any) => t.health <= 0)).toBe(true);
   await expect(page.locator("#result-title")).toHaveText("作戦成功");
   await capture(page, "result-victory");
+  expect(activityCaptured).toBe(true);
+  expect(result.allyActivity.totals.reduce((sum:number,row:any)=>sum+row.victory,0)).toBe(result.stats.allyAircraftKills);
+  await expect(page.locator('#ally-report')).toBeVisible();
+  await page.locator('#ally-report summary').tap();
+  await expect(page.locator('#ally-report-lines')).toContainText('敵機撃墜');
   await page.locator("#result-home").click();
   await expect(page.locator("#start")).toBeVisible();
 });

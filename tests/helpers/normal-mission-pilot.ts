@@ -48,7 +48,7 @@ export function createNormalMissionPilot() {
     const targets = [...enemies, ...ships].filter(target => target.health > 0);
     const nearest = targets.slice().sort((a, b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
     const pick = nearest?.kind === 'aircraft' ? nearest : targets.filter(target => target.kind === 'ship').sort((a, b) => a.health - b.health || player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
-    const healTarget = player.health < 95 ? enemies.filter(e => e.health > 0 && e.generation === 'reinforcement').sort((a,b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0] : null;
+    const healTarget = player.health < player.maxHealth * .95 ? enemies.filter(e => e.health > 0 && e.generation === 'reinforcement').sort((a,b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0] : null;
     const current = targets.find(target => target.id === targetId);
     const target = current?.kind === 'aircraft' ? ((ships.every(ship => ship.health <= 0) && snapshot.elapsed - targetSince > 20) ? enemies.filter(e=>e.health>0 && e.id!==current.id).sort((a,b)=>player.position.distanceTo(a.position)-player.position.distanceTo(b.position))[0] ?? current : current) : healTarget ?? current ?? pick;
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false };

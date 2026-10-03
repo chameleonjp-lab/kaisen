@@ -242,7 +242,8 @@ test("real flight to sea failure, result, replay, and home", async ({
   await capture(page, "result-sea");
   await page.locator("#retry").click();
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
-  expect((await state(page)).player.health).toBe(100);
+  expect((await state(page)).player.health).toBe(80);
+  await expect(page.locator("#health")).toHaveText("100");
   await page.locator("#pause").click();
   await page.locator("#pause-home").click();
   await expect(page.locator("#start")).toBeVisible();

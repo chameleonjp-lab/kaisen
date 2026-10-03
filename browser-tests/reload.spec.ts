@@ -17,7 +17,7 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
     await page.screenshot({path:`test-results/evidence/${name}.png`,style:'#pause-screen { visibility: hidden !important; }'});
   };
   await page.goto('/'); await expect(page.locator('#start')).toBeEnabled();
-  const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
+  const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot(true);
   const origin = {x:90,y:650};
   const touchStart = () => cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   const touchEnd = () => cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});

@@ -27,7 +27,12 @@ import { targetAimPoint } from "./flight-assist";
 import { projectGunSight } from "./gun-sight";
 import { AIM_COLORS, aimIndicator, aimRadius } from "./aim-indicator";
 import { AircraftBatchFactory } from "./aircraft-batch";
+import { AircraftTracers } from "./aircraft-tracers";
 import { ShipFactory } from "./ships";
+import { OrdnanceView } from "./ordnance-view";
+import { shipWreckPose, isShipObstacle } from "./ship-wreck";
+import { predictBombImpact } from "./ordnance";
+import { seaVertex, seaFragment, skyVertex, skyFragment } from "./atmosphere";
 import { RenderQueue } from "./render-queue";
 import { FIXED_DT, MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
 import { createOceanGeometry, oceanAnchor, OCEAN_GLSL } from "./ocean";
@@ -44,52 +49,6 @@ const EFFECT_CAPACITY = 240;
 const NAVAL_FLASH_CAPACITY = 252; // All 36 AA barrels on the maximum seven ships.
 const POINT_CAPACITY = EFFECT_CAPACITY + NAVAL_FLASH_CAPACITY + MAX_BULLETS;
 const TRACER_CAPACITY = MAX_BULLETS;
-const seaVertex = `
-uniform float uTime;
-varying vec3 vWorld;
-${OCEAN_GLSL}
-void main(){
- vWorld=(modelMatrix*vec4(position,1.)).xyz;
- vWorld.y=oceanHeight(vWorld.xz,uTime);
- gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);
-}`;
-const seaFragment = `
-uniform float uTime;
-varying vec3 vWorld;
-${OCEAN_GLSL}
-void main(){
- float d=length(cameraPosition-vWorld);
- vec2 uv=vWorld.xz*.14;
- float rippleA=sin(dot(uv,vec2(1.,.36))+uTime*.9+sin(uv.y*.36)*.4);
- float rippleB=sin(dot(uv,vec2(-.55,.82))-uTime*.63);
- // Broad normals use the same surface as collision; small ripples only shade it.
- float a=vWorld.x*.023+vWorld.z*.013-uTime*.7;
- float b=vWorld.x*-.039+vWorld.z*.031+uTime*.46;
- vec2 gradient=oceanGradient(vWorld.xz,uTime);
- vec3 swell=vec3(-gradient.x,1.,-gradient.y);
- vec3 n=normalize(swell+vec3(rippleA*.035,0.,rippleB*.025)*exp(-d*.0015));
- vec3 eye=normalize(cameraPosition-vWorld);
- vec3 light=normalize(vec3(-.6,.65,-.35));
- float fres=pow(1.-max(0.,dot(n,eye)),3.);
- float glint=pow(max(0.,dot(reflect(-light,n),eye)),95.);
- float fleck=sin(vWorld.x*.025+vWorld.z*.042+sin(vWorld.x*.04)-uTime*.4);
- vec3 water=mix(vec3(.022,.17,.22),vec3(.24,.48,.53),fres);
- water+=vec3(.90,.76,.45)*glint*.9;
- water+=vec3(.015,.038,.040)*fleck*exp(-d*.0008);
- float crest=smoothstep(1.1,1.7,sin(a)+sin(b)*.7);
- float broken=smoothstep(-.2,.6,sin(vWorld.x*.012-vWorld.z*.018+sin(b)));
- water+=vec3(.045,.07,.072)*crest*broken*exp(-d*.001);
- water=mix(water,vec3(.57,.73,.75),smoothstep(3500.,18000.,d));
- gl_FragColor=vec4(water,1.);
- #include <tonemapping_fragment>
- #include <colorspace_fragment>
-}`;
-const skyVertex = `varying vec3 vPosition;void main(){vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
-const skyFragment =
-  `varying vec3 vPosition;void main(){vec3 p=normalize(vPosition);float h=max(0.,p.y);vec3 c=mix(vec3(.68,.80,.81),vec3(.16,.37,.54),pow(h,.5));float s=pow(max(0.,dot(p,normalize(vec3(-.6,.65,-.35)))),360.);c+=vec3(.55,.42,.18)*s;float cloud=sin(p.x*22.+p.z*7.)*sin(p.z*34.-p.x*11.);c+=vec3(.09)*smoothstep(.48,.95,cloud)*smoothstep(.1,.22,h)*(1.-smoothstep(.35,.50,h));gl_FragColor=vec4(c,1.);#include <tonemapping_fragment>\n#include <colorspace_fragment>}`.replace(
-    ";#include",
-    ";\n#include",
-  );
 
 interface Particle {
   p: Vector3;
@@ -108,12 +67,14 @@ export class KaisenScene {
   private scene = new Scene();
   private aircraft = new AircraftFactory();
   private aircraftBatches = new AircraftBatchFactory();
+  private aircraftTracers = new AircraftTracers();
   private teamBandGeometry = new CylinderGeometry(0.34, 0.39, 0.6, 14, 1, true);
   private teamMaterials = {
     friendly: new MeshBasicMaterial({ color: 0x27aaa4 }),
     enemy: new MeshBasicMaterial({ color: 0xe29b55 }),
   };
   private ships = new ShipFactory();
+  private ordnanceView = new OrdnanceView();
   private planes = new Map<number, AircraftVisual>();
   private fleet = new Map<number, Group>();
   private seaMaterial = new ShaderMaterial({
@@ -182,7 +143,7 @@ export class KaisenScene {
     const sun = new DirectionalLight(0xffe9b5, 3.1);
     sun.position.set(-600, 700, -350);
     this.scene.add(sun);
-    this.scene.add(this.sea, this.sky);
+    this.scene.add(this.sea, this.sky, this.ordnanceView.root, this.aircraftTracers.root);
     this.tracersGeometry.setAttribute(
       "position",
       new BufferAttribute(this.tracerPositions, 3),
@@ -265,9 +226,11 @@ export class KaisenScene {
       for (const attribute of Object.values(geometry.attributes)) attribute.needsUpdate = true;
     this.tracersGeometry.setDrawRange(0, 2);
     this.particleGeometry.setDrawRange(0, 1);
+    this.aircraftTracers.prime(sample);
     this.renderer.render(this.scene, this.camera);
     this.tracersGeometry.setDrawRange(0, 0);
     this.particleGeometry.setDrawRange(0, 0);
+    this.aircraftTracers.update([]);
     this.renderer.render(this.scene, this.camera);
     this.renderQueue.submit(performance.now());
     // A linked program or a returned draw call is not a visible-frame barrier.
@@ -328,6 +291,7 @@ export class KaisenScene {
     this.current = state;
   }
   events(events: readonly GameEvent[], time: number) {
+    const smokeSalvos = new Set<string>();
     for (const e of events) {
       if (e.id <= this.lastEvent) continue;
       this.lastEvent = e.id;
@@ -336,13 +300,24 @@ export class KaisenScene {
         const born = (e.tick ?? Math.round(time / FIXED_DT)) * FIXED_DT;
         // One flash per emitted barrel. No idle turret flashes or old shots replayed
         // after a slow render frame; this never generates projectiles or damage.
-        if (ship && time - born < .16) this.navalFlashes.push({
-          p: e.position.clone(), v: ship.velocity.clone(), born, life: .16,
-          color: new Color(0xffedb0), size: 5, gravity: 0,
-        });
+        if (ship && time - born < .16) {
+          this.navalFlashes.push({ p: e.position.clone(), v: ship.velocity.clone(), born, life: .16,
+            color: new Color(0xffedb0), size: 5, gravity: 0 });
+          const salvo = `${e.owner}:${e.mountId}:${e.tick}`;
+          if (!smokeSalvos.has(salvo)) {
+            smokeSalvos.add(salvo);
+            this.particles.push({ p: e.position.clone(), v: ship.velocity.clone().add(new Vector3(0, 3, 0)), born, life: .8,
+              color: new Color(0x9ca6a7), size: e.detail === 'heavy-aa' ? 7 : 3.5, gravity: -.2 });
+          }
+        }
         continue;
       }
-      if (e.type !== "hit" && e.type !== "kill" && e.type !== "splash")
+      const hitShip = this.current?.ships.find(ship => ship.id === e.target);
+      if (hitShip && (e.type === "hit" || e.type === "ordnance-impact" || e.type === "mount-destroyed")) {
+        const local = e.localPosition ?? e.position.clone().sub(hitShip.position).applyQuaternion(hitShip.quaternion.clone().invert());
+        this.ships.impact(hitShip.id, local, (e.tick ?? Math.round(time / FIXED_DT)) * FIXED_DT, e.type === "ordnance-impact" ? "explosive" : e.type === "mount-destroyed" ? "mount" : "metal");
+      }
+      if (e.type !== "hit" && e.type !== "kill" && e.type !== "splash" && e.type !== "ordnance-impact" && e.type !== "mount-destroyed")
         continue;
       if (
         e.type === "kill" &&
@@ -356,33 +331,29 @@ export class KaisenScene {
           ...this.current.enemies,
           ...this.current.ships,
         ].find((t) => t.id === e.target);
-        if (target)
+        if (target && target.kind !== "ship")
           this.wrecks.set(target.id, {
             time,
             position: target.position.clone(),
             rotation: target.quaternion.clone(),
-            velocity:
-              target.kind === "ship"
-                ? target.velocity.clone()
-                : new Vector3(0, 0, -1)
-                    .applyQuaternion(target.quaternion)
-                    .multiplyScalar(target.speed * 0.5),
+            velocity: new Vector3(0, 0, -1).applyQuaternion(target.quaternion).multiplyScalar(target.speed * 0.5),
           });
       }
-      const count = e.type === "kill" ? 18 : e.type === "splash" ? 4 : 3;
+      const heavy = e.type === "ordnance-impact" || (e.type === "kill" && e.targetKind === "ship");
+      const count = heavy ? 24 : e.type === "kill" ? 18 : e.type === "splash" ? (e.weapon ? 12 : 4) : 3;
       for (let j = 0; j < count; j++) {
         const seed = e.id * 31 + j * 17,
           a = seed * 2.399963,
-          radius = e.type === "kill" ? 18 : 5;
+          radius = heavy ? 32 : e.type === "kill" ? 18 : e.type === "splash" ? 3 : 5;
         this.particles.push({
           p: e.position.clone(),
           v: new Vector3(
             Math.cos(a) * radius,
-            6 + (seed % 13),
+            e.type === "splash" ? 18 + (seed % 17) : 6 + (seed % 13),
             Math.sin(a) * radius,
           ),
           born: time,
-          life: e.type === "kill" ? 2.4 : 0.7,
+          life: heavy ? 3.2 : e.type === "kill" ? 2.4 : e.type === "splash" ? 1.1 : 0.7,
           color: new Color(
             e.type === "splash"
               ? 0xbbf4f5
@@ -390,9 +361,9 @@ export class KaisenScene {
                 ? 0x354047
                 : j % 3 === 0
                   ? 0xffd993
-                  : 0xed641d,
+                  : e.targetKind === "ship" && e.type === "hit" ? 0xdad3b0 : 0xed641d,
           ),
-          size: e.type === "kill" ? 28 : 8,
+          size: heavy ? 42 : e.type === "kill" ? 28 : e.type === "splash" ? 13 : 8,
         });
       }
     }
@@ -450,16 +421,10 @@ export class KaisenScene {
       if (wake) wake.visible = s.health > 0;
       v.position.copy(s.position);
       v.quaternion.copy(s.quaternion);
-      this.ships.update(s, v);
-      const wreck = this.wrecks.get(s.id);
-      if (s.health <= 0 && wreck) {
-        const age = this.visualTime - wreck.time;
-        v.visible = age < 7;
-        v.position
-          .copy(wreck.position)
-          .addScaledVector(wreck.velocity, age * 0.4);
-        v.position.y -= age * 3.8;
-        v.rotation.z += age * 0.035;
+      this.ships.update(s, v, this.visualTime);
+      if (s.health <= 0 && s.wreck) {
+        v.visible = isShipObstacle(s, this.visualTime);
+        shipWreckPose(s.wreck, this.visualTime, v.position, v.quaternion);
       }
     }
     getFlightCameraPose(
@@ -473,16 +438,19 @@ export class KaisenScene {
     this.sea.position.x = oceanAnchor(state.player.position.x);
     this.sea.position.z = oceanAnchor(state.player.position.z);
     this.seaMaterial.uniforms.uTime.value = state.elapsed;
-    const n = Math.min(TRACER_CAPACITY, state.bullets.length);
-    for (let i = 0; i < n; i++) {
-      const b = state.bullets[i],
-        tail = b.position.clone().addScaledVector(b.velocity, -0.025);
+    this.ordnanceView.update(state.ordnance, state.elapsed);
+    this.aircraftTracers.update(state.bullets);
+    let n = 0;
+    for (const b of state.bullets) {
+      if (b.kind !== 'aa') continue;
+      if (n >= TRACER_CAPACITY) break;
+      const tail = b.position.clone().addScaledVector(b.velocity, -0.025);
       this.tracerPositions.set(
         [tail.x, tail.y, tail.z, b.position.x, b.position.y, b.position.z],
-        i * 6,
+        n * 6,
       );
       const c = b.team === "friendly" ? [1, 0.83, 0.42] : [1, 0.32, 0.11];
-      this.tracerColors.set([...c, ...c], i * 6);
+      this.tracerColors.set([...c, ...c], n++ * 6);
     }
     this.tracersGeometry.setDrawRange(0, n * 2);
     this.tracersGeometry.attributes.position.needsUpdate = true;
@@ -543,11 +511,11 @@ export class KaisenScene {
       c.moveTo(sight.x, sight.y - radius - 6); c.lineTo(sight.x, sight.y - radius + 5);
       c.moveTo(sight.x, sight.y + radius - 5); c.lineTo(sight.x, sight.y + radius + 6);
       // A dark outline keeps the manual bore sight readable over bright sky/sea.
-      c.strokeStyle = "rgba(3,25,39,.9)";
-      c.lineWidth = 4;
+      c.strokeStyle = "rgba(3,25,39,.65)";
+      c.lineWidth = 2;
       c.stroke();
       c.strokeStyle = aimColor;
-      c.lineWidth = 1.5;
+      c.lineWidth = 1;
     }
     c.stroke();
     if (state.player.reloadTicksRemaining > 0) {
@@ -562,6 +530,26 @@ export class KaisenScene {
     }
     c.fillStyle = aimColor;
     c.fillRect(sight.x - 1, sight.y - 1, 2, 2);
+    const bombGuide = predictBombImpact(state.player, 9);
+    if (bombGuide && state.player.bombs > 0) {
+      const p = bombGuide.position.clone().project(this.camera);
+      if (p.z > -1 && p.z < 1 && Math.abs(p.x) < .94 && Math.abs(p.y) < .82) {
+        const x = (p.x * .5 + .5) * w, y = (-p.y * .5 + .5) * h;
+        c.strokeStyle = "#b7efce"; c.fillStyle = "#d1ffe3"; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(x - 8, y); c.lineTo(x + 8, y); c.moveTo(x, y - 8); c.lineTo(x, y + 8); c.stroke();
+        // Keep the physical impact cross fixed, offset only its explanation
+        // away from the central propeller, with a small contrast backplate.
+        c.save(); c.font = "600 10px system-ui"; c.textAlign = "left";
+        const label = "爆弾の落下目安", labelWidth = Math.ceil(c.measureText(label).width) + 12;
+        const labelX = x + 32 + labelWidth < w - 12 ? x + 32 : x - 32 - labelWidth;
+        const labelY = Math.max(76, Math.min(h - 60, y - 36));
+        c.strokeStyle = "rgba(183,239,206,.55)"; c.lineWidth = .75;
+        c.beginPath(); c.moveTo(x + (labelX > x ? 9 : -9), y);
+        c.lineTo(labelX > x ? labelX : labelX + labelWidth, labelY + 19); c.stroke();
+        c.fillStyle = "rgba(4,24,34,.78)"; c.fillRect(labelX, labelY, labelWidth, 20);
+        c.fillStyle = "#d1ffe3"; c.fillText(label, labelX + 6, labelY + 14); c.restore();
+      }
+    }
     const targets = [...state.allies, ...state.enemies, ...state.ships];
     c.shadowColor = "rgba(0,20,30,.9)";
     c.shadowBlur = 3;
@@ -699,6 +687,7 @@ export class KaisenScene {
       width: this.width,
       height: this.height,
       pixelRatio: this.renderer.getPixelRatio(),
+      aircraftTracers: this.aircraftTracers.diagnostics(),
     };
   }
   dispose() {
@@ -708,11 +697,13 @@ export class KaisenScene {
     for (const plane of this.planes.values()) this.scene.remove(plane.root);
     this.planes.clear();
     this.aircraftBatches.dispose();
+    this.aircraftTracers.dispose();
     this.aircraft.dispose();
     this.teamBandGeometry.dispose();
     this.teamMaterials.friendly.dispose();
     this.teamMaterials.enemy.dispose();
     this.ships.dispose();
+    this.ordnanceView.dispose();
     this.sea.geometry.dispose();
     this.seaMaterial.dispose();
     this.sky.geometry.dispose();

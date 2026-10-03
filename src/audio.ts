@@ -1,6 +1,6 @@
 /** Proposed propeller-only level: half the previous amplitude, other voices unchanged. */
 const PROPELLER_GAIN = 0.0475;
-import type { GameEvent } from './types';
+import type { Aircraft, GameEvent } from './types';
 
 const MAX_EFFECT_SOURCES = 10;
 const DAMAGE_SOURCE_RESERVE = 3;
@@ -9,8 +9,36 @@ const NOISE_BUFFER_SECONDS = 1.2;
 const PLAYER_EXPLOSION_DURATION_SECONDS = 0.95;
 const FINISH_TAIL_SECONDS = PLAYER_EXPLOSION_DURATION_SECONDS + 0.1;
 const KILL_TAIL_SECONDS = 0.4;
+const MAX_REMEMBERED_MOUNTS = 128;
+const MAX_PASS_AIRCRAFT = 32;
+const MAX_PASS_VOICES = 2;
+const WORLD_SOUND_RANGE = 3200;
+const PASS_START_DISTANCE = 180;
+const PASS_STOP_DISTANCE = 360;
+const PASS_DURATION = 1.4;
+const PASS_COOLDOWN = 4;
 
-type EffectType = 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'playerExplosion';
+export type WorldAudioCategory = 'naval-shot' | 'metal-hit' | 'splash' | 'ship-explosion' | 'ordnance-impact';
+type AudioListener = Pick<Aircraft, 'id' | 'position' | 'quaternion'>;
+type EffectType = 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'playerExplosion' | WorldAudioCategory | 'aircraft-pass';
+
+interface SpatialMix {
+  distance: number;
+  pan: number;
+  gain: number;
+  cutoff: number;
+}
+
+interface PassState {
+  x: number;
+  y: number;
+  z: number;
+  distance: number;
+  elapsed: number;
+  age: number;
+  lastStart: number;
+  voice?: EffectVoice;
+}
 
 interface EffectVoice {
   type: EffectType;
@@ -18,6 +46,10 @@ interface EffectVoice {
   sources: Set<AudioScheduledSourceNode>;
   nodes: Set<AudioNode>;
   ended: boolean;
+  output?: AudioNode;
+  spatial?: { gain: GainNode; filter: BiquadFilterNode; pan: StereoPannerNode };
+  passNoise?: AudioBufferSourceNode;
+  passTone?: OscillatorNode;
 }
 
 const EFFECT_PRIORITY: Record<EffectType, number> = {
@@ -27,12 +59,23 @@ const EFFECT_PRIORITY: Record<EffectType, number> = {
   kill: 3,
   damage: 4,
   playerExplosion: 5,
+  'naval-shot': 1,
+  'metal-hit': 2,
+  splash: 1,
+  'ship-explosion': 3,
+  'ordnance-impact': 3,
+  'aircraft-pass': 1,
 };
 
 const RATE_LIMIT_SECONDS: Partial<Record<EffectType, number>> = {
   shot: 0.035,
   hit: 0.045,
   damage: 0.11,
+  'metal-hit': 0.045,
+  splash: 0.075,
+  'ship-explosion': 0.14,
+  'ordnance-impact': 0.09,
+  'aircraft-pass': 0.3,
 };
 
 const SOUND_EFFECTS = new Set<GameEvent['type']>([
@@ -42,6 +85,28 @@ const SOUND_EFFECTS = new Set<GameEvent['type']>([
   'damage',
   'loop',
 ]);
+
+/** Audio reads world facts only; it never consumes simulation randomness or changes entities. */
+function spatialMix(position: GameEvent['position'], player: AudioListener): SpatialMix | null {
+  const dx = position.x - player.position.x;
+  const dy = position.y - player.position.y;
+  const dz = position.z - player.position.z;
+  const distance = Math.hypot(dx, dy, dz);
+  const q = player.quaternion;
+  const norm = Math.hypot(q.x, q.y, q.z, q.w);
+  if (!Number.isFinite(distance) || !Number.isFinite(norm) || norm < 0.00001) return null;
+  const x = q.x / norm, y = q.y / norm, z = q.z / norm, w = q.w / norm;
+  // Inverse listener rotation: +local X is the right ear; the aircraft nose is -local Z.
+  const localX = (1 - 2 * (y * y + z * z)) * dx + 2 * (x * y + w * z) * dy + 2 * (x * z - w * y) * dz;
+  const localZ = 2 * (x * z + w * y) * dx + 2 * (y * z - w * x) * dy + (1 - 2 * (x * x + y * y)) * dz;
+  const horizontal = Math.hypot(localX, localZ);
+  return {
+    distance,
+    pan: horizontal < 0.001 ? 0 : Math.max(-1, Math.min(1, localX / horizontal)),
+    gain: 1 / (1 + Math.pow(distance / 180, 1.4)),
+    cutoff: Math.max(650, Math.min(12000, 12000 / (1 + distance / 380))),
+  };
+}
 
 export class FlightAudio {
   private ctx: AudioContext | null = null;
@@ -57,6 +122,9 @@ export class FlightAudio {
   private lastEventAt = new Map<EffectType, number>();
   private unlockRequest: Promise<void> | null = null;
   private finishing = false;
+  private mountReports = new Map<string, { tick: number | undefined; time: number }>();
+  private passes = new Map<number, PassState>();
+  private passElapsed: number | null = null;
 
   enabled = true;
   active = false;
@@ -228,6 +296,174 @@ export class FlightAudio {
     }
   }
 
+  /** The caller classifies the actual shooter/target; an anonymous shot is never guessed to be naval. */
+  worldEvent(event: GameEvent, player: AudioListener, category: WorldAudioCategory): void {
+    if (!this.rememberEvent(event.id)) return;
+    const ctx = this.ctx;
+    if (!this.enabled || !this.active || !ctx || ctx.state !== 'running' || !this.master) return;
+    const mix = spatialMix(event.position, player);
+    if (!mix || mix.distance > WORLD_SOUND_RANGE) return;
+    const now = ctx.currentTime;
+    const heavy = event.detail === 'heavy-aa';
+    if (category === 'naval-shot') {
+      const key = `${event.owner}:${event.mountId ?? 'unknown'}`;
+      const last = this.mountReports.get(key);
+      // Several real barrels from one mount/tick form one report, without inventing extra shots.
+      if (last && ((event.tick !== undefined && last.tick === event.tick)
+        || now - last.time < (heavy ? 0.16 : 0.075))) return;
+      this.mountReports.delete(key);
+      this.mountReports.set(key, { tick: event.tick, time: now });
+      if (this.mountReports.size > MAX_REMEMBERED_MOUNTS) {
+        const oldest = this.mountReports.keys().next().value;
+        if (oldest !== undefined) this.mountReports.delete(oldest);
+      }
+    } else {
+      const last = this.lastEventAt.get(category);
+      if (last !== undefined && now - last < (RATE_LIMIT_SECONDS[category] ?? 0)) return;
+    }
+    const cost = category === 'naval-shot' ? (heavy ? 2 : 1) : this.sourceCost(category);
+    if (!this.reserveCapacity(category, cost, now)) return;
+    const voice = this.newVoice(category);
+    try {
+      this.attachSpatial(voice, mix, now);
+      switch (category) {
+        case 'naval-shot':
+          if (heavy) {
+            this.createNoisePulse(voice, now, 620, 0.72, 0.18, 0.29, 0.32);
+            this.createTonePulse(voice, now, 105, 48, 0.085, 0.27, 'triangle');
+          } else {
+            this.createNoisePulse(voice, now, 2350, 1.55, 0.095, 0.085, 0.1, 'bandpass', 0.002);
+          }
+          break;
+        case 'metal-hit':
+          this.createNoisePulse(voice, now, 2600, 1.65, 0.1, 0.06, 0.085, 'highpass', 0.001);
+          this.createTonePulse(voice, now, 940, 620, 0.055, 0.22, 'triangle');
+          break;
+        case 'splash':
+          this.createNoisePulse(voice, now, 880, 0.78, 0.13, 0.44, 0.48, 'bandpass', 0.035);
+          break;
+        case 'ship-explosion':
+          this.createNoisePulse(voice, now, 190, 0.58, 0.21, 0.94, 1.0, 'lowpass', 0.012);
+          this.createNoisePulse(voice, now, 1450, 1.1, 0.1, 0.19, 0.23, 'bandpass', 0.003);
+          this.createTonePulse(voice, now, 74, 28, 0.12, 0.78, 'sine');
+          break;
+        case 'ordnance-impact':
+          this.createNoisePulse(voice, now, event.weapon === 'torpedo' ? 420 : 950, 0.82, 0.18, 0.47, 0.52);
+          this.createTonePulse(voice, now, event.weapon === 'torpedo' ? 82 : 125, 42, 0.095, 0.45, 'sine');
+          break;
+      }
+      this.lastEventAt.set(category, now);
+    } catch {
+      this.retireVoice(voice, now);
+    }
+  }
+
+  /** Track at most 32 current aircraft, using simulation time and real relative motion for each pass. */
+  updatePasses(aircraft: readonly Aircraft[], player: Aircraft, elapsed: number): void {
+    const ctx = this.ctx;
+    if (!this.enabled || !this.active || !ctx || ctx.state !== 'running' || !this.master
+      || player.health <= 0 || !Number.isFinite(elapsed)) {
+      this.clearPasses(ctx?.currentTime ?? 0);
+      return;
+    }
+    const now = ctx.currentTime;
+    if (this.passElapsed !== null && elapsed < this.passElapsed) this.clearPasses(now);
+    this.passElapsed = elapsed;
+    const candidates = aircraft
+      .filter(entity => entity.id !== player.id && entity.health > 0)
+      .map(entity => ({ entity, mix: spatialMix(entity.position, player) }))
+      .filter((entry): entry is { entity: Aircraft; mix: SpatialMix } => entry.mix !== null)
+      .sort((a, b) => a.mix.distance - b.mix.distance || a.entity.id - b.entity.id)
+      .slice(0, MAX_PASS_AIRCRAFT);
+    const aliveIds = new Set(candidates.map(({ entity }) => entity.id));
+    for (const [id, state] of this.passes) {
+      if (!aliveIds.has(id)) {
+        if (state.voice) this.retireVoice(state.voice, now);
+        this.passes.delete(id);
+      }
+    }
+    for (const { entity, mix } of candidates) {
+      const x = entity.position.x - player.position.x;
+      const y = entity.position.y - player.position.y;
+      const z = entity.position.z - player.position.z;
+      let previous = this.passes.get(entity.id);
+      if (previous && entity.age < previous.age) {
+        if (previous.voice) this.retireVoice(previous.voice, now);
+        previous = undefined;
+      }
+      const dt = previous ? elapsed - previous.elapsed : 0;
+      if (previous && dt === 0) continue;
+      const state: PassState = {
+        x, y, z, distance: mix.distance, elapsed, age: entity.age,
+        lastStart: previous?.lastStart ?? -Infinity,
+        voice: previous?.voice?.ended ? undefined : previous?.voice,
+      };
+      this.passes.set(entity.id, state);
+      // A pause/gap/respawn only establishes a baseline; never play a backlog of passes.
+      if (!previous || dt <= 0 || dt > 0.5) {
+        if (state.voice) this.retireVoice(state.voice, now);
+        state.voice = undefined;
+        continue;
+      }
+      const radialSpeed = Math.max(-260, Math.min(260, (previous.distance - mix.distance) / dt));
+      const relativeSpeed = Math.hypot(x - previous.x, y - previous.y, z - previous.z) / dt;
+      if (state.voice) {
+        if (mix.distance > PASS_STOP_DISTANCE || elapsed - state.lastStart >= PASS_DURATION) {
+          this.retireVoice(state.voice, now);
+          state.voice = undefined;
+        } else {
+          this.updatePassVoice(state.voice, mix, entity.speed, radialSpeed, now);
+        }
+      }
+      const lastPass = this.lastEventAt.get('aircraft-pass');
+      if (state.voice || mix.distance > PASS_START_DISTANCE || radialSpeed < 25 || relativeSpeed < 45
+        || elapsed - state.lastStart < PASS_COOLDOWN
+        || (lastPass !== undefined && now - lastPass < RATE_LIMIT_SECONDS['aircraft-pass']!)
+        || Array.from(this.voices).filter(voice => voice.type === 'aircraft-pass').length >= MAX_PASS_VOICES
+        || !this.reserveCapacity('aircraft-pass', 2, now)) continue;
+      const voice = this.newVoice('aircraft-pass');
+      try {
+        this.attachSpatial(voice, mix, now);
+        this.createPassVoice(voice, now);
+        this.updatePassVoice(voice, mix, entity.speed, radialSpeed, now, true);
+        state.voice = voice;
+        state.lastStart = elapsed;
+        this.lastEventAt.set('aircraft-pass', now);
+      } catch {
+        this.retireVoice(voice, now);
+      }
+    }
+  }
+
+  private newVoice(type: EffectType): EffectVoice {
+    const voice: EffectVoice = { type, priority: EFFECT_PRIORITY[type], sources: new Set(), nodes: new Set(), ended: false };
+    this.voices.add(voice);
+    return voice;
+  }
+
+  private attachSpatial(voice: EffectVoice, mix: SpatialMix, now: number): void {
+    const ctx = this.ctx!;
+    const filter = this.trackNode(voice, ctx.createBiquadFilter());
+    const gain = this.trackNode(voice, ctx.createGain());
+    const pan = this.trackNode(voice, ctx.createStereoPanner());
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(mix.cutoff, now);
+    gain.gain.setValueAtTime(mix.gain, now);
+    pan.pan.setValueAtTime(mix.pan, now);
+    filter.connect(gain);
+    gain.connect(pan);
+    pan.connect(this.master!);
+    voice.output = filter;
+    voice.spatial = { filter, gain, pan };
+  }
+
+  private clearPasses(now: number): void {
+    for (const state of this.passes.values()) if (state.voice) this.retireVoice(state.voice, now);
+    this.passes.clear();
+    this.passElapsed = null;
+    this.lastEventAt.delete('aircraft-pass');
+  }
+
   /** Clear per-flight event IDs and stop every sound before a fresh run begins. */
   resetFlight(): void {
     this.active = false;
@@ -251,6 +487,7 @@ export class FlightAudio {
   finishFlight(): void {
     this.active = false;
     const ctx = this.ctx;
+    this.clearPasses(ctx?.currentTime ?? 0);
     const master = this.master;
     const engineGain = this.engineGain;
     if (!ctx || !master || !engineGain || ctx.state !== 'running' || !this.enabled) {
@@ -293,6 +530,8 @@ export class FlightAudio {
     if (type === 'hit') return 1;
     if (type === 'damage') return 3;
     if (type === 'playerExplosion') return 5;
+    if (type === 'ship-explosion') return 3;
+    if (type === 'metal-hit' || type === 'ordnance-impact' || type === 'aircraft-pass') return 2;
     return 1;
   }
 
@@ -381,9 +620,76 @@ export class FlightAudio {
     envelope.gain.exponentialRampToValueAtTime(0.0001, now + decay);
     source.connect(filter);
     filter.connect(envelope);
-    envelope.connect(master);
+    envelope.connect(voice.output ?? master);
     source.start(now);
     source.stop(now + stopAt);
+  }
+
+  private createTonePulse(
+    voice: EffectVoice, now: number, frequency: number, endFrequency: number,
+    peak: number, duration: number, type: OscillatorType,
+  ): void {
+    const ctx = this.ctx!;
+    const tone = this.trackSource(voice, ctx.createOscillator());
+    const envelope = this.trackNode(voice, ctx.createGain());
+    tone.type = type;
+    tone.frequency.setValueAtTime(frequency, now);
+    tone.frequency.exponentialRampToValueAtTime(endFrequency, now + duration * 0.7);
+    envelope.gain.setValueAtTime(0.0001, now);
+    envelope.gain.linearRampToValueAtTime(peak, now + 0.006);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    tone.connect(envelope);
+    envelope.connect(voice.output ?? this.master!);
+    tone.start(now);
+    tone.stop(now + duration + 0.02);
+  }
+
+  private createPassVoice(voice: EffectVoice, now: number): void {
+    const ctx = this.ctx!;
+    const noise = this.trackSource(voice, ctx.createBufferSource());
+    const filter = this.trackNode(voice, ctx.createBiquadFilter());
+    const air = this.trackNode(voice, ctx.createGain());
+    noise.buffer = this.noise;
+    noise.loop = true;
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(720, now);
+    air.gain.setValueAtTime(0.0001, now);
+    air.gain.linearRampToValueAtTime(0.075, now + 0.14);
+    air.gain.exponentialRampToValueAtTime(0.0001, now + PASS_DURATION - 0.02);
+    noise.connect(filter);
+    filter.connect(air);
+    air.connect(voice.output!);
+    const tone = this.trackSource(voice, ctx.createOscillator());
+    const engine = this.trackNode(voice, ctx.createGain());
+    tone.type = 'sawtooth';
+    engine.gain.setValueAtTime(0.0001, now);
+    engine.gain.linearRampToValueAtTime(0.035, now + 0.12);
+    engine.gain.exponentialRampToValueAtTime(0.0001, now + PASS_DURATION - 0.02);
+    tone.connect(engine);
+    engine.connect(voice.output!);
+    noise.start(now);
+    tone.start(now);
+    noise.stop(now + PASS_DURATION);
+    tone.stop(now + PASS_DURATION);
+    voice.passNoise = noise;
+    voice.passTone = tone;
+  }
+
+  private updatePassVoice(voice: EffectVoice, mix: SpatialMix, speed: number, radialSpeed: number, now: number, initial = false): void {
+    const spatial = voice.spatial!;
+    const doppler = Math.max(0.7, Math.min(1.45, 343 / (343 - radialSpeed)));
+    spatial.gain.gain.setTargetAtTime(mix.gain, now, 0.045);
+    spatial.filter.frequency.setTargetAtTime(mix.cutoff, now, 0.045);
+    spatial.pan.pan.setTargetAtTime(mix.pan, now, 0.035);
+    const safeSpeed = Number.isFinite(speed) ? Math.max(0, Math.min(200, speed)) : 0;
+    const pitch = (70 + safeSpeed * 0.35) * doppler;
+    if (initial) {
+      voice.passNoise!.playbackRate.setValueAtTime(0.8 * doppler, now);
+      voice.passTone!.frequency.setValueAtTime(pitch, now);
+    } else {
+      voice.passNoise!.playbackRate.setTargetAtTime(0.8 * doppler, now, 0.045);
+      voice.passTone!.frequency.setTargetAtTime(pitch, now, 0.045);
+    }
   }
 
   private createPlayerDamageImpact(voice: EffectVoice, now: number): void {
@@ -472,6 +778,8 @@ export class FlightAudio {
 
   private stopAllEffects(now: number): void {
     for (const voice of Array.from(this.voices)) this.retireVoice(voice, now);
+    this.clearPasses(now);
+    this.mountReports.clear();
   }
 
   dispose(): void {
@@ -490,4 +798,3 @@ export class FlightAudio {
     if (ctx && ctx.state !== 'closed') void ctx.close().catch(() => undefined);
   }
 }
-

@@ -1,4 +1,4 @@
-import { createFeedbackEasyPilot } from './feedback-easy-pilot';
+import { createBrowserMissionPilot } from './mission-browser-pilot';
 /** Inverse of the unchanged source stick's .08 radial dead zone. */
 export function pointerOffsetForControls(turn: number, climb: number) {
   const r = Math.hypot(turn, climb);
@@ -7,4 +7,5 @@ export function pointerOffsetForControls(turn: number, climb: number) {
   return { dx: turn * scale, dy: -climb * scale };
 }
 
-export const createTouchReloadPilot = createFeedbackEasyPilot;
+// The dedicated gun route follows current weapon lead and never requests a payload.
+export const createTouchReloadPilot = () => createBrowserMissionPilot(true);
