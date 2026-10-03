@@ -100,3 +100,54 @@ test('final air engagement retains collision avoidance without fleeing every saf
     else assert.ok(Math.abs(command.climb)<.1,'a passing aircraft can be engaged instead of a mandatory three-second climb');
   }
 });
+
+test('Normal recovery can engage a safe passing enemy while a distant ship remains alive', async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  const s=createGame(undefined,'normal'),pilot=createNormalMissionPilot();
+  for(const enemy of s.enemies.slice(1))enemy.health=0;
+  for(const ship of s.ships)ship.position.set(5000,0,5000);
+  s.player.health=50;s.player.position.set(0,500,0);
+  const enemy=s.enemies[0];enemy.position.set(60,500,-190);enemy.yaw=Math.PI;enemy.speed=110;enemy.generation='reinforcement';
+  updateQuaternion(enemy);updateQuaternion(s.player);
+  const before=JSON.stringify(s),command=pilot(s);
+  assert.ok(Math.abs(command.climb)<.1,'distant surviving ships must not force a three-second air disengagement');
+  assert.equal(JSON.stringify(s),before);
+});
+
+test('Easy chooses a target whose required lead and live firing circle can coexist', async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  for(const mode of ['easy','normal'] as const) {
+    const s=createGame(undefined,mode),pilot=createNormalMissionPilot(true);
+    for(const ship of s.ships)ship.health=0;for(const enemy of s.enemies.slice(2))enemy.health=0;
+    s.player.position.set(0,500,0);updateQuaternion(s.player);
+    const crossing=s.enemies[0],trailing=s.enemies[1];
+    crossing.position.set(80,500,-650);crossing.yaw=-Math.PI/2;updateQuaternion(crossing);
+    trailing.position.set(-100,500,-850);trailing.yaw=0;updateQuaternion(trailing);
+    const before=JSON.stringify(s),command=pilot(s);
+    if(mode==='easy')assert.ok(command.turn<0,'select the usable left-hand target instead of an unfireable crossing lead');
+    else assert.ok(command.turn>0,'Normal manual fire is not restricted by the Easy circle');
+    assert.equal(JSON.stringify(s),before);
+  }
+});
+
+test('Easy completes a begun bombing pass before switching to recovery, then still exits overhead',async()=>{
+  const {updateQuaternion}=await import('../src/flight');
+  const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot(),ship=s.ships[0];
+  for(const enemy of s.enemies)enemy.health=0;
+  for(const other of s.ships.slice(1))other.health=0;
+  const stern=ship.velocity.clone().normalize().negate();
+  s.player.position.copy(ship.position).addScaledVector(stern,1800);s.player.position.y=900;
+  s.player.yaw=ship.yaw;s.player.pitch=s.player.bank=0;updateQuaternion(s.player);pilot(s);
+  s.tick=600;s.elapsed=10;s.player.health=50;
+  s.player.position.copy(ship.position).addScaledVector(stern,800);s.player.position.y=900;
+  const enemy=s.enemies[0];enemy.health=enemy.maxHealth;enemy.generation='reinforcement';
+  enemy.position.copy(s.player.position);enemy.position.x+=1000;
+  const before=JSON.stringify(s),command=pilot(s);
+  assert.ok(Math.abs(command.turn)<.01,'continue the established ship axis despite a recovery target to the side');
+  assert.equal(JSON.stringify(s),before);
+  s.tick+=6;s.elapsed+=.1;
+  s.player.position.copy(ship.position).addScaledVector(stern,180);s.player.position.y=900;
+  const exit=pilot(s);
+  assert.ok(exit.climb>.2,'commitment still ends at the normal overhead escape');
+  assert.equal(exit.bomb,false);assert.equal(exit.fire,false);
+});

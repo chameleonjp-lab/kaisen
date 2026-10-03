@@ -27,11 +27,11 @@
 ## 対応する自動検査
 
 - 復活・HP・4隻・誤射・死亡原因・敵弾の強弱: `tests/feedback-rules.test.ts`, `tests/mission-rules.test.ts`, `tests/simulation.test.ts`。反復補充の実画面は `browser-tests/reinforcement.spec.ts`
-- 原機体・実寸と投影比較: `tests/fleet-scale.test.ts`, `tests/sea-contact.test.ts`。実際の艦接近/勝利画像は `browser-tests/victory.spec.ts` の成果物
+- 原機体・実寸と投影比較: `tests/fleet-scale.test.ts`, `tests/sea-contact.test.ts`。実際の艦接近/勝利画像は `browser-tests/00-easy-victory.spec.ts` の成果物
 - 照準色・固定投影・Easy保全: `tests/aim-indicator.test.ts`, `tests/modes.test.ts`, `browser-tests/modes.spec.ts`
 - 設定の保存/破棄/3入口と入力復帰: `tests/input-recovery.test.ts`, `tests/review-input-ownership.test.ts`, `browser-tests/feedback-settings.spec.ts`, `browser-tests/review-accessibility.spec.ts`
 - プロペラ専用音量と他SE保全: `tests/audio.test.ts`。再装填・停止時計・リング: `tests/touch-reload.test.ts`, `browser-tests/reload.spec.ts`
-- 全滅到達・実入力時刻の変動: `tests/normal-mission.test.ts`, `tests/browser-cadence.test.ts`。両モードの実ブラウザ全滅は `browser-tests/normal-victory.spec.ts`, `browser-tests/victory.spec.ts`。失敗を合格へ読み替えず、最終候補のChecksで確定する
+- 全滅到達・実入力時刻の変動: `tests/normal-mission.test.ts`, `tests/browser-cadence.test.ts`。両モードの実ブラウザ全滅は `browser-tests/00-normal-victory.spec.ts`, `browser-tests/00-easy-victory.spec.ts`。失敗を合格へ読み替えず、最終候補のChecksで確定する
 
 ## 実機で残る確認
 

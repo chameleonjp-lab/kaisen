@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
-import { forwardOf } from '../../src/flight';
-import { getFlightAssist } from '../../src/flight-assist';
+import { forwardOf, updateQuaternion } from '../../src/flight';
+import { EASY_AUTO_FIRE_RANGE, getFlightAssist } from '../../src/flight-assist';
+import { projectFlightTarget } from '../../src/flight-view';
 import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
 
@@ -82,7 +83,42 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     const recoveryTarget = staleAir && alternativeAir?.generation === 'reinforcement' ? alternativeAir : current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
       : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
     const gunPracticeTarget = preferAircraft ? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? current : bestAir) : null;
-    const target = gunPracticeTarget ?? (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (snapshot.mode === 'normal' && bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    // Finish a begun bombing pass before changing objectives. The ordinary
+    // overhead/empty-rack/low-altitude exit below still bounds the commitment.
+    // A recovery detour mid-pass otherwise repeatedly discards the approach.
+    const committedPass = snapshot.mode === 'easy' && current?.kind === 'ship' && shipPhase === 'attack' ? current : null;
+    let target = gunPracticeTarget ?? committedPass ?? (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (snapshot.mode === 'normal' && bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    if (snapshot.mode === 'easy' && target?.kind === 'aircraft') {
+      const canLeadAndFire = (enemy: Aircraft) => {
+        const velocity = forwardOf(enemy).multiplyScalar(enemy.speed);
+        const relative = enemy.position.clone().sub(player.position);
+        const speed = player.speed + (player.mg > 0 ? 820 : 700);
+        const a = velocity.lengthSq() - speed * speed, b = 2 * relative.dot(velocity), c = relative.lengthSq();
+        const discriminant = b * b - 4 * a * c;
+        if (discriminant < 0 || relative.length() > EASY_AUTO_FIRE_RANGE) return false;
+        const lead = (-b - Math.sqrt(discriminant)) / (2 * a);
+        if (lead < 0 || lead > 1.5) return false;
+        const point = enemy.position.clone(), rate = angular.get(enemy.id);
+        if (rate) for (let i = 0; i < 10; i++) {
+          const t = lead * (i + .5) / 10, yaw = enemy.yaw + rate.yaw * t, pitch = enemy.pitch + rate.pitch * t * .5;
+          point.addScaledVector(new Vector3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)), enemy.speed * lead / 10);
+        } else point.addScaledVector(velocity, lead);
+        const direction = point.sub(player.position).normalize();
+        const preview = { ...player, quaternion: player.quaternion.clone(), yaw: Math.atan2(-direction.x, -direction.z), pitch: Math.asin(direction.y) };
+        updateQuaternion(preview);
+        return projectFlightTarget(preview, enemy.position, 393 / 852, 'easy').inCircle;
+      };
+      // Correct lead alone is insufficient when it puts the live target outside
+      // Easy's unchanged automatic-fire circle. Prefer another usable aspect;
+      // do not shrink the lead or bypass the game's firing gate.
+      // Let an acquired target's in-flight burst arrive before discarding it.
+      // Avoid replacing the target while a useful burst may still arrive.
+      if (!canLeadAndFire(target) && (target.id !== targetId || snapshot.elapsed - targetProgressAt >= 1.5)) {
+        const available = enemies.filter(enemy => enemy.health > 0 && (!recovering || enemy.generation === 'reinforcement') && canLeadAndFire(enemy))
+          .sort((a, b) => score(a) - score(b));
+        if (available.length) target = available[0];
+      }
+    }
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false, bomb:false,torpedo:false,accelerate:false,brake:false };
     if (targetId !== target.id) { shipPhase = 'stage'; targetProgressAt = snapshot.elapsed; }
     targetId = target.id; observedTargetHealth = target.health;
@@ -111,10 +147,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         }
       } else aim.addScaledVector(velocity, lead);
       const closing = -target.position.clone().sub(player.position).dot(forwardOf(target).multiplyScalar(target.speed).sub(forwardOf(player).multiplyScalar(player.speed))) / Math.max(1,distance);
-      // Once naval fire is eliminated, a blanket 250m exit prevented
-      // close firing on passing targets indefinitely. Keep real collision-course
-      // dodges above and the 80m/low-altitude escape in the final air engagement.
-      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (weakestShip && closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
+      // Normal's blanket250m exit prevented recovery kills even when live ships
+      // were more than1km away. Retain actual collision-course dodges above and
+      // the80m/low-altitude escape; Easy's approach strategy is evaluated separately.
+      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (snapshot.mode === 'easy' && weakestShip && closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
         extensionUntil = snapshot.tick + 180;
         waypoint = player.position.clone().addScaledVector(forwardOf(player), 500);
         waypoint.y = player.position.y > 400 && target.position.y > player.position.y ? player.position.y - 250 : Math.max(350, player.position.y + 250);
