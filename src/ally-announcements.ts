@@ -24,7 +24,7 @@ function activityFor(event: GameEvent): Omit<Activity, 'count'> | null {
 }
 
 function text(activity: Activity): string {
-  const descriptions = { lost: 'が戦闘不能 · 40秒後に復帰', returned: 'が戦線へ復帰', victory: 'が敵機を撃墜' };
+  const descriptions = { lost: ' 戦闘不能（復帰40秒）', returned: ' 戦線へ復帰', victory: ' 敵機を撃墜' };
   return `僚機${activity.slot + 1}${descriptions[activity.kind]}${activity.count > 1 ? ` ×${activity.count}` : ''}`;
 }
 

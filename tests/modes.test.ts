@@ -133,7 +133,7 @@ test('Normal input releases only the ended finger while steering and another act
     steeringRevision: 9, loopEdge: false, keys: new Set(), clickBursts: new Set(),
     holds: { fire: new Set([2]), loop: new Set(), accelerate: new Set([3]), brake: new Set() },
   });
-  assert.deepEqual(controls.sample(), { turn: .5, climb: -.25, fire: true, loop: false, accelerate: true, brake: false, steeringRevision: 9 });
+  assert.deepEqual(controls.sample(), { turn: .5, climb: -.25, fire: true, loop: false, bomb:false,torpedo:false,accelerate: true, brake: false, steeringRevision: 9 });
   controls.endButton('fire', button, { pointerId: 2 }, true);
   const after = controls.sample();
   assert.equal(after.fire, false); assert.equal(after.accelerate, true);

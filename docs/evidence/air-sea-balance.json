@@ -1,0 +1,245 @@
+{
+  "generatedAt": "2026-10-03T07:50:48.059Z",
+  "note": "Default seed, actual fixed60Hz simulation with legal circular-stick inputs held6ticks. Counts are actual emitted projectiles/contact HP after attenuation; airDamage includes friendly-fire contacts. Dividing by route time includes manoeuvre/reload/nonfiring time and is not theoretical weapon DPS. Not browser/iPhone or human hit-rate evidence.",
+  "sources": {
+    "src/aircraft-damage.ts": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83",
+    "src/simulation.ts": "8d5c4c966931670b3fd868ccbb4661ee1add03cb9f91f35914e4252bb9d966ce",
+    "src/mission.ts": "0b8ba65d53ce4fc791a66cc6d2ba6ffb26212310f71c0884436003aadf1e1b2e",
+    "src/flight.ts": "8fe62d521bc2cfa11b0ab8cb3c0609c54a3d80355eff15a72257eea1aa4770a5",
+    "src/flight-assist.ts": "cfcb0ad7615f13d59f44a2c85d1f680c4b767b92e2847adfebe36641943d54b8",
+    "src/ai.ts": "8d6050f92f08b55b053430c706c46ca37683a65901e20a86dcf9fc2242da59c2",
+    "src/naval.ts": "88703e5ac96605f379073180b2bc308766fccf950209e814138a7333163c8f76",
+    "src/naval-damage.ts": "4d1cfa18e24fc46f4dca9cea2282c43dbc0cf7fde165848901fec6985091e70e",
+    "src/ordnance.ts": "293e436ccea2daa8a2496b8a3dfacf5615130f76bc0cb797b414d6cdd0bd3f53",
+    "src/ship-wreck.ts": "ae76873890da33d69504ef240e1cf6441f46ae0420802e4c4d5e005c67630ee3",
+    "tests/helpers/mission-browser-pilot.ts": "b7452c9ad28a6d7a978dec63cb90d6fc60ff45206773464e0d0a93b6d5076aa2"
+  },
+  "records": [
+    {
+      "mode": "easy",
+      "seed": 1262569811,
+      "time": 191.86666666666667,
+      "result": "all-clear",
+      "cause": null,
+      "hp": 80,
+      "stats": {
+        "playerAircraftKills": 9,
+        "playerShipKills": 4,
+        "allyAircraftKills": 7,
+        "allyShipKills": 0,
+        "shots": 778,
+        "hits": 138,
+        "loops": 0,
+        "damageTaken": 71.2319999999998,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 0
+      },
+      "weapons": {
+        "player/mg": {
+          "shots": 576,
+          "airHits": 96,
+          "airDamage": 230,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 2,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "player/cannon": {
+          "shots": 192,
+          "airHits": 31,
+          "airDamage": 410.68,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "ally/mg": {
+          "shots": 340,
+          "airHits": 124,
+          "airDamage": 228.68000000000023,
+          "partHits": 35,
+          "partDamage": 64.19999999999997,
+          "armorContacts": 4,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "ally/cannon": {
+          "shots": 116,
+          "airHits": 40,
+          "airDamage": 353.24000000000007,
+          "partHits": 10,
+          "partDamage": 86.4,
+          "armorContacts": 2,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "naval/aa": {
+          "shots": 6895,
+          "airHits": 288,
+          "airDamage": 368.22400000000226,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "ally/bomb": {
+          "shots": 2,
+          "airHits": 0,
+          "airDamage": 0,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 2,
+          "hullDamage": 1400
+        },
+        "enemy/mg": {
+          "shots": 802,
+          "airHits": 185,
+          "airDamage": 47.6,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "enemy/cannon": {
+          "shots": 254,
+          "airHits": 56,
+          "airDamage": 33.13600000000015,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "player/bomb": {
+          "shots": 10,
+          "airHits": 0,
+          "airDamage": 0,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 9,
+          "hullDamage": 9800
+        }
+      }
+    },
+    {
+      "mode": "normal",
+      "seed": 1262569811,
+      "time": 215.65,
+      "result": "all-clear",
+      "cause": null,
+      "hp": 80,
+      "stats": {
+        "playerAircraftKills": 6,
+        "playerShipKills": 4,
+        "allyAircraftKills": 13,
+        "allyShipKills": 0,
+        "shots": 500,
+        "hits": 89,
+        "loops": 0,
+        "damageTaken": 66.39999999999998,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 0
+      },
+      "weapons": {
+        "ally/mg": {
+          "shots": 420,
+          "airHits": 192,
+          "airDamage": 386.0400000000002,
+          "partHits": 75,
+          "partDamage": 141.6,
+          "armorContacts": 27,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "ally/cannon": {
+          "shots": 156,
+          "airHits": 75,
+          "airDamage": 642.8000000000001,
+          "partHits": 25,
+          "partDamage": 217.9199999999999,
+          "armorContacts": 11,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "naval/aa": {
+          "shots": 5723,
+          "airHits": 262,
+          "airDamage": 357.216000000002,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "ally/bomb": {
+          "shots": 2,
+          "airHits": 0,
+          "airDamage": 0,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 2,
+          "hullDamage": 1400
+        },
+        "enemy/mg": {
+          "shots": 982,
+          "airHits": 267,
+          "airDamage": 68.63999999999989,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "enemy/cannon": {
+          "shots": 318,
+          "airHits": 88,
+          "airDamage": 51.77600000000004,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "player/bomb": {
+          "shots": 10,
+          "airHits": 0,
+          "airDamage": 0,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 9,
+          "hullDamage": 9800
+        },
+        "player/mg": {
+          "shots": 366,
+          "airHits": 59,
+          "airDamage": 129,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        },
+        "player/cannon": {
+          "shots": 124,
+          "airHits": 21,
+          "airDamage": 301.08000000000004,
+          "partHits": 0,
+          "partDamage": 0,
+          "armorContacts": 0,
+          "payloadHits": 0,
+          "hullDamage": 0
+        }
+      }
+    }
+  ]
+}

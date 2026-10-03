@@ -30,10 +30,10 @@ export const NAVAL_WEAPONS: Readonly<Record<NavalWeaponKind, NavalWeapon>> = Obj
     historicalMaxRange: null, range: 0, maxTargetAltitude: 0, life: 0, damage: 0,
     magazine: 0, reloadSeconds: 0, dispersion: 0, barrelLength: 7, barrelRadius: .20, barrelSpacing: 1.1, bodySize: [7, 3.8, 8] as const }),
   'heavy-aa': Object.freeze({ kind: 'heavy-aa', caliberMm: 127, barrels: 2, muzzleSpeed: 720, roundsPerMinute: 10,
-    historicalMaxRange: null, range: 2800, maxTargetAltitude: 2600, life: 4.5, damage: 6,
+    historicalMaxRange: null, range: 2800, maxTargetAltitude: 2600, life: 4.5, damage: 4.8,
     magazine: 0, reloadSeconds: 0, dispersion: .024, barrelLength: 4.6, barrelRadius: .14, barrelSpacing: 1.1, bodySize: [4.2, 2.7, 4.3] as const }),
   'light-aa': Object.freeze({ kind: 'light-aa', caliberMm: 25, barrels: 3, muzzleSpeed: 900, roundsPerMinute: 220,
-    historicalMaxRange: null, range: 1250, maxTargetAltitude: 800, life: 1.7, damage: 1,
+    historicalMaxRange: null, range: 1250, maxTargetAltitude: 800, life: 1.7, damage: .8,
     magazine: 15, reloadSeconds: 60 * 15 / 110 - 60 * 15 / 220, dispersion: .033, barrelLength: 1.5, barrelRadius: .065, barrelSpacing: .38, bodySize: [2.1, 1.4, 2.0] as const }),
 });
 export interface NavalMountDefinition {
@@ -64,6 +64,7 @@ export const NAVAL_MOUNTS: readonly NavalMountDefinition[] = Object.freeze([
 export interface NavalMountState {
   mountId: string; yaw: number; elevation: number; targetId: number | null;
   cooldown: number; roundsInMagazine: number; salvo: number;
+  health: number; maxHealth: number; lastShotTick: number;
 }
 export interface NavalShip {
   id: number; health: number; position: Vector3; quaternion: Quaternion; velocity: Vector3; guns: NavalMountState[];
@@ -83,6 +84,8 @@ export function createNavalMounts(shipId: number): NavalMountState[] {
     elevation: (definition.weapon.endsWith('aa') ? 20 : 4) * RAD, targetId: null,
     // Readiness stagger is across mounts, never across the barrels of a ready mount.
     cooldown: .6 + ((shipId * 7 + i * 3) % 13) * .09,
+    health: definition.weapon === 'light-aa' ? 60 : definition.weapon === 'heavy-aa' ? 120 : 400,
+    maxHealth: definition.weapon === 'light-aa' ? 60 : definition.weapon === 'heavy-aa' ? 120 : 400, lastShotTick: -10000,
     roundsInMagazine: NAVAL_WEAPONS[definition.weapon].magazine, salvo: 0 }));
 }
 export function wrapNavalAngle(angle: number): number { return Math.atan2(Math.sin(angle), Math.cos(angle)); }
@@ -138,6 +141,18 @@ export const NAVAL_OCCLUDERS: readonly (readonly [readonly [number, number, numb
   [[-4, 18, 29], [4, 28, 36]],
   ...PLATFORM_SAFETY_BOXES,
 ]);
+/** Broad phase encloses every physical platform and turret yaw, not only the hull beam. */
+export const NAVAL_COLLISION_BOUNDS = (() => {
+  const min = [-CAPITAL_SHIP.width / 2, NAVAL_HULL_BOTTOM, -CAPITAL_SHIP.length / 2];
+  const max = [CAPITAL_SHIP.width / 2, CAPITAL_SHIP.height, CAPITAL_SHIP.length / 2];
+  for (const [a, b] of NAVAL_OCCLUDERS) for (let i = 0; i < 3; i++) { min[i] = Math.min(min[i], a[i]); max[i] = Math.max(max[i], b[i]); }
+  for (const mount of NAVAL_MOUNTS) {
+    const size = NAVAL_WEAPONS[mount.weapon].bodySize, radius = Math.hypot(size[0], size[2]) / 2;
+    const extent = [radius, size[1] / 2, radius], center = [mount.pivot[0], mount.pivot[1] - 1, mount.pivot[2]];
+    for (let i = 0; i < 3; i++) { min[i] = Math.min(min[i], center[i] - extent[i]); max[i] = Math.max(max[i], center[i] + extent[i]); }
+  }
+  return Object.freeze({ min: Object.freeze(min), max: Object.freeze(max) });
+})();
 // Compiled once: no per-bullet geometry/plane arrays or square roots in the narrow phase.
 const HULL_SPANS = NAVAL_HULL_SECTIONS.slice(0, -1).map(([a, aw], i) => {
   const [b, bw] = NAVAL_HULL_SECTIONS[i + 1], zA = a * CAPITAL_SHIP.length, zB = b * CAPITAL_SHIP.length;
@@ -251,6 +266,7 @@ export function stepNavalGuns(ship: NavalShip, friendlies: readonly Aircraft[], 
   for (let index = 0; index < NAVAL_MOUNTS.length; index++) {
     const definition = NAVAL_MOUNTS[index], gun = ship.guns[index], weapon = NAVAL_WEAPONS[definition.weapon];
     if (!gun || gun.mountId !== definition.id || !definition.weapon.endsWith('aa')) continue;
+    if (gun.health <= 0) { gun.targetId = null; continue; }
     gun.cooldown = Math.max(-dt, gun.cooldown - dt);
     let target = friendlies.find(p => p.id === gun.targetId), aim = target ? aimFor(ship, definition, gun, target) : null;
     if (!aim || (tick + index) % 12 === 0) {
@@ -284,7 +300,7 @@ export function stepNavalGuns(ship: NavalShip, friendlies: readonly Aircraft[], 
       shots.push({ position, velocity: direction.multiplyScalar(weapon.muzzleSpeed).add(ship.velocity), life: weapon.life,
         damage: weapon.damage, kind: 'aa', gravity: NAVAL_GRAVITY, mountId: definition.id, barrelIndex: barrel });
     }
-    gun.salvo++;
+    gun.salvo++; gun.lastShotTick = tick;
     gun.cooldown += 60 / weapon.roundsPerMinute;
     if (weapon.magazine > 0) {
       gun.roundsInMagazine--;

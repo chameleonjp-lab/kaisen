@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { desiredFlightInput, forwardOf } from '../../src/flight';
 import { targetAimPoint, getFlightAssist } from '../../src/flight-assist';
+import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value));
@@ -20,7 +21,7 @@ function plane(aircraft: Aircraft): Aircraft {
  */
 export function createBrowserMissionPilot() {
 
-  let recovering = false;
+  let recovering = false, targetProgressAt = 0, observedTargetHealth = Infinity;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
   let waypoint = new Vector3();
@@ -49,7 +50,7 @@ export function createBrowserMissionPilot() {
     }
     if (snapshot.tick < dodgeUntil) {
       trimDirection = snapshot.mode === 'normal' ? 1 : 0;
-      return {turn:0,climb:dodgeClimb,fire:false,loop:false,accelerate:trimDirection > 0};
+      return {turn:0,climb:dodgeClimb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
     }
     const ships = snapshot.ships.map(ship => ({ ...ship, position: vector(ship.position), velocity: vector(ship.velocity) }));
     const targets = [...enemies, ...ships].filter(target => target.health > 0);
@@ -66,17 +67,21 @@ export function createBrowserMissionPilot() {
     // Clear the finite fleet before chasing endlessly replenished aircraft.
     // This is the external test pilot's strategy, never a product AI change.
     const weakestShip = ships.filter(s=>s.health>0).sort((a,b)=>a.health-b.health || player.position.distanceTo(a.position)-player.position.distanceTo(b.position))[0];
+    // Bombing approaches stay above light-AA altitude; torpedoes require the separate low-level envelope.
     // Recover through the real reinforcement kill bonus before another naval pass.
     // Retain a recovery target until the observed HP has recovered.
     if (player.health < player.maxHealth * .7) recovering = true;
     else if (player.health >= player.maxHealth * .9) recovering = false;
-    const recoveryTarget = current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
+    if (current && current.health < observedTargetHealth - 1e-6) targetProgressAt = snapshot.elapsed;
+    const staleAir = current?.kind === 'aircraft' && snapshot.elapsed - targetProgressAt > 12;
+    const alternativeAir = air.filter(enemy => enemy.id !== current?.id).sort((a,b)=>score(a)-score(b))[0];
+    const recoveryTarget = staleAir && alternativeAir?.generation === 'reinforcement' ? alternativeAir : current?.kind === 'aircraft' && current.generation === 'reinforcement' ? current
       : enemies.filter(e=>e.health>0 && e.generation==='reinforcement').sort((a,b)=>score(a)-score(b))[0];
-    const target = snapshot.mode === 'easy' ? airFirst : (recovering ? recoveryTarget : null) ?? weakestShip ?? (current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
-    if (!target) return { turn: 0, climb: 0, fire: false, loop: false };
-    if (targetId !== target.id) { shipPhase = 'stage'; }
-    targetId = target.id;
-    let aim = target.position.clone(), evasive = false;
+    const target = (recovering ? recoveryTarget : null) ?? weakestShip ?? (staleAir && alternativeAir ? alternativeAir : current?.kind === 'aircraft' ? (bestAir && score(bestAir) < score(current)*.65 ? bestAir : current) : bestAir);
+    if (!target) return { turn: 0, climb: 0, fire: false, loop: false, bomb:false,torpedo:false,accelerate:false,brake:false };
+    if (targetId !== target.id) { shipPhase = 'stage'; targetProgressAt = snapshot.elapsed; }
+    targetId = target.id; observedTargetHealth = target.health;
+    let aim = target.position.clone(), evasive = false, bomb = false;
     const distance = player.position.distanceTo(aim);
     if (target.kind === 'aircraft') {
       // The pilot leads the target by steering the bore; Normal bullets still
@@ -98,7 +103,7 @@ export function createBrowserMissionPilot() {
         }
       } else aim.addScaledVector(velocity, lead);
       const closing = -target.position.clone().sub(player.position).dot(forwardOf(target).multiplyScalar(target.speed).sub(forwardOf(player).multiplyScalar(player.speed))) / Math.max(1,distance);
-      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (closing > 50 ? 250 : 80))) {
+      if (snapshot.tick >= extensionUntil && (player.position.y < 90 || distance < (closing > 50 && relative.dot(forwardOf(player)) > 0 ? 250 : 80))) {
         extensionUntil = snapshot.tick + 180;
         waypoint = player.position.clone().addScaledVector(forwardOf(player), 500);
         waypoint.y = player.position.y > 400 && target.position.y > player.position.y ? player.position.y - 250 : Math.max(350, player.position.y + 250);
@@ -106,17 +111,28 @@ export function createBrowserMissionPilot() {
       if (snapshot.tick < extensionUntil) { aim = waypoint; evasive = true; }
     } else {
       const stern = target.velocity.clone().normalize().negate();
-      const stage = target.position.clone().addScaledVector(stern, 1100); stage.y = 650;
+      const stage = target.position.clone().addScaledVector(stern, 1800); stage.y = 900;
       if (snapshot.tick < escapeUntil) { aim = waypoint; evasive = true; }
       else {
         if (shipPhase === 'escape') shipPhase = 'stage';
         if (shipPhase === 'stage' && player.position.distanceTo(stage) < 180) shipPhase = 'attack';
-        if (shipPhase === 'attack' && (distance < 240 || player.position.y < 100 || (snapshot.mode === 'normal' && player.reloadTicksRemaining > 0))) {
+        if (shipPhase === 'attack' && (distance < 240 || player.position.y < 100 || player.bombs === 0)) {
           shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
           waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
-          waypoint.y = Math.max(350, player.position.y + 220); aim = waypoint; evasive = true;
+          waypoint.y = Math.max(900, player.position.y + 220); aim = waypoint; evasive = true;
         } else if (shipPhase === 'stage') { aim = stage; evasive = true; }
-        else aim = targetAimPoint(target).addScaledVector(target.velocity, distance / (player.speed + 760));
+        else {
+          const prediction = predictBombImpact(player, target.position.y + 9);
+          aim = target.position.clone().addScaledVector(target.velocity, prediction?.time ?? 7);
+          aim.y = 900;
+          if (prediction && player.bombs > 0 && player.payloadCooldown <= 0) {
+            const q = target.quaternion as any;
+            const rotation = Array.isArray(q) ? new Quaternion().fromArray(q) : new Quaternion(q.x ?? q._x, q.y ?? q._y, q.z ?? q._z, q.w ?? q._w);
+            const future = target.position.clone().addScaledVector(target.velocity, prediction.time);
+            const offset = prediction.position.clone().sub(future).applyQuaternion(rotation.invert());
+            bomb = Math.abs(offset.x) < target.width * .36 && Math.abs(offset.z) < target.length * .35;
+          }
+        }
       }
     }
     if (snapshot.mode === 'normal' && player.reloadTicksRemaining > 0 && target.kind === 'aircraft') {
@@ -150,9 +166,11 @@ export function createBrowserMissionPilot() {
     if (target.kind !== 'aircraft' || distance < 500) fastChase = false;
     else if (distance > 800) fastChase = true;
     // Reposition and disengage at speed instead of loitering in the AA envelope.
-    const wantedSpeed = fastChase || evasive ? 141 : 85;
+    // Keep closure until within a close turning engagement; 85m/s at 500m
+    // let the faster target recede throughout the reinforcement recovery leg.
+    const wantedSpeed = fastChase || evasive ? 141 : target.kind === 'ship' || distance > 250 ? 110 : 85;
     trimDirection = snapshot.mode === 'easy' ? 0 : estimatedTrim < wantedSpeed - 1 ? 1 : estimatedTrim > wantedSpeed + 1 ? -1 : 0;
-    return {turn,climb,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
+    return {turn,climb,bomb,torpedo:false,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
 
   };
 }

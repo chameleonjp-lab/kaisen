@@ -1,6 +1,10 @@
 # GitHub Pagesへの配備
 
-## 現在の公開版（2026-10-03）
+## 現在の公開版（2026-10-03 05:32 UTC）
+
+PR #7/#8を利用者がマージしたmain `c63bff8b328676f2435ee50454143f321eef1ddd` を [run37100074074](https://github.com/chameleonjp-lab/kaisen/actions/runs/37100074074) で配備した。完全SHAに対する124単体・型/build・成果物検査と配備が成功。公開ページの40秒/4隻ルール、Easy/Normal、設定の開閉・音ON/OFF、読込JS `index-yFASa3PT.js` / CSS `index-fnb94wU2.css` と配備artifactの対応を確認。公開応答全体のSHAや禁止されているmanifest URLの取得を確認済みとはしない。クラウドWebGL無効のため公開飛行は未確認。今回の空海戦追加候補はまだ公開していない。
+
+## 前版の公開記録（2026-10-03）
 
 PR #6を利用者がマージしたmain `1950788018fa2a0466715f85c866d9f273718138` を、承認後に [run37086928771](https://github.com/chameleonjp-lab/kaisen/actions/runs/37086928771) で配備し成功。107単体・build・成果物照合が再度合格。公開画面のEasy/Normal切替、読み込まれたJS `index-BTmHSAV9.js` / CSS `index-KW3ZlEZ-.css` と、そのSHAを記録した配備成果物の対応を確認した。公開manifestの直接取得はアクセス制限のため未検証であり、別経路で迂回しない。dot側クラウドブラウザはWebGL無効なので公開版の飛行確認はblocked、CIの模擬ブラウザ成功とは区別する。
 

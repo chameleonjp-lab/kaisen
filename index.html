@@ -55,7 +55,7 @@
             画面を準備しています
           </button>
           <p class="controls-guide">
-            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 右下で宙返り</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復<br />僚機は撃墜から40秒で復帰
+            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 右下で宙返り</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復<br />爆弾は落下予測の十字で投下 · 魚雷は低空で水平飛行（目安高度20〜80m）<br />僚機は撃墜から40秒で復帰
           </p>
           <p id="friendly-fire-guide" class="controls-guide" hidden>味方への誤射：損傷1HPにつき−10点<br />味方撃墜はさらに−1500点</p>
           <button id="home-controls" class="text-button">操作ボタンの配置</button>
@@ -89,17 +89,20 @@
           </div>
           <div class="health-track"><i id="health-bar"></i></div>
           <div class="instrument">
-            <span id="altitude">350m</span><span id="speed">396km/h</span>
+            <span id="altitude">220m</span><span id="speed">396km/h</span>
           </div>
           <div class="wingmen">僚機 <span id="allies-count">4</span> / 4</div>
           <div class="score-readout">スコア <b id="score">0</b></div>
           <div class="ammo" aria-label="残弾数">機銃 <b id="mg-ammo">288</b> · 機関砲 <b id="cannon-ammo">96</b></div>
         </div>
         <div id="ally-announcements" class="ally-announcements" role="status" aria-live="polite" aria-atomic="true"></div>
+        <p id="payload-status" class="payload-status"></p>
         <p id="reload-status" class="reload-status" hidden></p>
         <p id="warning" class="warning" role="status" hidden>
           低空注意 · 機首を上げて
         </p>
+        <button id="bomb" class="flight-button payload-button" aria-label="爆弾を投下">爆弾 2</button>
+        <button id="torpedo" class="flight-button payload-button" aria-label="魚雷を投下">魚雷 1</button>
         <p id="flight-tip" class="flight-tip">触れた位置からドラッグして操縦</p>
         <div class="bottom-controls">
           <button

@@ -1,3 +1,4 @@
+import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
 import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
@@ -65,7 +66,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
-  let fleetCaptured = false, lastSample = -6;
+  let activityCaptured = false;
+  let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
   const pilot = createBrowserMissionPilot();
   while (true) {
     const s = await state(page);
@@ -104,9 +106,21 @@ test("physical circular-stick inputs reach the victory screen", async ({
       lastSample = -6;
       continue;
     }
+    if (!activityCaptured && s.allyActivity.visible.length > 0) {
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await page.locator('#pause').tap();
+      await expect.poll(async ()=>(await state(page)).phase).toBe('paused');
+      await capture(page,'wingman-activity-paused',true);activityCaptured=true;
+      await page.locator('#resume').tap();
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
+      lastSample=-6;continue;
+    }
     const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
-    await cdp.send("Input.dispatchTouchEvent", {type:"touchMove",touchPoints:[{x:origin.x+stickX,y:origin.y+stickY,id:1}]});
+    const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
+    lastSample=accepted.tick;
+    if(accepted.phase!=='playing')break;
+    if(request.bomb) { await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb');payloadPresses++; }
 
   }
   await cdp.send("Input.dispatchTouchEvent", {
@@ -115,11 +129,17 @@ test("physical circular-stick inputs reach the victory screen", async ({
   });
   const result = await state(page);
   expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
+  expect(payloadPresses, "Actual touch buttons launch the anti-ship payloads").toBeGreaterThan(0);
   expect(result.result?.outcome).toBe("victory");
   expect(result.enemies.every((t: any) => t.health <= 0)).toBe(true);
   expect(result.ships.every((t: any) => t.health <= 0)).toBe(true);
   await expect(page.locator("#result-title")).toHaveText("作戦成功");
   await capture(page, "result-victory");
+  expect(activityCaptured).toBe(true);
+  expect(result.allyActivity.totals.reduce((sum:number,row:any)=>sum+row.victory,0)).toBe(result.stats.allyAircraftKills);
+  await expect(page.locator('#ally-report')).toBeVisible();
+  await page.locator('#ally-report summary').tap();
+  await expect(page.locator('#ally-report-lines')).toContainText('敵機撃墜');
   await page.locator("#result-home").click();
   await expect(page.locator("#start")).toBeVisible();
 });

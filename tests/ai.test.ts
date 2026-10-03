@@ -1,4 +1,4 @@
-import { createFeedbackEasyPilot } from './helpers/feedback-easy-pilot';
+import { createBrowserMissionPilot as createFeedbackEasyPilot } from './helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from './helpers/touch-reload-pilot';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -68,7 +68,7 @@ function flyFeedbackMission(pattern = [6]) {
       const request = pilot(state), { dx, dy } = pointerOffsetForControls(request.turn, request.climb);
       const distance = Math.hypot(dx, dy), response = distance / 36 <= .08 ? 0 : (distance / 36 - .08) / .92;
       assert.ok(distance <= 36 + 1e-9);
-      held = { ...neutral, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, viewAspect: 393 / 852 };
+      held = { ...neutral, ...request, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, viewAspect: 393 / 852 };
     }
     stepGame(state, held);
   }

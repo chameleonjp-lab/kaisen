@@ -6,7 +6,11 @@ for(const viewport of [{width:393,height:852},{width:568,height:320}]) {
  test(`control layout settings save cancel and restore across screens ${viewport.width}x${viewport.height}`,async({page})=>{
   test.setTimeout(90000);await page.setViewportSize(viewport);await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
   await page.locator('#home-controls').tap();await expect(page.locator('#control-settings')).toBeVisible();
-  await page.locator('#control-mode').selectOption('normal');await page.locator('#control-target').selectOption('fire');
+  await page.locator('#control-mode').selectOption('normal');
+  await expect(page.locator('#control-target option')).toHaveCount(6);
+  await expect(page.locator('#control-target option[value="bomb"]')).toHaveText('爆弾');
+  await expect(page.locator('#control-target option[value="torpedo"]')).toHaveText('魚雷');
+  await page.locator('#control-target').selectOption('fire');
   await page.locator('#control-x').focus();await page.keyboard.press('ArrowLeft');
   const wanted=await page.locator('#control-x').inputValue();await page.locator('#control-save').tap();
   await expect(page.locator('#control-settings')).not.toBeVisible();

@@ -21,11 +21,12 @@ for (const mode of ['easy','normal'] as const) test(`${mode} browser pilot clear
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+1,input:{...held,...request,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+1,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
+    assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);
   }
-  context.diagnostic(JSON.stringify({mode,time:state.elapsed,hp:state.player.health,reason:state.endReason,stats:state.stats}));
+  context.diagnostic(JSON.stringify({mode,time:state.elapsed,hp:state.player.health,reason:state.endReason,cause:state.deathCause,stats:state.stats}));
   assert.equal(state.endReason,'all-clear');assert.ok(state.player.health>0);
   assert.ok([...state.enemies,...state.ships].every(t=>t.health<=0));
   assert.ok(state.stats.playerAircraftKills>0&&state.stats.playerShipKills>0);
@@ -47,8 +48,9 @@ for (const lag of [1,5]) test(`Normal fleet-first pilot clears acceptance-relati
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+lag,input:{...held,...request,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+lag,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
+    assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);
   }
   context.diagnostic(JSON.stringify({time:state.elapsed,hp:state.player.health,stats:state.stats}));
@@ -73,8 +75,9 @@ test('Normal recovery pilot clears actual CI21 observed request/acceptance timin
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+cycle.deliveryTicks,input:{...held,...request,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+cycle.deliveryTicks,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
+    assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);
   }
   context.diagnostic(JSON.stringify({time:state.elapsed,hp:state.player.health,stats:state.stats}));

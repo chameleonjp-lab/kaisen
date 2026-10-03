@@ -141,9 +141,9 @@ export function autoFireTarget(player: Aircraft, enemies: readonly CombatTarget[
 }
 
 /** Straight flight prediction; maneuvers after launch can still evade the shot. */
-export function predictedShotDirection(origin: Vector3, forward: Vector3, target: CombatTarget, bulletSpeed: number, lifetime: number): Vector3 {
+export function predictedShotDirection(origin: Vector3, forward: Vector3, target: CombatTarget, bulletSpeed: number, lifetime: number, aimPoint?: Vector3): Vector3 {
   const velocity = target.kind === 'ship' ? target.velocity.clone() : new Vector3(0, 0, -1).applyQuaternion(target.quaternion).multiplyScalar(target.speed);
-  const relative = targetAimPoint(target).sub(origin);
+  const relative = (aimPoint?.clone() ?? targetAimPoint(target)).sub(origin);
   const a = velocity.lengthSq() - bulletSpeed * bulletSpeed;
   const b = 2 * relative.dot(velocity);
   const c = relative.lengthSq();

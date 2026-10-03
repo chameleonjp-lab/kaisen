@@ -1,3 +1,4 @@
+import { releaseBomb } from '../src/ordnance';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Vector3 } from 'three';
@@ -93,7 +94,7 @@ test('ship local hull and superstructure boxes take a single first impact; near-
   const miss = shot(1, 'friendly', new Vector3(150, 8, -200), new Vector3()); miss.previous.set(150, 8, 200);
   assert.equal(sweptShipHitTime(miss, ship), null);
   ship.health = 100; state.bullets.push(shot(1, 'friendly', new Vector3(0, 8, 200), new Vector3(0, 0, -24000), 40));
-  stepGame(state, neutral); assert.equal(ship.health, 60); assert.equal(state.events.filter(event => event.type === 'hit').length, 1);
+  stepGame(state, neutral); assert.equal(ship.health, 100, "aircraft guns cannot perforate the armored hull"); assert.equal(state.events.filter(event => event.type === 'hit').length, 1);
 });
 
 test('pause, invalid frame gaps, and ended state do not mutate world or clock', () => {
@@ -154,9 +155,10 @@ test('per-mount AA launches actual ballistic rounds and outside-range targets ca
   assert.equal(state.events.filter(e => e.type === 'shot' && e.owner === ship.id).length, 0);
 });
 
-test('allied final ship kill is credited once even when the salvo has multiple rounds', () => {
+test('allied final ship kill is credited once even when multiple bombs arrive', () => {
   const state = quietState(), ship = state.ships[0]; ship.position.set(0, 0, 0); ship.previous.copy(ship.position); ship.health = 1;
-  for (let i = 0; i < 2; i++) state.bullets.push(shot(state.allies[0].id, 'friendly', new Vector3(0, 8, 200), new Vector3(0, 0, -24000)));
+  ship.velocity.set(0,0,0); ship.yaw=0; ship.quaternion.identity(); ship.previousQuaternion.identity();
+  for(let i=0;i<2;i++){const bomb=releaseBomb(90000+i,state.allies[0])!;bomb.age=1;bomb.position.set(0,15,100);bomb.previous.copy(bomb.position);bomb.velocity.set(0,-600,0);state.ordnance.push(bomb);}
   stepGame(state, neutral);
   assert.equal(state.endReason, 'all-clear'); assert.equal(state.stats.allyShipKills, 1); assert.equal(state.result?.allyShipKills, 1);
   assert.equal(state.events.filter(event => event.type === 'kill' && event.target === ship.id).length, 1);

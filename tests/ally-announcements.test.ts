@@ -35,9 +35,9 @@ test('ally activity derives the victim and exact shooter from destruction snapsh
     event(7, { team: 'enemy', ownerAllySlot: undefined }),
   ];
   feed.record(events); feed.record(events);
-  assert.deepEqual(feed.update(10), ['僚機3が戦闘不能 · 40秒後に復帰', '僚機3が戦線へ復帰']);
+  assert.deepEqual(feed.update(10), ['僚機3 戦闘不能（復帰40秒）', '僚機3 戦線へ復帰']);
   assert.deepEqual(feed.update(12.999), feed.snapshot().visible);
-  assert.deepEqual(feed.update(13), ['僚機2が敵機を撃墜']);
+  assert.deepEqual(feed.update(13), ['僚機2 敵機を撃墜']);
   assert.deepEqual(feed.snapshot().totals, [
     { lost: 0, returned: 0, victory: 0 }, { lost: 0, returned: 0, victory: 1 },
     { lost: 1, returned: 1, victory: 0 }, { lost: 0, returned: 0, victory: 0 },
@@ -63,7 +63,7 @@ test('simultaneous and sustained ally events coalesce into at most twelve pendin
   assert.deepEqual(feed.update(18), []);
   assert.ok(feed.snapshot().totals.every(item => item.lost === 50 && item.returned === 50 && item.victory === 50));
   feed.clear(); assert.deepEqual(feed.summary(), []); assert.deepEqual(feed.update(0), []);
-  feed.record([event(1, {})]); assert.deepEqual(feed.update(0), ['僚機1が敵機を撃墜']);
+  feed.record([event(1, {})]); assert.deepEqual(feed.update(0), ['僚機1 敵機を撃墜']);
 });
 
 test('actual friendly-fire loss, a dead ally remaining round, and respawn retain their four-slot identity', () => {

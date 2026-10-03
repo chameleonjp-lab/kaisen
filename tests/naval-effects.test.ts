@@ -58,5 +58,5 @@ test('bounded flash storage shares a fixed particle batch and keeps the newest r
   }));
   view.events(events, 1);
   assert.equal(view.navalFlashes.length, 252);
-  assert.equal(view.particles.length, 0);
+  assert.equal(view.particles.length, 1, 'one grouped muzzle-smoke plume for the same mount/tick volley');
 });

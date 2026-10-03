@@ -1,7 +1,7 @@
 // Adapted from faitofuraito@025cad4930b487628675a0e20a88323aae0fac89 src/control-settings.ts. See docs/PROVENANCE.md.
-import type { FlightControlButtons } from './input';
+import type { KaisenControlButtons } from './input';
 
-type ControlName = keyof FlightControlButtons;
+type ControlName = keyof KaisenControlButtons;
 type GameMode = 'normal' | 'easy';
 type ControlPlacement = { x: number; y: number; size: number; opacity: number };
 type ControlLayout = Record<ControlName, ControlPlacement>;
@@ -13,16 +13,18 @@ const STORAGE_KEYS: Record<GameMode, string> = {
   easy: 'kaisen-controls-easy-v1',
 };
 const MODES: GameMode[] = ['normal', 'easy'];
-const CONTROL_NAMES: ControlName[] = ['fire', 'loop', 'accelerate', 'brake'];
+const CONTROL_NAMES: ControlName[] = ['fire', 'loop', 'accelerate', 'brake', 'bomb', 'torpedo'];
 const MODE_CONTROLS: Record<GameMode, ControlName[]> = {
   normal: CONTROL_NAMES,
-  easy: ['loop'],
+  easy: ['loop', 'bomb', 'torpedo'],
 };
 const DEFAULT_LAYOUT: ControlLayout = {
   fire: { x: 0.83, y: 0.84, size: 96, opacity: 0.9 },
   loop: { x: 0.83, y: 0.66, size: 72, opacity: 0.78 },
   accelerate: { x: 0.17, y: 0.84, size: 76, opacity: 0.82 },
   brake: { x: 0.17, y: 0.66, size: 76, opacity: 0.82 },
+  bomb: { x: 0.39, y: 0.77, size: 56, opacity: 0.88 },
+  torpedo: { x: 0.58, y: 0.77, size: 56, opacity: 0.88 },
 };
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -64,7 +66,7 @@ function loadLayout(mode: GameMode): ControlLayout {
   }
 }
 
-/** Edits and persists the four in-flight button layouts without resuming flight. */
+/** Edits and persists the flight and payload button layouts without resuming flight. */
 export class ControlSettings {
   private readonly app: HTMLElement;
   private readonly dialog: HTMLDialogElement;
@@ -92,7 +94,7 @@ export class ControlSettings {
     return this.dialog.open;
   }
 
-  constructor(private readonly buttons: FlightControlButtons) {
+  constructor(private readonly buttons: KaisenControlButtons) {
     this.app = document.getElementById('app') ?? document.body;
     this.saved = { normal: loadLayout('normal'), easy: loadLayout('easy') };
     this.draft = this.copyLayouts(this.saved);
@@ -185,6 +187,7 @@ export class ControlSettings {
           <select id="control-target" class="control-target">
             <option value="fire">射撃</option><option value="loop">宙返り</option>
             <option value="accelerate">加速</option><option value="brake">減速</option>
+            <option value="bomb">爆弾</option><option value="torpedo">魚雷</option>
           </select>
           <button id="control-reset" class="control-reset" type="button">標準配置に戻す</button>
           <div class="control-settings-grid">

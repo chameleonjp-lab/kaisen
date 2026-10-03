@@ -1,3 +1,4 @@
+import { releaseBomb } from '../src/ordnance';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Vector3 } from 'three';
@@ -123,7 +124,9 @@ test('an allied last hit clears immediately during reload and freezes the unfini
   for (let i = 0; i < 20; i++) stepGame(s, neutral);
   const ship = s.ships[0]; ship.health = 1;
   ship.position.set(0, 0, 0); ship.previous.copy(ship.position);
-  s.bullets.push(shot(s.allies[0].id, 'friendly', new Vector3(0, 8, 200), new Vector3(0, 0, -24000)));
+  ship.velocity.set(0,0,0); ship.yaw=0; ship.quaternion.identity(); ship.previousQuaternion.identity();
+  const bomb=releaseBomb(90000,s.allies[0])!; bomb.age=1; bomb.position.set(0,15,100); bomb.previous.copy(bomb.position); bomb.velocity.set(0,-600,0);
+  s.ordnance.push(bomb);
   stepGame(s, neutral);
   assert.equal(s.result?.outcome, 'victory'); assert.equal(s.stats.allyShipKills, 1);
   assert.equal(s.player.reloadTicksRemaining, 339);
