@@ -3,7 +3,7 @@ import { assignTargets, targetFor, updateAI } from './ai';
 import { autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
-import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_COUNT, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, resolveMissionConfig } from './mission';
+import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, ENEMY_MG_DAMAGE, ENEMY_CANNON_DAMAGE, resolveMissionConfig } from './mission';
 import { beginPlayerReload, tickPlayerReload } from './ammunition';
 import { aircraftSeaContact } from './sea-contact';
 import { oceanHeight } from './ocean';
@@ -31,13 +31,16 @@ function metaFor(state: GameState): SimulationMeta {
   if (!meta) throw new Error('Game state must be created with createGame');
   return meta;
 }
-function emit(state: GameState, type: GameEvent['type'], position: Vector3, owner: number, target?: CombatTarget, team?: Team): void {
+function emit(state: GameState, type: GameEvent['type'], position: Vector3, owner: number, target?: CombatTarget, team?: Team): GameEvent | undefined {
   const meta = metaFor(state);
   if (state.events.length >= MAX_EVENTS_PER_STEP) {
-    if (type !== 'end' && type !== 'kill') return;
-    state.events.shift();
+    if (!['end', 'kill', 'reinforcement', 'ally-respawn', 'heal', 'reload-start', 'reload-complete'].includes(type)) return;
+    const cosmetic = state.events.findIndex(e => e.type === 'shot' || e.type === 'hit' || e.type === 'splash');
+    state.events.splice(Math.max(0, cosmetic), 1);
   }
-  state.events.push({ id: meta.nextEventId++, tick: state.tick, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, team });
+  const event = { id: meta.nextEventId++, tick: state.tick, type, position: position.clone(), owner, target: target?.id, targetKind: target?.kind, team };
+  state.events.push(event);
+  return event;
 }
 
 export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | GameMode = {}): GameState {
@@ -51,8 +54,8 @@ export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | G
   const state: GameState = {
     phase: 'ready', reinforcementsSpawned: false, mode: mission.mode, config: mission, seed: normalized, player, allies, enemies,
     ships: makeFleet(mission.shipCount), bullets: [], events: [], elapsed: 0, tick: 0,
-    stats: { playerAircraftKills: 0, playerShipKills: 0, allyAircraftKills: 0, allyShipKills: 0, shots: 0, hits: 0, loops: 0, damageTaken: 0 },
-    result: null, endReason: null,
+    stats: { playerAircraftKills: 0, playerShipKills: 0, allyAircraftKills: 0, allyShipKills: 0, shots: 0, hits: 0, loops: 0, damageTaken: 0, friendlyDamage: 0, friendlyKills: 0, score: 0 },
+    result: null, endReason: null, deathCause: null, allyRespawnAt: {},
   };
   metadata.set(state, { nextEntityId: 1000, nextEventId: 1, accumulator: 0, pendingLoop: false, flight: createFlightController(player), deathReason: null, previousOrientations: new Map(), pendingHeal: 0 });
   assignTargets(state);
@@ -72,11 +75,18 @@ function finish(state: GameState, reason: EndReason): void {
   state.result = Object.freeze({ outcome: reason === 'all-clear' ? 'victory' : 'defeat', time: state.elapsed,
     playerAircraftKills: state.stats.playerAircraftKills, playerShipKills: state.stats.playerShipKills,
     allyAircraftKills: state.stats.allyAircraftKills, allyShipKills: state.stats.allyShipKills,
-    alliesSurvived: state.allies.filter(item => item.health > 0).length });
+    alliesSurvived: state.allies.filter(item => item.health > 0).length, score: state.stats.score, friendlyDamage: state.stats.friendlyDamage, friendlyKills: state.stats.friendlyKills });
   emit(state, 'end', state.player.position, state.player.id);
 }
 function registerDestruction(state: GameState, target: CombatTarget, owner: number, team?: Team): void {
   emit(state, 'kill', target.position, owner, target, team);
+  if (target.kind === 'aircraft' && target.team === 'friendly' && target !== state.player) {
+    state.allyRespawnAt[target.id] = state.tick + ALLY_RESPAWN_TICKS;
+    if (state.mode === 'normal' && owner === state.player.id && team === 'friendly') {
+      state.stats.friendlyKills += 1;
+      state.stats.score -= FRIENDLY_KILL_PENALTY;
+    }
+  }
   if (target.team !== 'enemy' || team !== 'friendly') return;
   if (owner === state.player.id) {
     if (target.kind === 'ship') state.stats.playerShipKills += 1;
@@ -170,7 +180,7 @@ function resolveContacts(state: GameState): void {
       plane.position.lerpVectors(plane.previous, plane.position, seaContact.fraction);
       plane.quaternion.slerpQuaternions(meta.previousOrientations.get(plane.id) ?? plane.quaternion, plane.quaternion.clone(), seaContact.fraction);
       destroy(state, plane, plane.id); emit(state, 'splash', seaContact.point, plane.id);
-      if (plane === state.player) meta.deathReason = 'sea';
+      if (plane === state.player) { meta.deathReason = 'sea'; state.deathCause = 'sea'; }
       continue;
     }
     for (const ship of state.ships) {
@@ -178,7 +188,7 @@ function resolveContacts(state: GameState): void {
       if (sweptShipHitTime(plane, ship, 3) !== null) {
         // A ram never damages a ship or creates a route to an all-clear.
         destroy(state, plane, ship.id, ship.team);
-        if (plane === state.player) meta.deathReason = 'collision';
+        if (plane === state.player) { meta.deathReason = 'collision'; state.deathCause = 'ship-collision'; }
         break;
       }
     }
@@ -190,7 +200,7 @@ function resolveContacts(state: GameState): void {
     friendly.position.lerpVectors(friendly.previous, friendly.position, time);
     enemy.position.lerpVectors(enemy.previous, enemy.position, time);
     destroy(state, friendly, enemy.id, 'enemy'); destroy(state, enemy, friendly.id, 'friendly');
-    if (friendly === state.player) meta.deathReason = 'collision';
+    if (friendly === state.player) { meta.deathReason = 'collision'; state.deathCause = 'aircraft-collision'; }
   }
 }
 
@@ -226,7 +236,7 @@ function fireAircraft(state: GameState, plane: Aircraft, firing: boolean, target
         direction.normalize();
       }
       appendBullet(state, { owner: plane.id, team: plane.team, kind, position, velocity: direction.multiplyScalar(speed), life: BULLET_LIFETIME,
-        damage: player ? (kind === 'mg' ? 5 : 25) : plane.team === 'friendly' ? (kind === 'mg' ? 3 : 12) : (kind === 'mg' ? 2 : 8) });
+        damage: player ? (kind === 'mg' ? 5 : 25) : plane.team === 'friendly' ? (kind === 'mg' ? 3 : 12) : (kind === 'mg' ? ENEMY_MG_DAMAGE : ENEMY_CANNON_DAMAGE) });
     }
     if (player) plane[kind] -= 2;
     plane[clock] = player ? (kind === 'mg' ? 1 / 12 : 1 / 4) : (kind === 'mg' ? 0.28 : 0.95);
@@ -250,7 +260,14 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
   if (target.health <= 0) return;
   const damage = Math.min(target.health, bullet.damage); target.health -= damage;
   if (target === state.player) state.stats.damageTaken += damage;
-  if (bullet.owner === state.player.id) state.stats.hits += 1;
+  if (bullet.owner === state.player.id && target.team !== bullet.team) state.stats.hits += 1;
+  if (state.mode === 'normal' && bullet.owner === state.player.id && target.team === 'friendly') {
+    state.stats.friendlyDamage += damage;
+    state.stats.score -= damage * FRIENDLY_DAMAGE_PENALTY;
+  }
+  if (target === state.player && target.health <= 0) {
+    state.deathCause = bullet.team === 'friendly' ? 'friendly-fire' : bullet.kind === 'aa' ? 'naval-fire' : 'enemy-aircraft';
+  }
   emit(state, 'hit', position, bullet.owner, target, bullet.team);
   emit(state, 'damage', position, target.id, target, target.team);
   if (target.health <= 0) registerDestruction(state, target, bullet.owner, bullet.team);
@@ -273,13 +290,14 @@ function updateBullets(state: GameState): void {
     for (const candidate of candidates) {
       if (candidate.health <= 0 || candidate.id === bullet.owner) continue;
       // Other hulls are solid even to their own fleet's AA; no friendly damage.
-      if (candidate.team === bullet.team && !(bullet.kind === 'aa' && candidate.kind === 'ship')) continue;
+      if (candidate.team === bullet.team && !(bullet.kind === 'aa' && candidate.kind === 'ship')
+        && !(state.mode === 'normal' && bullet.team === 'friendly' && candidate.kind === 'aircraft')) continue;
       const hit = candidate.kind === 'ship' ? sweptShipHitTime(bullet, candidate, 0, travel / FIXED_DT) : sweptAircraftHitTime(bullet, candidate, travel / FIXED_DT);
       if (hit !== null && (hit < first || (hit === first && target !== null && candidate.id < target.id))) { target = candidate; first = hit; }
     }
     if (target) {
       const point = bullet.previous.clone().lerp(bullet.position, first);
-      if (target.team !== bullet.team) damageTarget(state, target, bullet, point);
+      if (target.team !== bullet.team || (state.mode === 'normal' && target.kind === 'aircraft' && bullet.team === 'friendly')) damageTarget(state, target, bullet, point);
       else emit(state, 'hit', point, bullet.owner, target, bullet.team);
       continue;
     }
@@ -289,30 +307,52 @@ function updateBullets(state: GameState): void {
   state.bullets = survivors;
 }
 
-/** One wave at the beginning of tick 10800; a mission ended earlier stays ended. */
+/** Every 40 active seconds, replace only dead enemy slots up to five living aircraft. */
 function spawnReinforcements(state: GameState): void {
-  if (state.reinforcementsSpawned || state.tick < REINFORCEMENT_TICK) return;
+  if (state.tick % REINFORCEMENT_TICK !== 0) return;
+  const missing = state.enemies.filter(enemy => enemy.health <= 0);
+  if (!missing.length) return;
   state.reinforcementsSpawned = true;
   const forward = forwardOf(state.player);
   const horizontal = new Vector3(forward.x, 0, forward.z).normalize();
   if (horizontal.lengthSq() < EPSILON) horizontal.set(0, 0, -1);
   const right = new Vector3(-horizontal.z, 0, horizontal.x);
-  for (let index = 0; index < REINFORCEMENT_COUNT; index++) {
-    const position = state.player.position.clone().addScaledVector(horizontal, 1400).addScaledVector(right, (index - 1) * 180);
+  for (let index = 0; index < missing.length; index++) {
+    const position = state.player.position.clone().addScaledVector(horizontal, 1400).addScaledVector(right, (index - (missing.length - 1) / 2) * 180);
     position.y = Math.max(220, state.player.position.y + 100 + index * 35);
     const yaw = Math.atan2(position.x - state.player.position.x, position.z - state.player.position.z);
     const enemy = makeAircraft(metaFor(state).nextEntityId++, 'enemy', position, yaw);
     enemy.generation = 'reinforcement';
-    state.enemies.push(enemy);
+    const slot = state.enemies.indexOf(missing[index]);
+    metaFor(state).previousOrientations.delete(missing[index].id);
+    state.enemies[slot] = enemy;
   }
-  emit(state, 'reinforcement', state.player.position, state.player.id);
+  const event = emit(state, 'reinforcement', state.player.position, state.player.id);
+  if (event) event.amount = missing.length;
+}
+
+function respawnAllies(state: GameState): void {
+  for (let slot = 0; slot < state.allies.length; slot++) {
+    const previous = state.allies[slot], due = state.allyRespawnAt[previous.id];
+    if (previous.health > 0 || due === undefined || state.tick < due) continue;
+    const forward = forwardOf(state.player), side = slot % 2 === 0 ? -1 : 1;
+    const right = new Vector3(-forward.z, 0, forward.x).normalize();
+    const position = state.player.position.clone().addScaledVector(forward, -350 - slot * 50).addScaledVector(right, side * 150);
+    position.y = Math.max(220, state.player.position.y + 80 + slot * 30);
+    const replacement = makeAircraft(metaFor(state).nextEntityId++, 'friendly', position, state.player.yaw, previous.role);
+    // A new ID prevents old bullets/targets from becoming the resurrected aircraft.
+    state.allies[slot] = replacement;
+    delete state.allyRespawnAt[previous.id];
+    metaFor(state).previousOrientations.delete(previous.id);
+    emit(state, 'ally-respawn', replacement.position, replacement.id);
+  }
 }
 
 function fixedStep(state: GameState, input: FlightInput): void {
   const meta = metaFor(state), player = state.player;
   if (player.health <= 0) { finish(state, meta.deathReason ?? 'shot-down'); return; }
   state.tick += 1; state.elapsed = state.tick * FIXED_DT;
-  spawnReinforcements(state);
+  respawnAllies(state);
   meta.pendingHeal = 0;
   for (const plane of [player, ...state.allies, ...state.enemies]) {
     let previous = meta.previousOrientations.get(plane.id);
@@ -353,13 +393,14 @@ function fixedStep(state: GameState, input: FlightInput): void {
     const amount = Math.min(meta.pendingHeal, player.maxHealth - player.health);
     player.health += amount;
     if (amount > 0) {
-      emit(state, 'heal', player.position, player.id);
-      state.events[state.events.length - 1].amount = amount;
+      const event = emit(state, 'heal', player.position, player.id);
+      if (event) event.amount = amount;
     }
   }
   // Resolve every in-flight round before choosing the outcome. Death wins a simultaneous all-clear.
   if (player.health <= 0) finish(state, meta.deathReason ?? 'shot-down');
   else if (state.enemies.every(item => item.health <= 0) && state.ships.every(item => item.health <= 0)) finish(state, 'all-clear');
+  else spawnReinforcements(state);
 }
 
 /** Fixed 60 Hz. Suspended frame gaps are ignored; callers pause on blur/visibility changes. */

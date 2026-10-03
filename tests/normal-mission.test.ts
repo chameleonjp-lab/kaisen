@@ -5,14 +5,14 @@ import type { FlightInput } from '../src/types';
 import { createNormalMissionPilot } from './helpers/normal-mission-pilot';
 import { pointerOffsetForControls } from './helpers/touch-reload-pilot';
 
-test('Normal default fleet clears through manual fire and circular input with six/seven tick hold', () => {
-  for (const pattern of [[6], [6, 7]]) {
+test('Normal default fleet clears through manual fire and circular input with six/seven and coarse twelve tick hold', context => {
+  for (const pattern of [[6], [6, 7], [12]]) {
     const state = createGame(undefined, 'normal'), pilot = createNormalMissionPilot();
     startGame(state);
     let nextSample = 0, sample = 0, navalShots = 0;
     let held: FlightInput = { turn: 0, climb: 0, fire: false, loop: false, viewAspect: 393 / 852 };
     const reloads: { type: 'reload-start' | 'reload-complete'; tick: number }[] = [];
-    for (let i = 0; i < 60 * 150 && state.phase === 'playing'; i++) {
+    for (let i = 0; i < 60 * 600 && state.phase === 'playing'; i++) {
       if (state.tick >= nextSample) {
         nextSample = state.tick + pattern[sample++ % pattern.length];
         const before = JSON.stringify(state), snapshot = JSON.parse(before);
@@ -35,7 +35,8 @@ test('Normal default fleet clears through manual fire and circular input with si
         if (event.type === 'shot' && state.ships.some(ship => ship.id === event.owner)) navalShots++;
       }
     }
-    assert.equal(state.config.shipCount, 3);
+    context.diagnostic(JSON.stringify({pattern,time:state.elapsed,hp:state.player.health,reason:state.endReason,stats:state.stats}));
+    assert.equal(state.config.shipCount, 4);
     assert.equal(state.endReason, 'all-clear', `hold pattern ${pattern}`);
     assert.equal(state.result?.outcome, 'victory');
     assert.ok(state.player.health > 0);

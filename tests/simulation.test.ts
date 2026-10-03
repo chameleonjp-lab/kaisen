@@ -20,14 +20,14 @@ function shot(owner: number, team: Bullet['team'], position: Vector3, velocity: 
 function snapshot(state: GameState): string { return JSON.stringify(state); }
 
 test('fixed 5 versus 5 roster, provisional internal fleet counts, easy default, repeatable seed', () => {
-  for (const shipCount of [3, 5, 7] as const) {
+  for (const shipCount of [3, 4, 5, 7] as const) {
     const state = createGame(44, { shipCount });
     assert.equal(state.phase, 'ready'); assert.equal(state.mode, 'easy');
     assert.equal(state.allies.length + 1, 5); assert.equal(state.enemies.length, 5); assert.equal(state.ships.length, shipCount);
     assert.equal(new Set([state.player, ...state.allies, ...state.enemies, ...state.ships].map(item => item.id)).size, 10 + shipCount);
     assert.equal(snapshot(state), snapshot(createGame(44, { shipCount })));
   }
-  assert.throws(() => createGame(1, { shipCount: 4 as 3 }));
+  assert.throws(() => createGame(1, { shipCount: 6 as 3 }));
 });
 
 test('all-clear waits for both categories and freezes the final tick exactly once', () => {
@@ -67,7 +67,7 @@ test('death wins a simultaneous final kill from already airborne shots', () => {
 });
 
 test('swept fast projectile hits first enemy only, ignores its own team, never duplicates kills', () => {
-  const state = quietState();
+  const state = quietState(); state.mode = 'easy';
   const ally = state.allies[0]; ally.health = 100; ally.position.set(-80, 500, 0); ally.previous.copy(ally.position);
   for (let index = 0; index < 2; index++) { const enemy = state.enemies[index]; enemy.health = 100; enemy.position.set(index * 60, 500, 0); enemy.previous.copy(enemy.position); }
   state.bullets.push(shot(1, 'friendly', new Vector3(-200, 500, 0), new Vector3(24000, 0, 0)));
@@ -115,14 +115,16 @@ test('sea collision replaces altitude deadline, and ramming cannot kill a ship',
   stepGame(ram, neutral); assert.equal(ram.endReason, 'collision'); assert.equal(ship.health, ship.maxHealth);
 });
 
-test('initial dead units remain dead before the scheduled wave and entities stay bounded', () => {
+test('units remain bounded through repeated replenishment and manually dead allies do not acquire phantom death timers', () => {
   const state = quietState(); const roster = [...state.enemies, ...state.allies].map(item => item.id);
   for (let i = 0; i < 60 * 90; i++) {
     stepGame(state, { ...neutral, fire: true });
     assert.ok(state.bullets.length <= MAX_BULLETS); assert.ok(state.events.length <= MAX_EVENTS_PER_STEP);
   }
-  assert.deepEqual([...state.enemies, ...state.allies].map(item => item.id), roster);
-  assert.ok(state.enemies.every(item => item.health === 0));
+  assert.equal(state.enemies.length, 5); assert.equal(state.allies.length, 4);
+  assert.deepEqual(state.allies.map(item => item.id), roster.slice(5));
+  assert.equal(Object.keys(state.allyRespawnAt).length, 0);
+  assert.ok(state.enemies.some(item => !roster.includes(item.id)));
   for (const entity of [state.player, ...state.allies, ...state.enemies, ...state.ships, ...state.bullets]) {
     assert.ok(entity.position.toArray().every(Number.isFinite));
   }

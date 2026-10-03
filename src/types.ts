@@ -29,27 +29,28 @@ export interface Bullet {
 export interface GameEvent {
   /** Fixed simulation tick of the event, so deferred rendering cannot replay old muzzle flashes. */
   tick?: number;
-  id: number; type: 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'end' | 'splash' | 'reload-start' | 'reload-complete' | 'reinforcement' | 'heal';
+  id: number; type: 'shot' | 'hit' | 'kill' | 'damage' | 'loop' | 'end' | 'splash' | 'reload-start' | 'reload-complete' | 'reinforcement' | 'ally-respawn' | 'heal';
   position: Vector3; owner: number; target?: number; targetKind?: 'aircraft' | 'ship'; team?: Team; amount?: number;
 }
 export interface FlightInput {
   turn: number; climb: number; fire: boolean; loop: boolean;
   accelerate?: boolean; brake?: boolean; viewAspect?: number; steeringRevision?: number;
 }
-export interface MissionConfig { shipCount: 3 | 5 | 7; mode: GameMode; }
+export interface MissionConfig { shipCount: 3 | 4 | 5 | 7; mode: GameMode; }
 export interface MissionStats {
   playerAircraftKills: number; playerShipKills: number; allyAircraftKills: number; allyShipKills: number;
-  shots: number; hits: number; loops: number; damageTaken: number;
+  shots: number; hits: number; loops: number; damageTaken: number; friendlyDamage: number; friendlyKills: number; score: number;
 }
 export interface GameResult {
   outcome: 'victory' | 'defeat'; time: number; playerAircraftKills: number; playerShipKills: number;
-  allyAircraftKills: number; allyShipKills: number; alliesSurvived: number;
+  allyAircraftKills: number; allyShipKills: number; alliesSurvived: number; score: number; friendlyDamage: number; friendlyKills: number;
 }
 export type EndReason = 'all-clear' | 'shot-down' | 'collision' | 'sea';
+export type DeathCause = 'enemy-aircraft' | 'naval-fire' | 'friendly-fire' | 'aircraft-collision' | 'ship-collision' | 'sea' | null;
 export interface GameState {
   phase: 'ready' | 'playing' | 'paused' | 'ended'; mode: GameMode;
   reinforcementsSpawned: boolean;
   player: Aircraft; allies: Aircraft[]; enemies: Aircraft[]; ships: Ship[];
   bullets: Bullet[]; events: GameEvent[]; elapsed: number; tick: number; seed: number;
-  config: Readonly<MissionConfig>; stats: MissionStats; result: GameResult | null; endReason: EndReason | null;
+  deathCause: DeathCause; allyRespawnAt: Record<number, number>; config: Readonly<MissionConfig>; stats: MissionStats; result: GameResult | null; endReason: EndReason | null;
 }

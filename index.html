@@ -39,10 +39,10 @@
             </div>
             <div>
               <span>敵航空隊</span><strong>5<small>機</small></strong
-              ><em>3分で敵3機が復活</em>
+              ><em>40秒ごとに敵5機まで補充</em>
             </div>
             <div>
-              <span>敵艦隊</span><strong>3<small>隻</small></strong
+              <span>敵艦隊</span><strong>4<small>隻</small></strong
               ><em>初期構成</em>
             </div>
           </div>
@@ -55,8 +55,10 @@
             画面を準備しています
           </button>
           <p class="controls-guide">
-            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 右下で宙返り</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復
+            <span>画面をドラッグ</span>で操縦<br /><span id="mode-guide">照準円内・1.2km以内へ自動射撃 · 右下で宙返り</span><br />弾切れで6秒再装填 · 海面への接触で終了<br />復活敵を自機で撃破するとHP回復<br />僚機は撃墜から40秒で復帰
           </p>
+          <p id="friendly-fire-guide" class="controls-guide" hidden>味方への誤射：損傷1HPにつき−10点<br />味方撃墜はさらに−1500点</p>
+          <button id="home-controls" class="text-button">操作ボタンの配置</button>
           <p id="keyboard-guide" class="keyboard-guide">キーボード：矢印で操縦 · Lで宙返り</p>
           <p id="startup-error" class="error" role="alert" hidden></p>
           <button id="reload" class="secondary" hidden>再読み込み</button>
@@ -75,7 +77,7 @@
           </div>
           <div class="targets">
             <div>敵機 <b id="enemy-count">5</b><small id="enemy-total">/ 5</small></div>
-            <div>敵艦 <b id="ship-count">3</b><small>/ 3</small></div>
+            <div>敵艦 <b id="ship-count">4</b><small>/ 4</small></div>
           </div>
           <button id="pause" class="icon-button" aria-label="一時停止">
             Ⅱ
@@ -90,6 +92,7 @@
             <span id="altitude">350m</span><span id="speed">396km/h</span>
           </div>
           <div class="wingmen">僚機 <span id="allies-count">4</span> / 4</div>
+          <div class="score-readout">スコア <b id="score">0</b></div>
           <div class="ammo" aria-label="残弾数">機銃 <b id="mg-ammo">288</b> · 機関砲 <b id="cannon-ammo">96</b></div>
         </div>
         <p id="reload-status" class="reload-status" hidden></p>
@@ -132,6 +135,7 @@
           <button id="resume" class="primary">飛行を再開</button
           ><button id="pause-restart" class="secondary">はじめから出撃</button
           ><button id="pause-home" class="text-button">ホームへ戻る</button>
+          <button id="pause-controls" class="secondary">操作ボタンの配置</button>
         </div>
       </section>
       <section
@@ -149,6 +153,8 @@
             <span id="result-time-label">経過時間</span
             ><strong id="result-time">00:00.00</strong>
           </div>
+          <p class="score-readout">スコア <b id="result-score">0</b></p>
+          <p id="friendly-fire-result"></p>
           <dl class="result-stats">
             <div>
               <dt>自機の撃破</dt>
@@ -165,6 +171,7 @@
           </dl>
           <button id="retry" class="primary">もう一度出撃</button
           ><button id="result-home" class="secondary">ホームへ戻る</button>
+          <button id="result-controls" class="text-button">操作ボタンの配置</button>
           <p class="result-note">この試作ではオンライン送信は行いません</p>
         </div>
       </section>

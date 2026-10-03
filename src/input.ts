@@ -20,6 +20,8 @@ function neutralInput(steeringRevision = 0): FlightInput {
 /** Pointer and keyboard input for the four on-screen flight controls. */
 export class FlightControls {
   private steerPointer: number | null = null;
+  private steerPointerType: string | null = null;
+  private readonly buttonPointerTypes = new Map<number, string>();
   private readonly holds: Record<ControlName, Set<number>> = {
     fire: new Set(), loop: new Set(), accelerate: new Set(), brake: new Set(),
   };
@@ -56,9 +58,9 @@ export class FlightControls {
 
     const opts = { signal: this.abort.signal };
     surface.addEventListener('pointerdown', event => this.beginSteering(event, app), opts);
-    surface.addEventListener('pointermove', event => this.moveSteering(event), opts);
-    surface.addEventListener('pointerup', event => this.endSteering(event), opts);
-    surface.addEventListener('pointercancel', event => this.endSteering(event), opts);
+    window.addEventListener('pointermove', event => this.moveSteering(event), opts);
+    window.addEventListener('pointerup', event => this.endPointer(event, true), opts);
+    window.addEventListener('pointercancel', event => this.endPointer(event, false), opts);
     surface.addEventListener('lostpointercapture', event => this.endSteering(event), opts);
     surface.addEventListener('contextmenu', event => event.preventDefault(), opts);
 
@@ -80,10 +82,14 @@ export class FlightControls {
     window.addEventListener('keyup', event => this.keyUp(event), opts);
     window.addEventListener('blur', () => this.clear(), opts);
     window.addEventListener('pagehide', () => this.clear(), opts);
+    window.addEventListener('resize', () => this.clear(), opts);
+    window.visualViewport?.addEventListener('resize', () => this.clear(), opts);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.clear();
     }, opts);
   }
+
+  peek() { return { turn: this.turn, climb: this.climb, steerPointer: this.steerPointer, heldPointers: Object.fromEntries(Object.entries(this.holds).map(([name, ids]) => [name, [...ids]])), keys: [...this.keys] }; }
 
   sample(): FlightInput {
     if (!this.active()) {
@@ -123,6 +129,8 @@ export class FlightControls {
   clear(): void {
     const steeringPointer = this.steerPointer;
     this.steerPointer = null;
+    this.steerPointerType = null;
+    this.buttonPointerTypes.clear();
     this.turn = 0;
     this.climb = 0;
     this.keys.clear();
@@ -148,9 +156,12 @@ export class FlightControls {
   }
 
   private beginSteering(event: PointerEvent, app: HTMLElement): void {
-    if (!this.active() || this.steerPointer !== null || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (!this.active() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (event.isPrimary) this.retireSameTypePointer(event.pointerType);
+    if (this.steerPointer !== null) return;
     event.preventDefault();
     this.steerPointer = event.pointerId;
+    this.steerPointerType = event.pointerType;
     this.origin = { x: event.clientX, y: event.clientY };
     const appRect = app.getBoundingClientRect();
     this.joystick.style.left = `${event.clientX - appRect.left}px`;
@@ -163,6 +174,7 @@ export class FlightControls {
 
   private moveSteering(event: PointerEvent): void {
     if (event.pointerId !== this.steerPointer) return;
+    if (event.pointerType === 'mouse' && event.buttons === 0) { this.endSteering(event); return; }
     event.preventDefault();
     const dx = event.clientX - this.origin.x;
     const dy = event.clientY - this.origin.y;
@@ -182,9 +194,32 @@ export class FlightControls {
     }
   }
 
+  /** A new primary down retires an ended gesture of that device type only.
+   * Pointer IDs can be recycled; concurrent mouse/pen/touch each have a primary.
+   */
+  private retireSameTypePointer(pointerType: string): void {
+    if (this.steerPointer !== null && this.steerPointerType === pointerType) {
+      const id = this.steerPointer;
+      this.endSteering({ pointerId: id } as PointerEvent);
+      this.releaseCapture(this.surface, id);
+    }
+    for (const name of Object.keys(this.buttons) as ControlName[]) {
+      for (const id of this.holds[name]) if (this.buttonPointerTypes.get(id) === pointerType) {
+        this.endButton(name, this.buttons[name], { pointerId: id } as PointerEvent, false);
+        this.releaseCapture(this.buttons[name], id);
+      }
+    }
+  }
+
+  private endPointer(event: PointerEvent, completed: boolean): void {
+    this.endSteering(event);
+    for (const name of Object.keys(this.buttons) as ControlName[]) this.endButton(name, this.buttons[name], event, completed);
+  }
+
   private endSteering(event: PointerEvent): void {
     if (event.pointerId !== this.steerPointer) return;
     this.steerPointer = null;
+    this.steerPointerType = null;
     if (Math.abs(this.turn) > 1e-4 || Math.abs(this.climb) > 1e-4) this.steeringRevision += 1;
     this.turn = 0;
     this.climb = 0;
@@ -197,8 +232,10 @@ export class FlightControls {
     if (!this.active() || (event.pointerType === 'mouse' && event.button !== 0)) return;
     if (this.mode === 'easy' && name !== 'loop') return;
     if (name === 'loop' && button.getAttribute('aria-disabled') === 'true') return;
+    if (event.isPrimary) this.retireSameTypePointer(event.pointerType);
     event.preventDefault();
     this.holds[name].add(event.pointerId);
+    this.buttonPointerTypes.set(event.pointerId, event.pointerType);
     this.capture(button, event.pointerId);
     button.classList.add('is-pressed');
     button.setAttribute('aria-pressed', 'true');
@@ -207,6 +244,7 @@ export class FlightControls {
   private endButton(name: ControlName, button: HTMLButtonElement, event: PointerEvent, completed: boolean): void {
     if (!this.holds[name].has(event.pointerId)) return;
     this.holds[name].delete(event.pointerId);
+    this.buttonPointerTypes?.delete(event.pointerId);
     if (name === 'loop' && completed && this.active() && button.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
     if (this.holds[name].size === 0) {
       button.classList.remove('is-pressed');

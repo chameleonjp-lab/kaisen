@@ -455,3 +455,16 @@ test('event dedupe is bounded and a new flight resets the event ID window', asyn
   }
 });
 
+
+
+test('propeller-only reduction halves the engine gain while master and hit envelopes remain unchanged', async () => {
+  const { audio, context, restore } = await createFixture();
+  try {
+    const engine = Reflect.get(audio, 'engineGain') as FakeGainNode;
+    const master = Reflect.get(audio, 'master') as FakeGainNode;
+    assert.ok(engine.gain.events.some(e => e.type.startsWith('target') && e.value === .0475));
+    assert.ok(master.gain.events.some(e => e.type.startsWith('target') && e.value === .6));
+    audio.event(gameEvent(9001, 'hit'), true);
+    assert.ok(context.gains.at(-1)!.gain.events.some(e => e.type === 'linear' && e.value === .16));
+  } finally { audio.dispose(); restore(); }
+});

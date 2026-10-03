@@ -1,3 +1,5 @@
+/** Proposed propeller-only level: half the previous amplitude, other voices unchanged. */
+const PROPELLER_GAIN = 0.0475;
 import type { GameEvent } from './types';
 
 const MAX_EFFECT_SOURCES = 10;
@@ -159,7 +161,7 @@ export class FlightAudio {
 
     this.ensureEngine(now);
     engineGain.gain.cancelScheduledValues(now);
-    engineGain.gain.setTargetAtTime(0.095, now, 0.035);
+    engineGain.gain.setTargetAtTime(PROPELLER_GAIN, now, 0.035);
     master.gain.cancelScheduledValues(now);
     master.gain.setTargetAtTime(0.6, now, 0.04);
   }

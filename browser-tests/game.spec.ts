@@ -133,7 +133,7 @@ for (const viewport of [
     const s = await state(page);
     expect(s.allies).toHaveLength(4);
     expect(s.enemies).toHaveLength(5);
-    expect(s.ships).toHaveLength(3);
+    expect(s.ships).toHaveLength(4);
     expect(s.player.kind).toBe("aircraft");
     for (const id of ["pause", "loop", "game-sound"]) {
       const box = await page.locator(`#${id}`).boundingBox();

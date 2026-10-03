@@ -1,3 +1,5 @@
+import { createFeedbackEasyPilot } from '../tests/helpers/feedback-easy-pilot';
+import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 // This long real-input route avoids video readback. Final screenshots and state
@@ -54,7 +56,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
   page,
   context,
 }) => {
-  test.setTimeout(180000);
+  test.setTimeout(720000);
   await opened(page);
   const cdp = await context.newCDPSession(page);
   await started(page);
@@ -63,24 +65,15 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
-  let fleetCaptured = false;
-  let targetId: number | null = null,
-    attackingShip = false,
-    extendUntil = 0,
-    lastSample = -6;
-  let waypoint = { x: 0, y: 250, z: 0 };
-
-  const clamp = (v: number, lo: number, hi: number) =>
-    Math.max(lo, Math.min(hi, v));
-  const wrap = (v: number) =>
-    ((((v + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI;
+  let fleetCaptured = false, lastSample = -6;
+  const pilot = createFeedbackEasyPilot();
   while (true) {
     const s = await state(page);
     if (s.phase === "ended") break;
     expect(s.phase, "Unexpected pause during real touch flight").toBe(
       "playing",
     );
-    expect(s.elapsed, "Bounded mission reachability window").toBeLessThan(150);
+    expect(s.elapsed, "Bounded mission reachability window").toBeLessThan(600);
     if (s.tick - lastSample < 6) {
       await page.waitForTimeout(35);
       continue;
@@ -93,28 +86,13 @@ test("physical circular-stick inputs reach the victory screen", async ({
       y: Math.sin(player.pitch),
       z: -Math.cos(player.yaw) * Math.cos(player.pitch),
     };
-    const targets = [...s.enemies, ...s.ships].filter((t) => t.health > 0);
-    const distance = (t: any) =>
-      Math.hypot(t.position.x - p.x, t.position.y - p.y, t.position.z - p.z);
-    const target =
-      targets.find((t) => t.id === targetId) ??
-      targets.sort((a, b) => distance(a) - distance(b))[0];
-    if (!target) break;
-    if (targetId !== target.id) attackingShip = false;
-    targetId = target.id;
-    let aim = { ...target.position };
-    const d = distance(target);
-    const dx = aim.x - p.x,
-      dz = aim.z - p.z;
-    const angle = Math.acos(
-      clamp(
-        (forward.x * dx + forward.z * dz) /
-          Math.max(1e-9, Math.hypot(forward.x, forward.z) * Math.hypot(dx, dz)),
-        -1,
-        1,
-      ),
-    );
-    if (!fleetCaptured && target.kind === "ship" && d < 700 && angle < .3) {
+    const ships = s.ships.filter((t:any) => t.health > 0);
+    const distance = (t:any) => Math.hypot(t.position.x-p.x,t.position.y-p.y,t.position.z-p.z);
+    const target = ships.sort((a:any,b:any)=>distance(a)-distance(b))[0];
+    const d = target ? distance(target) : Infinity;
+    const dx = target ? target.position.x-p.x : 0, dz=target ? target.position.z-p.z : 0;
+    const angle = Math.acos(Math.max(-1,Math.min(1,(forward.x*dx+forward.z*dz)/Math.max(1e-9,Math.hypot(forward.x,forward.z)*Math.hypot(dx,dz)))));
+    if (!fleetCaptured && target && d < 800 && angle < .3) {
       await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
       await page.locator("#pause").tap();
       await expect.poll(async () => (await state(page)).phase).toBe("paused");
@@ -126,42 +104,10 @@ test("physical circular-stick inputs reach the victory screen", async ({
       lastSample = -6;
       continue;
     }
-    const tooClose =
-      target.kind === "ship" && !attackingShip && d < 360 && angle > 0.25;
-    if (
-      s.tick >= extendUntil &&
-      (tooClose || p.y < 90 || d < (target.kind === "ship" ? 210 : 70))
-    ) {
-      extendUntil = s.tick + 360;
-      attackingShip = false;
-      waypoint = {
-        x: p.x + forward.x * 740,
-        y: Math.max(250, p.y + 100),
-        z: p.z + forward.z * 740,
-      };
-    }
-    if (s.tick < extendUntil) aim = waypoint;
-    else if (target.kind === "ship") {
-      if (angle < 0.25 && d > 330) attackingShip = true;
-      aim.y = attackingShip ? target.position.y + target.height * 0.4 : 250;
-    }
-    const ax = aim.x - p.x,
-      ay = aim.y - p.y,
-      az = aim.z - p.z;
-    let turn = clamp(-wrap(Math.atan2(-ax, -az) - player.yaw) / 0.7, -1, 1);
-    let climb =
-      (clamp(Math.atan2(ay, Math.hypot(ax, az)) / 0.62, -1, 1) * 0.62) / 0.95;
-    const norm = Math.hypot(turn, climb);
-    if (norm > 1) {
-      turn /= norm;
-      climb /= norm;
-    }
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [
-        { x: origin.x + 36 * turn, y: origin.y - 36 * climb, id: 1 },
-      ],
-    });
+    const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
+    expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
+    await cdp.send("Input.dispatchTouchEvent", {type:"touchMove",touchPoints:[{x:origin.x+stickX,y:origin.y+stickY,id:1}]});
+
   }
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
