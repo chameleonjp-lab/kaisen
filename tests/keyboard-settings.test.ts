@@ -2,13 +2,37 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightControls } from '../src/input';
 import {
-  KeyboardSettings, DEFAULT_KEY_BINDINGS, KEY_ACTIONS, KEYBOARD_STORAGE_KEY, captureKey,
+  ControlInputPresentation, KeyboardSettings, DEFAULT_KEY_BINDINGS, KEY_ACTIONS, KEYBOARD_STORAGE_KEY, captureKey,
   keyConflict, keyLabel, parseKeyBindings, preferredControlEditor, validKeyBindings,
 } from '../src/keyboard-settings';
 
 function key(code: string, extras: object = {}): KeyboardEvent {
   return Object.assign(new Event('keydown', { cancelable: true }), { code, repeat: false, isComposing: false, ctrlKey: false, altKey: false, metaKey: false, ...extras }) as KeyboardEvent;
 }
+
+test('input presentation cannot move a pressed target before click commits its action', () => {
+  const descriptors = ['window','navigator'].map(name=>[name,Object.getOwnPropertyDescriptor(globalThis,name)] as const);
+  const win = Object.assign(new EventTarget(), { matchMedia: () => ({ matches:false }) });
+  Object.defineProperty(globalThis,'window',{configurable:true,value:win});
+  Object.defineProperty(globalThis,'navigator',{configurable:true,value:{maxTouchPoints:5}});
+  const controller = new ControlInputPresentation(); const seen:string[]=[]; controller.subscribe(()=>seen.push(controller.value));
+  const pointer=(type:string,pointerType:string)=>win.dispatchEvent(Object.assign(new Event(type),{pointerType}));
+  try {
+    assert.equal(controller.value,'touch');
+    pointer('pointerdown','mouse'); assert.equal(controller.value,'touch','layout stays stable while a mouse press is held');
+    pointer('pointerup','mouse'); assert.equal(controller.value,'touch');
+    pointer('click','mouse'); assert.equal(controller.value,'keyboard');
+    pointer('pointerdown','touch'); pointer('pointercancel','touch'); assert.equal(controller.value,'keyboard');
+    pointer('click',''); assert.equal(controller.value,'keyboard','cancelled pointer cannot leak into a later programmatic click');
+    pointer('pointerdown','touch'); pointer('pointerup','touch'); pointer('click','');
+    assert.equal(controller.value,'touch','Safari click may omit pointerType; use the completed press');
+    win.dispatchEvent(key('KeyA')); assert.equal(controller.value,'keyboard');
+    assert.deepEqual(seen,['keyboard','touch','keyboard']);
+  } finally {
+    controller.dispose();
+    for(const [name,descriptor] of descriptors)if(descriptor)Object.defineProperty(globalThis,name,descriptor);else Reflect.deleteProperty(globalThis,name);
+  }
+});
 
 test('keyboard persistence restores complete distinct keys and rejects invalid or partial records', () => {
   const bindings = { ...DEFAULT_KEY_BINDINGS, fire: 'KeyF', bomb: 'Numpad1', torpedo: 'IntlYen', pause: 'KeyP' };

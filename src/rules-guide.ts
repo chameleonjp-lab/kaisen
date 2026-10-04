@@ -1,4 +1,5 @@
 import type { GameMode } from './types';
+import { containDialogTabFocus } from './dialog-focus';
 
 export type GuideInput = 'touch' | 'keyboard';
 export interface RulesContext { mode: GameMode; input: GuideInput; keyboardDescription: string; }
@@ -55,6 +56,7 @@ export class RulesGuide {
     this.content = this.dialog.querySelector('#rules-content')!;
     for (const id of ['rules-close', 'rules-back']) this.dialog.querySelector('#' + id)!.addEventListener('click', () => this.close(), { signal: this.abort.signal });
     this.dialog.addEventListener('cancel', event => { event.preventDefault(); this.close(); }, { signal: this.abort.signal });
+    this.dialog.addEventListener('keydown', event => containDialogTabFocus(this.dialog, event), { signal: this.abort.signal });
     this.dialog.addEventListener('close', () => { this.clearInput(); this.returnFocus?.focus({ preventScroll: true }); }, { signal: this.abort.signal });
   }
   open(button: HTMLElement) {

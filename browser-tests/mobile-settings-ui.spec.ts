@@ -6,6 +6,8 @@ for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }
   test(`Safari-sized touch settings and rules remain readable ${viewport.width}x${viewport.height}`, async ({ page, browserName }) => {
     await page.setViewportSize(viewport); await page.goto('/');
     await page.locator('#home-rules').tap(); await expect(page.locator('#rules-guide')).toBeVisible();
+    await page.keyboard.press('Shift+Tab'); await expect(page.locator('#rules-back')).toBeFocused();
+    await page.keyboard.press('Tab'); await expect(page.locator('#rules-close')).toBeFocused();
     const text = await page.locator('#rules-content').innerText();
     expect(text).toContain('スマートフォンの操作'); expect(text).not.toContain('PCの操作'); expect(text).not.toContain('キーボード：');
     await page.locator('#rules-content').evaluate(element => { element.scrollTop = element.scrollHeight; });
@@ -23,12 +25,18 @@ for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }
       expect(visible, `${id} is visible and hit-testable above the footer`).toBe(true);
     }
     await page.locator('#control-preview').scrollIntoViewIfNeeded();
+    const previewBox=await page.locator('#control-preview').boundingBox();
+    const scrollerBox=await page.locator('.settings-main').boundingBox();
+    expect(previewBox!.height).toBeLessThanOrEqual(scrollerBox!.height);
+    for(const name of ['bomb','torpedo'])await expect(page.locator(`.preview-control[data-control="${name}"]`)).toBeInViewport();
     const labels = await page.locator('.preview-control').allTextContents();
     expect(labels).toEqual(expect.arrayContaining(['爆弾','魚雷'])); expect(labels.join('')).not.toContain('残り');
     const fits = await page.locator('.preview-control:not([hidden]) > span').evaluateAll(elements => elements.map(element => { const r=element.getBoundingClientRect(), preview=element.closest('#control-preview')!.getBoundingClientRect(); return { name: element.textContent, fits: r.left>=preview.left && r.right<=preview.right, whiteSpace: getComputedStyle(element).whiteSpace }; }));
     for (const item of fits) { expect(item.fits, `${item.name} fits the miniature control`).toBe(true); expect(item.whiteSpace).toBe('nowrap'); }
     await mkdir('test-results/evidence', { recursive: true });
     await page.screenshot({ path: `test-results/evidence/settings-${browserName}-${viewport.width}x${viewport.height}-preview.png` });
+    await page.locator('.settings-main').evaluate(element=>{element.scrollTop=0;});
+    await page.screenshot({ path: `test-results/evidence/settings-${browserName}-${viewport.width}x${viewport.height}-fields.png` });
     await page.locator('#control-close').tap(); await expect(page.locator('#home-controls')).toBeFocused();
     await page.locator('#home-rules').tap(); await page.keyboard.press('Escape');
     await expect(page.locator('#rules-guide')).not.toBeVisible(); await expect(page.locator('#home-rules')).toBeFocused();

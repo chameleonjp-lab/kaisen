@@ -1,5 +1,6 @@
 // Adapted from faitofuraito@025cad4930b487628675a0e20a88323aae0fac89 src/control-settings.ts. See docs/PROVENANCE.md.
 import type { KaisenControlButtons } from './input';
+import { containDialogTabFocus } from './dialog-focus';
 import {
   KeyboardSettings, ControlInputPresentation, DEFAULT_KEY_BINDINGS, KEY_ACTIONS, KEY_LABELS, KEYBOARD_STORAGE_KEY,
   captureKey, keyConflict, keyLabel, preferredControlInput, type KeyAction, type KeyBindings,
@@ -44,6 +45,12 @@ export function controlDisplaySize(size: number, width: number, height: number):
 export function previewLabelStyle(diameter: number, characters: number) {
   const outside = diameter < characters * 9 + 6;
   return { outside, fontSize: outside ? 10 : Math.min(13, (diameter - 6) / characters) };
+}
+
+export function previewDimensions(width: number, height: number, availableWidth: number, availableHeight: number) {
+  const ratio = width > 0 && height > 0 ? width / height : .46;
+  const fitWidth = Math.min(Math.max(80, availableWidth), Math.max(80, availableHeight) * ratio);
+  return { width: fitWidth, height: fitWidth / ratio };
 }
 
 export function controlBounds(size: number, width: number, height: number, insets: Insets, margin = 8): { minX: number; maxX: number; minY: number; maxY: number } {
@@ -320,7 +327,10 @@ export class ControlSettings {
       this.keyDraft = { ...DEFAULT_KEY_BINDINGS };
       this.renderKeys('標準のキーに戻しました。「保存する」で適用します。');
     }, { signal });
-    this.dialog.addEventListener('keydown', event => this.captureKeyboard(event), { signal, capture: true });
+    this.dialog.addEventListener('keydown', event => {
+      this.captureKeyboard(event);
+      containDialogTabFocus(this.dialog, event);
+    }, { signal, capture: true });
     window.addEventListener('blur', () => { this.cancelKeyCapture(); this.releaseDrag(); }, { signal });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { this.cancelKeyCapture(); this.releaseDrag(); } }, { signal });
     this.dialog.addEventListener('cancel', event => {
@@ -588,6 +598,7 @@ export class ControlSettings {
       element.style.setProperty('--preview-font-size', `${labelStyle.fontSize}px`);
       element.classList.toggle('external-label', labelStyle.outside);
       element.dataset.labelAlign = control.x < .25 ? 'left' : control.x > .75 ? 'right' : 'center';
+      element.dataset.labelVertical = control.y < .25 ? 'below' : 'above';
       element.style.setProperty('--control-opacity', String(control.opacity));
       element.classList.toggle('is-selected', this.selected === name);
     }
@@ -639,9 +650,10 @@ export class ControlSettings {
     this.releaseDrag();
     const appRect = this.app.getBoundingClientRect();
     const availableWidth = Math.max(80, this.dialog.clientWidth - 48);
-    const ratio = appRect.width > 0 && appRect.height > 0 ? appRect.width / appRect.height : 0.46;
-    this.preview.style.width = `${availableWidth}px`;
-    this.preview.style.height = `${availableWidth / ratio}px`;
+    const scrollRegion = this.dialog.querySelector<HTMLElement>('.settings-main')!;
+    const preview = previewDimensions(appRect.width, appRect.height, availableWidth, scrollRegion.clientHeight - 24);
+    this.preview.style.width = `${preview.width}px`;
+    this.preview.style.height = `${preview.height}px`;
     this.updateEditor();
   };
 }

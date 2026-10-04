@@ -23,6 +23,9 @@ test('both modes show zero-based tallies, clear payloads and paused rules withou
     expect(after.tick).toBe(frozen.tick); expect(after.stats).toEqual(frozen.stats); expect(after.player.bombs).toBe(2);
     await page.keyboard.press('Escape'); await expect(page.locator('#pause-screen')).toBeVisible();
     expect((await read(page)).phase).toBe('paused'); await expect(page.locator('#pause-rules')).toBeFocused();
+    // Finish through real touch as well, restoring touch-specific guidance for the phone image.
+    await page.locator('#pause-rules').tap(); await page.locator('#rules-close').tap();
+    expect((await read(page)).tick).toBe(frozen.tick);
     await mkdir('test-results/evidence',{recursive:true});
     await page.screenshot({path:`test-results/evidence/feedback-${mode}-393x648.png`,style:'#pause-screen {visibility:hidden!important}'});
     await page.locator('#pause-home').tap();

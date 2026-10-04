@@ -102,3 +102,5 @@
   #control-settings .settings-header .eyebrow, .settings-scroll-hint { display: none; }
   #control-settings .settings-shell { grid-template-rows: auto auto minmax(80px, 1fr) auto; }
 }
+
+#control-settings .preview-control.external-label[data-label-vertical="below"] > span { bottom: auto; top: calc(100% + 2px); }

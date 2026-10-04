@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ControlSettings, DEFAULT_LAYOUT, controlBounds, controlDisplaySize, persistControlSettings, migratePayloadDefault, previewLabelStyle } from '../src/control-settings';
+import { ControlSettings, DEFAULT_LAYOUT, controlBounds, controlDisplaySize, persistControlSettings, migratePayloadDefault, previewLabelStyle, previewDimensions } from '../src/control-settings';
 import { DEFAULT_KEY_BINDINGS, KEYBOARD_STORAGE_KEY, KeyboardSettings } from '../src/keyboard-settings';
 
 function storageFixture() {
@@ -11,6 +11,14 @@ function storageFixture() {
 test('small desktop preview buttons use readable external labels rather than overflowing or microscopic text', () => {
   for (const diameter of [15.75,20.66,26.1]) assert.deepEqual(previewLabelStyle(diameter,3),{outside:true,fontSize:10});
   const large=previewLabelStyle(52,3); assert.equal(large.outside,false); assert.ok(large.fontSize*3+6<=52);
+});
+
+test('the complete position preview fits its scroll region while preserving the device aspect', () => {
+  for(const [width,height,availableWidth,availableHeight] of [[393,648,329,390],[568,320,460,84],[1280,800,472,510]]) {
+    const result=previewDimensions(width,height,availableWidth,availableHeight);
+    assert.ok(result.width<=availableWidth);assert.ok(result.height<=availableHeight+1e-9);
+    assert.ok(Math.abs(result.width/result.height-width/height)<1e-9);
+  }
 });
 
 test('only exact legacy payload defaults move to the lower edge without mutating custom saved placements', () => {

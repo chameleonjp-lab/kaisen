@@ -1,3 +1,17 @@
+# CI31の入力方式切替とフォーカス修正（2026-10-04）
+
+head `ea8eb962d2aee09d558f0279fecce6814b3ce3ff`、[CI31/run37163200377](https://github.com/chameleonjp-lab/kaisen/actions/runs/37163200377)は228単体/型build/成果物pass、ブラウザ21/33pass・12fail、2026-10-04 00:09 UTC終了。WebKitの設定/説明/PCキー3件、Easy実入力全滅500.4667秒/HP80、自機15機/4艦・僚機16機、40秒補充/6秒装填/新HUDと説明/任意PCキー実入力はpass。
+
+失敗11件はNormal選択または再出撃のクリックが成立しない。新しい入力方式表示がpointerdownで文章高さを変え、押していたラジオ/出撃がrelease前に移動していた。入力検査をtapや強制clickへ変更せず、製品側でpointerdownは方式を記録するだけ、宛先が確定したclickのcaptureで表示を更新する。SafariでclickにpointerTypeがない場合は直前のpressを使用し、cancel/blur/キー入力は保留を破棄する。新しい局所回帰は修正前fail/修正後pass。押下中の矩形不変→mouseupでNormal選択→touch再出撃の実経路を全件先頭に追加する。
+
+残る1件は設定Closeから逆TabがSaveへ戻らない。独立レビューでTab境界処理の欠落を確認し、同時のdocument blur/音OFFをtraceで確認。ブラウザUIへ移った可能性はあるがtraceにactiveElementがなく移動先は断定しない。設定と説明で共通の可視・有効フォーカス境界処理を使い、6局所検査を追加した。既存のSave/Close期待と全操作経路は維持する。
+
+実画像で下端兵装/残弾表示・新HUD・Iowa船型とWebKit文字配色を確認した一方、設定プレビュー全体がscrollerより大きく下部を隠していた。縦横比を維持して可視scrollerへ収め、小さい円は10pxの外側ラベルで識別する。設定項目とプレビューを別々に撮影し、元画像とCI上の停止画面を区別する。Normalの長い操作ヒントは短くした。
+
+修正後の統合236単体・型/buildは2026-10-04 00:20 UTCにpass。34ブラウザを列挙し、新しいclick/Tab回帰を長いEasy/Normal完走の前に配置した。JS795.40kB/gzip214.74、CSS27.67kB/gzip6.93。現在候補の実ブラウザ結果は未確定。
+
+artifact11288309536（22711068bytes、SHA256 c2b4a0cc1098e0b5662f6a8b4d1e5bd779cfa2f1d533296c052a43cfa73e8a96）を取得・照合。全33件はskip/retryなし。次の修正は入力表示・モーダル焦点・設定プレビューと検査/記録のみで、Iowa/弾補正/飛行/HP/勝敗はCI31と同一。最終候補で全体再検査し、旧passを新headへ付け替えない。
+
 # 2026-10-04 実機報告の修正バッチ
 
 基点main8663af9b67c31b01c7b7b0b16a605fd0b9b32770/tree7d876ad66aa0cdb9f07dc976da8b3775a2626b7a。以前の最終head9adeb05はCI30で202単体/25ブラウザsuccess、その同一treeを本人がマージし公開済み。新しい画像4枚に対してF01–F10を実装し、この前版の合格を新候補へ流用しない。

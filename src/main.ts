@@ -67,7 +67,7 @@ function syncMode() {
 function syncInstructions() {
   const touch = presentationMode() === "touch";
   app.dataset.input = presentationMode();
-  el("flight-tip").textContent = touch ? "ボタンのない場所をドラッグして操縦" : "マウスドラッグでも操縦できます";
+  el("flight-tip").textContent = touch ? "ドラッグで操縦" : "キーで操縦";
   el("input-guide").textContent = touch ? "画面をドラッグして操縦" : "キーボードで操縦";
   el("mode-guide").textContent = state.mode === "easy"
     ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"

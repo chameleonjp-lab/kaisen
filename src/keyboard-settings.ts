@@ -95,14 +95,26 @@ export function preferredControlInput(): 'touch' | 'keyboard' {
 
 export class ControlInputPresentation {
   private current = preferredControlInput();
+  private pendingPointer: string | null = null;
   private readonly abort = new AbortController();
   private readonly listeners = new Set<() => void>();
   constructor() {
     window.addEventListener('pointerdown', event => {
-      if (event.pointerType === 'mouse') this.set('keyboard');
-      else if (event.pointerType === 'touch' || event.pointerType === 'pen') this.set('touch');
+      // Only observe here: changing guide height during pointerdown moves the
+      // pressed radio/start button before release, cancelling its activation.
+      this.pendingPointer = event.pointerType;
     }, { signal: this.abort.signal });
+    window.addEventListener('pointercancel', () => { this.pendingPointer = null; }, { signal: this.abort.signal });
+    window.addEventListener('blur', () => { this.pendingPointer = null; }, { signal: this.abort.signal });
+    window.addEventListener('click', event => {
+      // The click target is already committed. Capture updates presentation
+      // before a settings/help click handler chooses its device-specific view.
+      const pointer = event.pointerType || this.pendingPointer; this.pendingPointer = null;
+      if (pointer === 'mouse') this.set('keyboard');
+      else if (pointer === 'touch' || pointer === 'pen') this.set('touch');
+    }, { signal: this.abort.signal, capture: true });
     window.addEventListener('keydown', event => {
+      this.pendingPointer = null;
       if (!event.isComposing && !keyboardEventHasShortcutModifier(event)) this.set('keyboard');
     }, { signal: this.abort.signal });
   }
