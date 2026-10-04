@@ -48,9 +48,40 @@ test('closest hull surface uses the tapered bow and real scaled sloped sides',()
 
 test('bounded water blast is weaker than direct damage, with a strict 20m boundary',()=>{
   assert.equal(BOMB_BLAST.radius,20);
-  for(const [distance,damage] of [[0,500],[4,400],[10,250],[19.9,2.5],[20,0],[30,0]])close(bombBlastDamage(2000,distance),damage);
-  for(const d of [-1,NaN,Infinity])assert.equal(bombBlastDamage(2000,d),0);
-  assert.equal(bombBlastDamage(-1,0),0);assert.equal(bombBlastDamage(1000,10),125);
+  assert.equal(BOMB_BLAST.maximumDamage,500);
+  for(const [distance,damage] of [[0,500],[4,400],[10,250],[19.9,2.5],[20,0],[30,0]])close(bombBlastDamage(500,distance),damage);
+  for(const d of [-1,NaN,Infinity])assert.equal(bombBlastDamage(500,d),0);
+  assert.equal(bombBlastDamage(-1,0),0);assert.equal(bombBlastDamage(250,10),125);
+});
+
+test('1800 direct bombs sink the flagship in three hits and an escort in two in both modes',()=>{
+  for(const mode of ['easy','normal'] as const)for(const [hp,expectedHits] of [[4000,3],[2400,2]]) {
+    const state=fixture(mode),ship=state.ships[0];ship.health=ship.maxHealth=hp;
+    for(const plane of [...state.allies,...state.enemies])plane.health=0;
+    ship.guns.forEach(g=>g.health=0);
+    state.player.position.set(10000,900,10000);state.player.previous.copy(state.player.position);
+    for(let hit=1;hit<=expectedHits;hit++) {
+      const bomb=releaseBomb(9900+hit,state.player)!;bomb.age=1;
+      bomb.position.set(10,10,0);bomb.previous.copy(bomb.position);bomb.velocity.set(0,-500,0);
+      state.ordnance.push(bomb);stepGame(state,neutral);
+      close(ship.health,Math.max(0,hp-1800*hit));
+      assert.equal(state.stats.playerShipKills,hit===expectedHits?1:0);
+    }
+    assert.equal(state.result?.outcome,'victory');assert.equal(state.stats.hits,expectedHits);
+  }
+});
+
+test('direct damage tuning preserves player and allied water-blast strength and torpedo damage',()=>{
+  for(const scale of [1,.5]) {
+    const state=fixture(),ship=state.ships[0],bomb=waterBomb(state,CAPITAL_SHIP.width/2+10);
+    bomb.damage*=scale;
+    const impact=stepOrdnance(bomb,[ship],0,FIXED_DT).outcomes.find(o=>o.type==='impact');
+    assert.ok(impact?.type==='impact');
+    const distance=bomb.position.distanceTo(closestBombHullPoint(bomb.position,new Vector3(1,1,1)));
+    close(impact.damage,500*scale*(1-distance/20));
+    assert.equal(bomb.damage,1800*scale);
+  }
+  assert.equal(ORDNANCE_TUNING.torpedo.damage,2000);
 });
 
 test('armed near misses use water contact once, actual surface distance, and stop outside range',()=>{
@@ -82,7 +113,7 @@ test('forecast exactly matches actual fixed-step release against moving and turn
     else ship.velocity.set(0,0,-6);
     const before=JSON.stringify(state),prediction=predictBombEffect(state)!;
     assert.equal(JSON.stringify(state),before,'forecast cannot mutate world/clock/guns');
-    assert.equal(prediction.kind,'direct');assert.equal(prediction.affected[0].damage,2000);
+    assert.equal(prediction.kind,'direct');assert.equal(prediction.affected[0].damage,1800);
     const actual=fly(state),impact=actual.result.outcomes.find(o=>o.type==='impact');assert.ok(impact);
     close(prediction.position.distanceTo(actual.bomb.position),0);close(prediction.time,actual.bomb.age);
     if(impact?.type==='impact')assert.deepEqual(prediction.affected,[{shipId:impact.shipId,damage:impact.damage}]);

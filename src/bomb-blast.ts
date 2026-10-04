@@ -2,7 +2,7 @@ import { Triangle, Vector3 } from 'three';
 import { CAPITAL_SHIP, NAVAL_HULL_BOTTOM, NAVAL_HULL_BOTTOM_INSET, NAVAL_HULL_SECTIONS, segmentNavalHullEntry } from './naval';
 
 /** Game tuning: water near misses only. Direct contact keeps full bomb damage. */
-export const BOMB_BLAST = Object.freeze({ radius: 20, maximumFraction: .25 });
+export const BOMB_BLAST = Object.freeze({ radius: 20, maximumDamage: 500 });
 
 // The same tapered, sloped hull spans as rendering/collision, including the narrow bow.
 const triangles: Triangle[] = [];
@@ -34,7 +34,7 @@ export function closestBombHullPoint(point: Vector3, scale: Vector3): Vector3 {
   return nearest;
 }
 
-export function bombBlastDamage(directDamage: number, distance: number): number {
-  if (!Number.isFinite(directDamage) || !Number.isFinite(distance) || directDamage <= 0 || distance < 0 || distance >= BOMB_BLAST.radius) return 0;
-  return directDamage * BOMB_BLAST.maximumFraction * (1 - distance / BOMB_BLAST.radius);
+export function bombBlastDamage(maximumDamage: number, distance: number): number {
+  if (!Number.isFinite(maximumDamage) || !Number.isFinite(distance) || maximumDamage <= 0 || distance < 0 || distance >= BOMB_BLAST.radius) return 0;
+  return maximumDamage * (1 - distance / BOMB_BLAST.radius);
 }

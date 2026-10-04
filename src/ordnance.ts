@@ -8,7 +8,7 @@ import { segmentMountContact } from './naval-damage';
 
 /** Provisional game tuning, not a historical weapon performance model. Metres/seconds. */
 export const ORDNANCE_TUNING = Object.freeze({
-  bomb: Object.freeze({ damage: 2000, life: 30, armingAge: .25 }),
+  bomb: Object.freeze({ damage: 1800, life: 30, armingAge: .25 }),
   torpedo: Object.freeze({ damage: 2000, life: 70, waterSpeed: 24, depth: 1.5,
     armingDistance: 80, minReleaseAltitude: 15, maxReleaseAltitude: 90,
     maxReleaseSpeed: 125, maxReleasePitch: .25, maxReleaseBank: .4,
@@ -145,7 +145,9 @@ function bombWaterBlast(round: OrdnanceRound, sweeps: readonly ShipSweep[], frac
     if (sweep.ship.health <= 0) continue;
     const local = localAt(round.position, sweep, fraction);
     const nearest = closestBombHullPoint(local, sweep.scale);
-    const damage = bombBlastDamage(round.damage, local.distanceTo(nearest));
+    // Near-miss strength is independent of direct-hit tuning; retain the round's allied damage scale.
+    const maximumBlast = BOMB_BLAST.maximumDamage * (round.damage / ORDNANCE_TUNING.bomb.damage);
+    const damage = bombBlastDamage(maximumBlast, local.distanceTo(nearest));
     if (damage <= EPS) continue;
     const rotation = sweep.before.clone().slerp(sweep.after, fraction);
     const world = nearest.applyQuaternion(rotation).add(sweep.ship.previous.clone().lerp(sweep.ship.position, fraction));

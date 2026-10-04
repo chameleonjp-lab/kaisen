@@ -11,7 +11,7 @@ for(const scenario of evidence.cases) test(`${scenario.mode} replays historical 
   // whose hull, light-AA volley and Easy correction were intentionally replaced
   // by user-requested Iowa/aim changes. Do not regenerate those historical facts
   // or assert old numeric outcomes against a different rules revision.
-  assert.equal(RULES_VERSION,'kaisen-air-sea-10');
+  assert.equal(RULES_VERSION,'kaisen-air-sea-11');
   const replay=()=>{
   const state=createGame(scenario.seed,scenario.config);startGame(state);
   let index=0,held:FlightInput={turn:0,climb:0,fire:false,loop:false};
