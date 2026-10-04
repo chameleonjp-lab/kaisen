@@ -1,11 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 // These DOM routes also run in WebKit. They do not claim WebGL or iPhone hardware coverage.
 for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }]) {
   test(`Safari-sized touch settings and rules remain readable ${viewport.width}x${viewport.height}`, async ({ page, browserName }) => {
+    await page.addInitScript(() => {
+      const events:unknown[]=[]; (window as any).__qaGuidePointers=events;
+      for(const type of ['pointerdown','pointerup','pointercancel','click']) window.addEventListener(type,event=>{
+        if(!(event.target instanceof Element)||!event.target.closest('#home-rules'))return;
+        const pointer=event as PointerEvent;
+        events.push({type,pointerType:pointer.pointerType??null,detail:pointer.detail,time:performance.now()});
+      },{capture:true});
+    });
     await page.setViewportSize(viewport); await page.goto('/');
     await page.locator('#home-rules').tap(); await expect(page.locator('#rules-guide')).toBeVisible();
+    await mkdir('test-results/evidence', { recursive: true });
+    await writeFile(`test-results/evidence/guide-input-${browserName}-${viewport.width}x${viewport.height}.json`,JSON.stringify(await page.evaluate(()=>({events:(window as any).__qaGuidePointers,presentation:document.getElementById('app')!.dataset.input})),null,2));
     await page.keyboard.press('Shift+Tab'); await expect(page.locator('#rules-back')).toBeFocused();
     await page.keyboard.press('Tab'); await expect(page.locator('#rules-close')).toBeFocused();
     const text = await page.locator('#rules-content').innerText();

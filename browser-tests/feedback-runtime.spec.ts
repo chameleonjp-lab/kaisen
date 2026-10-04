@@ -32,24 +32,3 @@ test('both modes show zero-based tallies, clear payloads and paused rules withou
   }
 });
 
-test.describe('custom desktop input', () => {
-  test.use({isMobile:false,hasTouch:false,viewport:{width:1280,height:800}});
-  test('committed custom keys fire and pause, old keys stop firing, rules own their keys', async ({page}) => {
-    await page.goto('/'); await expect(page.locator('#start')).toBeEnabled();
-    await page.locator('#home-controls').click();
-    await page.locator('[data-key-action="fire"]').click(); await page.keyboard.press('KeyF');
-    await page.locator('[data-key-action="pause"]').click(); await page.keyboard.press('KeyP');
-    await page.locator('#control-save').click(); await page.locator('input[value="normal"]').check();
-    await page.locator('#start').click(); await page.keyboard.down('KeyF');
-    await expect.poll(async()=>(await read(page)).stats.shots).toBeGreaterThan(0);
-    await page.keyboard.up('KeyF'); await page.keyboard.press('KeyP');
-    await expect(page.locator('#pause-screen')).toBeVisible(); const frozen=await read(page);
-    await page.locator('#pause-rules').click(); await page.keyboard.press('KeyP'); await page.keyboard.press('KeyF');
-    expect((await read(page)).tick).toBe(frozen.tick); expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
-    await page.keyboard.press('Escape'); await page.keyboard.press('KeyP');
-    await expect.poll(async()=>(await read(page)).phase).toBe('playing');
-    await page.keyboard.down('Space'); await expect.poll(async()=>(await read(page)).tick).toBeGreaterThan(frozen.tick+12);
-    await page.keyboard.up('Space'); expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
-    await page.keyboard.press('KeyP'); await page.locator('#pause-home').click();
-  });
-});

@@ -27,7 +27,12 @@ test('input presentation cannot move a pressed target before click commits its a
     pointer('pointerdown','touch'); pointer('pointerup','touch'); pointer('click','');
     assert.equal(controller.value,'touch','Safari click may omit pointerType; use the completed press');
     win.dispatchEvent(key('KeyA')); assert.equal(controller.value,'keyboard');
-    assert.deepEqual(seen,['keyboard','touch','keyboard']);
+    pointer('pointerdown','touch'); assert.equal(controller.value,'keyboard','a touch press also keeps layout stable until click');
+    pointer('pointerup','touch'); pointer('click','mouse');
+    assert.equal(controller.value,'touch','a touch press must win over a mouse-labeled compatibility click');
+    pointer('pointerdown','touch'); win.dispatchEvent(key('Enter')); pointer('click','');
+    assert.equal(controller.value,'keyboard','keyboard activation clears the pending touch before its click');
+    assert.deepEqual(seen,['keyboard','touch','keyboard','touch','keyboard']);
   } finally {
     controller.dispose();
     for(const [name,descriptor] of descriptors)if(descriptor)Object.defineProperty(globalThis,name,descriptor);else Reflect.deleteProperty(globalThis,name);

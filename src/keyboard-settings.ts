@@ -109,7 +109,8 @@ export class ControlInputPresentation {
     window.addEventListener('click', event => {
       // The click target is already committed. Capture updates presentation
       // before a settings/help click handler chooses its device-specific view.
-      const pointer = event.pointerType || this.pendingPointer; this.pendingPointer = null;
+      // WebKit can label a touch-generated click as mouse; trust its press first.
+      const pointer = this.pendingPointer || event.pointerType; this.pendingPointer = null;
       if (pointer === 'mouse') this.set('keyboard');
       else if (pointer === 'touch' || pointer === 'pen') this.set('touch');
     }, { signal: this.abort.signal, capture: true });
