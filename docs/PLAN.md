@@ -1,3 +1,7 @@
+# 2026-10-04 Easyの開始高度と艦追尾
+
+利用者の実機指摘により、Easyの開始高度と艦への追尾を今回調整する。[EASY_SHIP_TRACKING.md](EASY_SHIP_TRACKING.md)に原因・候補比較・検査を記録。300m/艦補助25%は比較に基づく調整値で、利用者の数値指定ではない。航空機対象の補助、弾補正35%/0.028rad、Normal、カメラ幾何は維持する。これ以前の「補助を不変」とする記述は今回の艦対象部分だけ置換する。
+
 # 現行の追加範囲（2026-10-04）
 
 PR9公開main8663af9bへの実機フィードバックは[REQUESTS.md](REQUESTS.md)のF01–F10が現在の作業範囲。アイオワ級の船型・AA構成は[IOWA_REFERENCE.md](IOWA_REFERENCE.md)、Easy発射補正の小幅増加は[EASY_ASSIST_TUNING.md](EASY_ASSIST_TUNING.md)。過去の263m船体、三連装25mm、25%/.020rad等の値はここで置換する。カメラ/飛行/ランキング条件は維持。以下は経緯を残す履歴。

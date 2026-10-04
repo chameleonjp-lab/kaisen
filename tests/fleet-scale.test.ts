@@ -38,5 +38,5 @@ test('foreground capital ship has a larger visible footprint with unchanged airc
  const before=hullSpan(oldPlayer,new Vector3(160,0,-760)),after=hullSpan(s.player,s.ships[0].position);
  context.diagnostic(JSON.stringify({before,after,oldAltitude:350,newAltitude:s.player.position.y}));
  assert.ok(after.width>before.width*1.5);assert.ok(after.width>280);assert.ok(after.top<852&&after.bottom>0);
- assert.equal(s.ships[0].length,270.43);assert.equal(s.player.position.y,220);
+ assert.equal(s.ships[0].length,270.43);assert.equal(s.player.position.y,300);
 });
