@@ -1,3 +1,4 @@
+import { currentBombGuide, bombReleaseCue, bombForecastTiming } from './bomb-guide';
 import "./style.css";
 import "./control-settings.css";
 import {
@@ -227,6 +228,7 @@ function pause(reason: string) {
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   pauseReasons.add(reason);
   pauseGame(state);
+  updateBombCue();
   accumulator = 0;
   if (screen !== "paused") setScreen("paused");
   el("pause-reason").textContent = contextLost
@@ -246,6 +248,7 @@ function resume() {
   if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
   pauseReasons.clear();
   resumeGame(state);
+  updateBombCue();
   accumulator = 0;
   lastFrame = 0;
   setScreen("playing");
@@ -288,6 +291,12 @@ function finish() {
   el("ally-report").hidden = allySummary.length === 0;
   el("ally-report-lines").textContent = allySummary.join("\n");
 }
+function updateBombCue() {
+  const bombCue = bombReleaseCue(state, currentBombGuide(state));
+  el("bomb").dataset.ready = String(bombCue.ready);
+  el("bomb-hint").textContent = bombCue.text;
+  el("bomb").setAttribute("aria-label", `爆弾を投下・${payloadReadout(state.player.bombs, state.player.bombReloadTicks)}・${bombCue.text}（予測）`);
+}
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
   el("score").textContent = String(Math.round(state.stats.score));
@@ -296,7 +305,7 @@ function updateHUD() {
   el("enemy-total").textContent = `残り${progress.aircraftRemaining}機`;
   el("bomb-ammo").textContent = payloadReadout(state.player.bombs, state.player.bombReloadTicks);
   el("torpedo-ammo").textContent = payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks);
-  el("bomb").setAttribute("aria-label", `爆弾を投下・${payloadReadout(state.player.bombs, state.player.bombReloadTicks)}`);
+  updateBombCue();
   el("torpedo").setAttribute("aria-label", `魚雷を投下・${payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks)}`);
   const torpedoCheck = checkTorpedoRelease(state.player, state.elapsed);
   el("torpedo").dataset.ready = String(torpedoCheck.allowed && state.player.torpedoReloadTicks === 0);
@@ -414,7 +423,7 @@ function frame() {
         announce(reasons[e.detail ?? "invalid"], 2, 1);
       }
       if (e.type === "ordnance-dud" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾不発 · 投下直後の接触" : "魚雷不発 · 進入条件/航走距離を確認", 3, 1);
-      if (e.type === "ordnance-impact" && e.owner === state.player.id) announce(e.detail === "wreck" ? "沈没中の残骸に命中" : `${e.weapon === "bomb" ? "爆弾" : "魚雷"}命中 · 艦体損傷`, 2, 1);
+      if (e.type === "ordnance-impact" && e.owner === state.player.id) announce(e.detail === "wreck" ? "沈没中の残骸に命中" : `${e.weapon === "bomb" ? "爆弾" : "魚雷"}${e.detail === "blast" ? "至近弾" : "命中"} · 艦体損傷`, 2, 1);
       if (e.type === "mount-destroyed" && e.owner === state.player.id) announce("敵砲座を破壊", 2, 1);
       if (e.type === "hit" && e.armor && e.owner === state.player.id && state.elapsed - lastArmorHintAt > 5) {
         lastArmorHintAt = state.elapsed; announce("艦の装甲には爆弾・魚雷を", 2.5);
@@ -574,6 +583,8 @@ if (import.meta.env.DEV) {
           ships: state.ships,
           bullets: state.bullets.length,
           ordnance: state.ordnance,
+          bombGuide: currentBombGuide(state),
+          bombForecastTiming: bombForecastTiming(state),
           result: state.result,
           stats: state.stats,
           deathCause: state.deathCause,

@@ -15,6 +15,7 @@ async function pilotState(page: Page) {
     // CI26's two 3,600-entry histories made each feedback message 156kB.
     // The pilot needs live entities/input, not a repeated performance archive.
     // Full snapshots remain in screenshots/final evidence; no game state changes.
+    snapshot.bombButton={ready:document.getElementById('bomb')!.dataset.ready,text:document.getElementById('bomb-hint')!.textContent};
     return snapshot;
   });
 }
@@ -77,7 +78,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
-  let activityCaptured = false;
+  let activityCaptured = false, bombCueCaptured = false;
   let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
   const pilot = createBrowserMissionPilot();
   while (true) {
@@ -92,6 +93,16 @@ test("physical circular-stick inputs reach the victory screen", async ({
       continue;
     }
     lastSample = s.tick;
+    if(!bombCueCaptured && s.bombButton.ready==='true') {
+      expect(s.bombGuide.affected.length).toBeGreaterThan(0);expect(['direct','blast']).toContain(s.bombGuide.kind);
+      expect(s.player.bombs).toBeGreaterThan(0);expect(s.player.bombReloadTicks).toBe(0);expect(s.player.payloadCooldown).toBe(0);
+      expect(['命中見込み','至近弾圏内']).toContain(s.bombButton.text);
+      await mkdir('test-results/evidence',{recursive:true});
+      await page.screenshot({path:'test-results/evidence/bomb-ready-easy.png'});
+      await writeFile('test-results/evidence/bomb-ready-easy.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:s,after:await pilotState(page)},null,2));
+      bombCueCaptured=true;
+    }
+
     const player = s.player,
       p = player.position;
     const forward = {
@@ -143,6 +154,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
   const consumedInputs = await page.evaluate(()=>(window as any).__kaisenReadState('audit'));
   expect(consumedInputs.dropped).toBe(0);expect(consumedInputs.entries[0].tick).toBe(1);
   expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
+  expect(bombCueCaptured,"Bomb green cue was inspected during a live approach").toBe(true);
   expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
   expect(payloadPresses, "Actual touch buttons launch the anti-ship payloads").toBeGreaterThan(0);
   expect(result.result?.outcome).toBe("victory");

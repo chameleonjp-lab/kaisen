@@ -14,10 +14,10 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
-  const observePilot = () => page.evaluate(() => (window as any).__kaisenReadState(false));
+  const observePilot = () => page.evaluate(() => {const s=(window as any).__kaisenReadState(false);s.bombButton={ready:document.getElementById('bomb')!.dataset.ready,text:document.getElementById('bomb-hint')!.textContent};return s;});
   const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
   const origin = { x: 180, y: 500 };
-  let payloadPresses = 0;
+  let payloadPresses = 0, bombCueCaptured = false;
   let consumedInputs: any = null;
   let fireHeld = false, accelerateHeld = false, brakeHeld = false, lastSample = -6, sawReload = false, completedReload = false, won = false;
   const samples: unknown[] = [];
@@ -76,6 +76,16 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
       expect(state.phase, 'Unrecognized flight phase').toBe('playing');
       expect(state.elapsed, 'Bounded real-input completion window').toBeLessThan(600);
       lastSample = state.tick;
+    if(!bombCueCaptured && state.bombButton.ready==='true') {
+      expect(state.bombGuide.affected.length).toBeGreaterThan(0);expect(['direct','blast']).toContain(state.bombGuide.kind);
+      expect(state.player.bombs).toBeGreaterThan(0);expect(state.player.bombReloadTicks).toBe(0);expect(state.player.payloadCooldown).toBe(0);
+      expect(['命中見込み','至近弾圏内']).toContain(state.bombButton.text);
+      await mkdir('test-results/evidence',{recursive:true});
+      await page.screenshot({path:'test-results/evidence/bomb-ready-normal.png'});
+      await writeFile('test-results/evidence/bomb-ready-normal.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:state,after:await observePilot()},null,2));
+      bombCueCaptured=true;
+    }
+
       const input = pilot(state), { dx, dy } = pointerOffsetForControls(input.turn, input.climb);
       expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(36 + 1e-9);
       const accepted = await steerAndObserve(page,cdp,origin,input.turn,input.climb);
@@ -107,6 +117,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     expect(consumedInputs.dropped).toBe(0);
     expect(consumedInputs.entries[0].tick).toBe(1);
     expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
+    expect(bombCueCaptured,"Bomb green cue was inspected during a live approach").toBe(true);
     expect(payloadPresses).toBeGreaterThan(0);
     expect(result.result?.outcome).toBe('victory');
     expect(result.enemies.every((target: any) => target.health <= 0)).toBe(true);

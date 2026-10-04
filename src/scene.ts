@@ -32,7 +32,8 @@ import { ShipFactory } from "./ships";
 import { MAX_NAVAL_SHOTS_PER_STEP } from "./naval";
 import { OrdnanceView } from "./ordnance-view";
 import { shipWreckPose, isShipObstacle } from "./ship-wreck";
-import { predictBombImpact } from "./ordnance";
+import { currentBombGuide } from "./bomb-guide";
+import { BOMB_BLAST } from "./bomb-blast";
 import { seaVertex, seaFragment, skyVertex, skyFragment } from "./atmosphere";
 import { RenderQueue } from "./render-queue";
 import { FIXED_DT, MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
@@ -531,17 +532,29 @@ export class KaisenScene {
     }
     c.fillStyle = aimColor;
     c.fillRect(sight.x - 1, sight.y - 1, 2, 2);
-    const bombGuide = predictBombImpact(state.player, 9);
+    const bombGuide = currentBombGuide(state);
     if (bombGuide && state.player.bombs > 0) {
       const p = bombGuide.position.clone().project(this.camera);
       if (p.z > -1 && p.z < 1 && Math.abs(p.x) < .94 && Math.abs(p.y) < .82) {
         const x = (p.x * .5 + .5) * w, y = (-p.y * .5 + .5) * h;
-        c.strokeStyle = "#b7efce"; c.fillStyle = "#d1ffe3"; c.lineWidth = 1.5;
+        const effective = bombGuide.affected.length > 0;
+        c.strokeStyle = effective ? "#88ffad" : "#eef5ee"; c.fillStyle = c.strokeStyle; c.lineWidth = 1.5;
         c.beginPath(); c.moveTo(x - 8, y); c.lineTo(x + 8, y); c.moveTo(x, y - 8); c.lineTo(x, y + 8); c.stroke();
+        if (bombGuide.kind === "water" || bombGuide.kind === "blast") {
+          c.save(); c.globalAlpha = .65; c.setLineDash([3, 3]); c.lineWidth = 1;
+          c.beginPath();
+          for (let i = 0; i <= 24; i++) {
+            const angle = i / 24 * Math.PI * 2;
+            const edge = bombGuide.position.clone().add(new Vector3(Math.cos(angle) * BOMB_BLAST.radius, 0, Math.sin(angle) * BOMB_BLAST.radius)).project(this.camera);
+            const ex = (edge.x * .5 + .5) * w, ey = (-edge.y * .5 + .5) * h;
+            if (i === 0) c.moveTo(ex, ey); else c.lineTo(ex, ey);
+          }
+          c.stroke(); c.restore();
+        }
         // Keep the physical impact cross fixed, offset only its explanation
         // away from the central propeller, with a small contrast backplate.
         c.save(); c.font = "600 10px system-ui"; c.textAlign = "left";
-        const label = "爆弾の落下目安", labelWidth = Math.ceil(c.measureText(label).width) + 12;
+        const label = `${bombGuide.kind === "direct" ? "命中見込み" : bombGuide.kind === "blast" ? "至近弾圏内" : bombGuide.kind === "dud" ? "不発見込み" : bombGuide.kind === "wreck" ? "残骸に接触" : "爆弾の落下目安"} · ${bombGuide.time.toFixed(1)}秒`, labelWidth = Math.ceil(c.measureText(label).width) + 12;
         const labelX = x + 32 + labelWidth < w - 12 ? x + 32 : x - 32 - labelWidth;
         const labelY = Math.max(76, Math.min(h - 60, y - 36));
         c.strokeStyle = "rgba(183,239,206,.55)"; c.lineWidth = .75;
