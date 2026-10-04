@@ -32,7 +32,7 @@ test('release copies the current aircraft pose and velocity without retaining ai
   close(bomb.position.distanceTo(source.position), 1.2);
   assert.ok(bomb.position.distanceTo(new Vector3(0, -1.2, 0).applyQuaternion(source.quaternion).add(source.position)) < 1e-10);
   assert.ok(bomb.velocity.distanceTo(new Vector3(0, 0, -source.speed).applyQuaternion(source.quaternion)) < 1e-10);
-  assert.equal(bomb.owner, source.id); assert.equal(bomb.team, source.team); assert.equal(bomb.damage, 1400);
+  assert.equal(bomb.owner, source.id); assert.equal(bomb.team, source.team); assert.equal(bomb.damage, 1800);
   assert.equal(bomb.phase, 'air'); assert.equal(bomb.waterDistance, 0);
   const start = bomb.position.clone(), velocity = bomb.velocity.clone();
   source.position.set(-999, -999, -999); source.quaternion.identity(); source.speed = 65;
@@ -87,7 +87,7 @@ test('bombs hit the visible deck before sea contact and cannot apply the same im
   const result = stepOrdnance(bomb, [target], 0, DT);
   assert.equal(result.active, false); assert.equal(result.outcomes.length, 1);
   const impact = result.outcomes[0]; assert.equal(impact.type, 'impact');
-  if (impact.type === 'impact') { assert.equal(impact.shipId, target.id); assert.equal(impact.damage, 1400); close(impact.position.y, 9); }
+  if (impact.type === 'impact') { assert.equal(impact.shipId, target.id); assert.equal(impact.damage, 1800); close(impact.position.y, 9); }
   assert.deepEqual(snapshot(target), before); assert.equal(bomb.life, 0);
   assert.deepEqual(stepOrdnance(bomb, [target], DT, DT).outcomes, []);
 });

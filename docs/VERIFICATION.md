@@ -464,3 +464,23 @@ artifact `11227264174`（SHA256 `93ded9b0f0a1f5d874b37b2dd7a8d5f395070d0a9c7530b
 [CI14](https://github.com/chameleonjp-lab/kaisen/actions/runs/37011601273) は95単体/build合格、ブラウザ11/12合格。再装填テストは今度は「ゲージが1/3まで進む2秒を待ってから撮影する」という任意の撮影時刻に届かなかった。artifact `11228472767`（SHA256 `99c58d8767b743b942c24b029f74d535067114259456982081d048cef14fb706`）の結果は51.1秒/tick3066の正当な全滅、HP94、384発、残弾0、装填304tick。開始後56tick=0.9333秒で勝利したため、未撮影だった。
 
 撮影を最初に観測した装填へ変更し、停止中のGPU描画完了まで待って、前のキャンバス画像を誤って読むことも防ぐ。ゲージの表示値をその時点の装填tickと照合し、停止中の不変と再開後の進行を必須確認する。その後の補充または正当な全滅の厳密な検査は維持する。撮影のためにクリアを遅らせたり、AI・ダメージ・残弾・時計を変更したりしない。1/3まで進んだリングと完了の実画像は、同じゲーム本体を使うCI12の証拠として保持する。
+
+
+## 2026-10-04 爆弾予測と威力（B01/B02）
+- 基点main658e5a515ddc88e32d768e396fa5067039ac6ac2 / tree75e3c44e50a9b63e0b191ef87fd103ef32b3ca95。公開Pages6と同じ。新しい作業枝feat/kaisen-bomb-guide
+- 改修: 自機爆弾のtick開始投下、実弾と同じ未来艦移動／重力／波面／信管／接触の予測、緑＋短文、残弾と停止／装填の優先、直接威力2,000、海面至近弾20m・最大25%。詳細BOMB_GUIDE.md
+- 関連検査: node --import tsx --test tests/bomb-guide.test.ts tests/ordnance.test.ts tests/naval-weapon-roles.test.ts tests/ship-wreck.test.ts、40/40pass。初期検査の失敗は想定位置が実船体の端／艦橋へ入っていたfixture修正で解決。独立レビューで見つかった実入力の1tickずれは製品側の投下順序を修正し、実stepGameの12境界条件で再検査
+- 2026-10-04 04:54 UTC 作業単位の全体境界: npm test252/252pass（24.735秒）、npm run build pass。JS800.61kB/gzip216.79、CSS27.80kB/gzip6.96。既存500kB警告あり
+- Node24.19/npm11.9、lockfile/依存/ビルド設定/workflowとharness固定版は基点と同じ。戦闘・HUDの変更なので最終headの既存全ブラウザ検査を必要とし、旧35件の成功へ付け替えない。新しい両モードの装填／停止表示2件を含む37件を予定。長い2完走経路でも実ボタンの緑＋短文を観測し、未加工の進入画像を保存
+- ローカルブラウザ起動は既知の権限制限があるため試みない。実ブラウザは既存GitHub CI、iPhone実機はnot_run。予測のNode計測／自動操縦はdocs/evidence/bomb-guide.json。描画の実機性能や人の遊びやすさと同一視しない
+- 旧CI入力fixtureは保持し、調整後の識別RULES_VERSIONをkaisen-air-sea-10へ。HP/得点/順位ルールとネットワーク連携を変更しない。失敗や未実行を成功と記録しない
+
+
+## 2026-10-04 爆弾直撃を利用者指定1,800へ変更（B02追記）
+- 基点は未マージPR12/head `31fe51346f554625738e1b98414baa794d0dc09b` / tree `edd81ca0f400a9779762dd063110cc4892ba6a83`。mainは `658e5a515ddc88e32d768e396fa5067039ac6ac2`。既存作業枝feat/kaisen-bomb-guideへまとめて保存
+- 旧候補2,000の[CI36/run37178775094](https://github.com/chameleonjp-lab/kaisen/actions/runs/37178775094)は2026-10-04 05:24:10 UTCに252単体・型/build・37ブラウザすべてpass。今回の1,800版へ成功を流用しない
+- 指定どおり直撃1,800、僚機の既存半分係数で900。旗艦4,000HPは3発／通常2,400HPは2発。魚雷2,000と海面至近弾20m・最大500／僚機250を維持し、至近弾を直撃値への依存から分離。予測／実弾は同じ計算を通す
+- 変更path: src/ordnance.ts・bomb-blast.ts・rules-guide.ts・mission.ts、tests/ordnance.test.ts・bomb-guide.test.ts・consumed-input-replay.test.ts、docs/BOMB_GUIDE.md・PLAN.md・REQUESTS.md・VERIFICATION.md・evidence/bomb-guide-1800.json。旧数値証拠JSONと旧入力fixtureは保持。依存／lockfile／assets／build設定／workflow／browser検査logic／ハーネス固定版は不変
+- 関連42単体pass。両モードの実stepGameで3発／2発撃沈・命中統計と勝利を検査し、自機／半分威力の至近弾値と魚雷を固定値で検査。2026-10-04 06:15 UTC確認、全254単体pass（27.267秒、fail/skip0）・型/build pass。JS800.62kB/gzip216.80、CSS27.80kB/gzip6.96。既存500kB警告あり
+- Node入力診断はEasy135.7167秒／HP80、Normal116.1167秒／HP80で勝利。各8発投下・7損傷、自機3艦／僚機1艦。人の試遊・実ブラウザ・iPhone性能ではない。値と実撃沈fixtureはevidence/bomb-guide-1800.json
+- 戦闘威力が変わる最終候補のため、旧CIの30分以内省略を使わず、次headの既存37ブラウザを含む全体CIを必要とする。現在はnot_runで、完全SHAとrunはPRのChecksに対応付ける。rule識別はkaisen-air-sea-11、HP／得点／ランキング条件は不変。iPhone実機は未実施

@@ -1,3 +1,4 @@
+import { BOMB_BLAST, bombBlastDamage, closestBombHullPoint } from './bomb-blast';
 import { Quaternion, Vector3 } from 'three';
 import { CAPITAL_SHIP, NAVAL_GRAVITY, NAVAL_COLLISION_BOUNDS, segmentNavalHullEntry, shipCollisionBoxes } from './naval';
 import type { NavalMountState } from './naval';
@@ -7,7 +8,7 @@ import { segmentMountContact } from './naval-damage';
 
 /** Provisional game tuning, not a historical weapon performance model. Metres/seconds. */
 export const ORDNANCE_TUNING = Object.freeze({
-  bomb: Object.freeze({ damage: 1400, life: 30, armingAge: .25 }),
+  bomb: Object.freeze({ damage: 1800, life: 30, armingAge: .25 }),
   torpedo: Object.freeze({ damage: 2000, life: 70, waterSpeed: 24, depth: 1.5,
     armingDistance: 80, minReleaseAltitude: 15, maxReleaseAltitude: 90,
     maxReleaseSpeed: 125, maxReleasePitch: .25, maxReleaseBank: .4,
@@ -32,7 +33,7 @@ export type TorpedoReleaseRejection = 'invalid' | 'altitude' | 'speed' | 'pitch'
 export interface TorpedoReleaseCheck { allowed: boolean; reason: TorpedoReleaseRejection | null; altitude: number; }
 type OutcomeBase = { kind: OrdnanceKind; position: Vector3 };
 export type OrdnanceOutcome =
-  | (OutcomeBase & { type: 'impact'; shipId: number; damage: number })
+  | (OutcomeBase & { type: 'impact'; shipId: number; damage: number; blast?: boolean })
   | (OutcomeBase & { type: 'splash' })
   | (OutcomeBase & { type: 'dud'; reason: 'air-contact' | 'unarmed' | 'violent-entry'; shipId?: number });
 export interface OrdnanceStepResult { active: boolean; outcomes: OrdnanceOutcome[]; }
@@ -136,6 +137,27 @@ function firstShipContact(start: Vector3, end: Vector3, ships: readonly ShipSwee
   }
   return first;
 }
+/** Water shock reaches a live hull surface, never a centre/AABB or a sunk obstacle. */
+function bombWaterBlast(round: OrdnanceRound, sweeps: readonly ShipSweep[], fraction: number): OrdnanceOutcome[] {
+  if (round.age + EPS < ORDNANCE_TUNING.bomb.armingAge) return [];
+  const outcomes: OrdnanceOutcome[] = [];
+  for (const sweep of sweeps) {
+    if (sweep.ship.health <= 0) continue;
+    const local = localAt(round.position, sweep, fraction);
+    const nearest = closestBombHullPoint(local, sweep.scale);
+    // Near-miss strength is independent of direct-hit tuning; retain the round's allied damage scale.
+    const maximumBlast = BOMB_BLAST.maximumDamage * (round.damage / ORDNANCE_TUNING.bomb.damage);
+    const damage = bombBlastDamage(maximumBlast, local.distanceTo(nearest));
+    if (damage <= EPS) continue;
+    const rotation = sweep.before.clone().slerp(sweep.after, fraction);
+    const world = nearest.applyQuaternion(rotation).add(sweep.ship.previous.clone().lerp(sweep.ship.position, fraction));
+    const blocker = firstShipContact(round.position, world, sweeps.filter(other => other !== sweep), fraction, fraction);
+    if (blocker && blocker.fraction < 1 - EPS) continue;
+    outcomes.push({ type: 'impact', kind: 'bomb', shipId: sweep.ship.id, position: world, damage, blast: true });
+  }
+  return outcomes;
+}
+
 function ballisticPosition(position: Vector3, velocity: Vector3, dt: number): Vector3 {
   const next = position.clone().addScaledVector(velocity, dt); next.y -= .5 * NAVAL_GRAVITY * dt * dt; return next;
 }
@@ -175,7 +197,18 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
   if (!validRound(round) || round.life <= 0) { round.life = 0; return { active: false, outcomes }; }
   if (!Number.isFinite(startTime) || !Number.isFinite(dt) || dt <= 0 || dt > ORDNANCE_TUNING.maxStep + EPS)
     return { active: true, outcomes };
-  const sweeps: ShipSweep[] = ships.filter(validShip).map(ship => ({ ship,
+  // Conservative world-space broad phase includes the entire curved short step and blast radius.
+  // It avoids building every distant ship's collision boxes for each forecast tick.
+  const endBound = ballisticPosition(round.position, round.velocity, Math.min(dt, round.life));
+  const nearBomb = (ship: OrdnanceShip) => {
+    if (round.kind !== 'bomb') return true;
+    const scale = [ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length];
+    const radius = Math.hypot(...scale.map((v,i) => v * Math.max(Math.abs(NAVAL_COLLISION_BOUNDS.min[i]), Math.abs(NAVAL_COLLISION_BOUNDS.max[i])))) + BOMB_BLAST.radius + 1;
+    return (['x','y','z'] as const).every(axis =>
+      Math.min(round.position[axis], endBound[axis]) <= Math.max(ship.previous[axis], ship.position[axis]) + radius &&
+      Math.max(round.position[axis], endBound[axis]) >= Math.min(ship.previous[axis], ship.position[axis]) - radius);
+  };
+  const sweeps: ShipSweep[] = ships.filter(validShip).filter(nearBomb).map(ship => ({ ship,
     before: (ship.previousQuaternion ?? ship.quaternion).clone().normalize(), after: ship.quaternion.clone().normalize(),
     scale: new Vector3(ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length),
     boxes: shipCollisionBoxes(ship),
@@ -205,7 +238,10 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
         round.velocity.y -= NAVAL_GRAVITY * water; elapse(round, water); elapsed += water;
         outcomes.push({ type: 'splash', kind: round.kind, position: round.position.clone() });
         const horizontalSpeed = Math.hypot(round.velocity.x, round.velocity.z);
-        if (round.kind === 'bomb') { round.life = 0; break; }
+        if (round.kind === 'bomb') {
+          outcomes.push(...bombWaterBlast(round, sweeps, elapsed / dt));
+          round.life = 0; break;
+        }
         if (Math.abs(round.velocity.y) > ORDNANCE_TUNING.torpedo.maxEntryVerticalSpeed + EPS || horizontalSpeed <= EPS) {
           outcomes.push({ type: 'dud', kind: round.kind, position: round.position.clone(), reason: 'violent-entry' });
           round.life = 0; break;

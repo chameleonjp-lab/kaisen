@@ -1,0 +1,253 @@
+{
+  "note": "Node diagnostic, not human play or phone/browser performance. Automated legal-input pilot; separate deterministic damage unit fixtures. Sustained upper bounds assume every bomb hits and immediate reattack, unlike mission average.",
+  "tuning": [
+    {
+      "damage": 1400,
+      "flagshipHits": 3,
+      "escortHits": 2,
+      "salvoDamage": 2800,
+      "idealDps": 430.7692307692308,
+      "tickCycleDps": 429.6675191815857,
+      "allyDamage": 700
+    },
+    {
+      "damage": 1800,
+      "flagshipHits": 3,
+      "escortHits": 2,
+      "salvoDamage": 3600,
+      "idealDps": 553.8461538461538,
+      "tickCycleDps": 552.4296675191816,
+      "allyDamage": 900
+    },
+    {
+      "damage": 2000,
+      "flagshipHits": 2,
+      "escortHits": 2,
+      "salvoDamage": 4000,
+      "idealDps": 615.3846153846154,
+      "tickCycleDps": 613.8107416879795,
+      "allyDamage": 1000
+    },
+    {
+      "damage": 2200,
+      "flagshipHits": 2,
+      "escortHits": 2,
+      "salvoDamage": 4400,
+      "idealDps": 676.9230769230769,
+      "tickCycleDps": 675.1918158567775,
+      "allyDamage": 1100
+    },
+    {
+      "damage": 2400,
+      "flagshipHits": 2,
+      "escortHits": 1,
+      "salvoDamage": 4800,
+      "idealDps": 738.4615384615385,
+      "tickCycleDps": 736.5728900255755,
+      "allyDamage": 1200
+    }
+  ],
+  "torpedo": {
+    "damage": 2000,
+    "magazine": 1,
+    "reloadSeconds": 6,
+    "idealDps": 333.3333333333333
+  },
+  "times": [
+    {
+      "height": 50,
+      "ships": 4,
+      "samples": 100,
+      "medianMs": 1.1221409999999992,
+      "p95Ms": 1.7592829999999822,
+      "maxMs": 4.504331999999977
+    },
+    {
+      "height": 300,
+      "ships": 4,
+      "samples": 100,
+      "medianMs": 2.060250999999994,
+      "p95Ms": 3.4816020000000663,
+      "maxMs": 3.7795200000000477
+    },
+    {
+      "height": 900,
+      "ships": 4,
+      "samples": 100,
+      "medianMs": 3.5273010000000795,
+      "p95Ms": 3.927127999999925,
+      "maxMs": 4.1432720000000245
+    },
+    {
+      "height": 10000,
+      "ships": 4,
+      "samples": 100,
+      "medianMs": 0.0012710000000879518,
+      "p95Ms": 0.0014830000000074506,
+      "maxMs": 0.004566000000068016
+    }
+  ],
+  "actualSinks": [
+    {
+      "hp": 4000,
+      "directHits": 3,
+      "remaining": 0,
+      "kills": 1,
+      "hitCredit": 3
+    },
+    {
+      "hp": 2400,
+      "directHits": 2,
+      "remaining": 0,
+      "kills": 1,
+      "hitCredit": 2
+    }
+  ],
+  "missions": [
+    {
+      "mode": "easy",
+      "time": 135.71666666666667,
+      "hp": 80,
+      "outcome": "victory",
+      "cause": null,
+      "bombs": 8,
+      "hits": 7,
+      "blastHits": 0,
+      "actualDamage": 9900,
+      "missionAverageDamagePerSecond": 72.94608866511113,
+      "stats": {
+        "playerAircraftKills": 9,
+        "playerShipKills": 3,
+        "allyAircraftKills": 8,
+        "allyShipKills": 1,
+        "shots": 454,
+        "hits": 119,
+        "loops": 0,
+        "damageTaken": 80.59199999999984,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 0
+      },
+      "shotRecords": [
+        {
+          "time": 35.233333333333334,
+          "damage": 1500,
+          "target": 102,
+          "detail": "direct"
+        },
+        {
+          "time": 54.233333333333334,
+          "damage": 1800,
+          "target": 103,
+          "detail": "direct"
+        },
+        {
+          "time": 54.699999999999996,
+          "damage": 600,
+          "target": 103,
+          "detail": "direct"
+        },
+        {
+          "time": 77.86666666666666,
+          "damage": 1800,
+          "target": 101,
+          "detail": "direct"
+        },
+        {
+          "time": 78.35,
+          "damage": 600,
+          "target": 101,
+          "detail": "direct"
+        },
+        {
+          "time": 101.88333333333333,
+          "damage": 1800,
+          "target": 100,
+          "detail": "direct"
+        },
+        {
+          "time": 102.38333333333333,
+          "damage": 1800,
+          "target": 100,
+          "detail": "direct"
+        }
+      ]
+    },
+    {
+      "mode": "normal",
+      "time": 116.11666666666666,
+      "hp": 80,
+      "outcome": "victory",
+      "cause": null,
+      "bombs": 8,
+      "hits": 7,
+      "blastHits": 0,
+      "actualDamage": 9900,
+      "missionAverageDamagePerSecond": 85.25907851298982,
+      "stats": {
+        "playerAircraftKills": 5,
+        "playerShipKills": 3,
+        "allyAircraftKills": 7,
+        "allyShipKills": 1,
+        "shots": 194,
+        "hits": 53,
+        "loops": 0,
+        "damageTaken": 33.119999999999955,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 0
+      },
+      "shotRecords": [
+        {
+          "time": 31.566666666666666,
+          "damage": 1500,
+          "target": 102,
+          "detail": "direct"
+        },
+        {
+          "time": 48.88333333333333,
+          "damage": 1800,
+          "target": 103,
+          "detail": "direct"
+        },
+        {
+          "time": 49.416666666666664,
+          "damage": 600,
+          "target": 103,
+          "detail": "direct"
+        },
+        {
+          "time": 67.4,
+          "damage": 1800,
+          "target": 101,
+          "detail": "direct"
+        },
+        {
+          "time": 67.91666666666667,
+          "damage": 600,
+          "target": 101,
+          "detail": "direct"
+        },
+        {
+          "time": 104.56666666666666,
+          "damage": 1800,
+          "target": 100,
+          "detail": "direct"
+        },
+        {
+          "time": 105.1,
+          "damage": 1800,
+          "target": 100,
+          "detail": "direct"
+        }
+      ]
+    }
+  ],
+  "selectedDirectDamage": 1800,
+  "waterBlast": {
+    "radius": 20,
+    "maximumDamage": 500,
+    "allyMaximumDamage": 250,
+    "preservedFromHead": "31fe51346f554625738e1b98414baa794d0dc09b"
+  }
+}

@@ -1,3 +1,4 @@
+import { advanceShipMotion } from './ship-motion';
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
 import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
@@ -309,11 +310,12 @@ function updatePayloads(state: GameState): void {
   const obstacles = state.ships.filter(ship => isShipObstacle(ship, state.elapsed)).map(ship => ({ ...ship, collisionActive: true }));
   state.ordnance = state.ordnance.filter(round => {
     const result = stepOrdnance(round, obstacles, state.elapsed - FIXED_DT, FIXED_DT);
+    let hitCredited = false;
     for (const outcome of result.outcomes) {
       const ship = 'shipId' in outcome ? state.ships.find(item => item.id === outcome.shipId) : undefined;
       if (outcome.type === 'impact' && ship && ship.health > 0 && round.team !== ship.team) {
         const actual = Math.min(ship.health, outcome.damage); ship.health -= actual;
-        if (round.owner === state.player.id) state.stats.hits++;
+        if (round.owner === state.player.id && !hitCredited) { state.stats.hits++; hitCredited = true; }
         // Local blast damages nearby exposed mounts; hull damage is counted only once.
         const local = outcome.position.clone().sub(ship.position).applyQuaternion(ship.quaternion.clone().invert());
         ship.superstructureHealth = Math.max(0, ship.superstructureHealth - outcome.damage * .15);
@@ -328,7 +330,7 @@ function updatePayloads(state: GameState): void {
           }
         }
         const event = emit(state, 'ordnance-impact', outcome.position, round.owner, ship, round.team);
-        if (event) { event.weapon = round.kind; event.amount = actual; }
+        if (event) { event.weapon = round.kind; event.amount = actual; if (outcome.blast) event.detail = 'blast'; }
         if (ship.health <= 0) registerDestruction(state, ship, round.owner, round.team);
       } else if (outcome.type === 'impact' && ship) {
         const event = emit(state, 'ordnance-impact', outcome.position, round.owner, ship, round.team);
@@ -343,27 +345,9 @@ function updatePayloads(state: GameState): void {
 }
 
 function updateShips(state: GameState): void {
-  for (const ship of state.ships) {
-    if (ship.health <= 0) {
-      if (ship.wreck) {
-        ship.previous.copy(ship.position); ship.previousQuaternion.copy(ship.quaternion);
-        shipWreckPose(ship.wreck, state.elapsed, ship.position, ship.quaternion);
-        ship.velocity.copy(ship.wreck.velocity).multiplyScalar(Math.exp(-Math.max(0, state.elapsed - ship.wreck.since) / 8));
-      }
-      continue;
-    }
-    ship.previous.copy(ship.position); ship.previousQuaternion.copy(ship.quaternion); ship.age += FIXED_DT;
-    ship.yaw += Math.sin(ship.age * .04 + ship.id) * .0035 * FIXED_DT;
-    const roll = Math.sin(ship.age * .39 + ship.id) * .008;
-    const pitch = Math.sin(ship.age * .29 + ship.id * .7) * .004;
-    ship.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), ship.yaw)
-      .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), pitch))
-      .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), roll));
-    const speed = ship.velocity.length();
-    ship.velocity.set(-Math.sin(ship.yaw) * speed, 0, -Math.cos(ship.yaw) * speed);
-    ship.position.addScaledVector(ship.velocity, FIXED_DT);
-  }
+  for (const ship of state.ships) advanceShipMotion(ship, state.elapsed, FIXED_DT);
 }
+
 function fireShip(state: GameState, ship: Ship): void {
   if (ship.health <= 0) return;
   const shots = stepNavalGuns(ship, [state.player, ...state.allies], state.tick, FIXED_DT);
@@ -508,6 +492,11 @@ function fixedStep(state: GameState, input: FlightInput): void {
   }
   for (const plane of [player, ...state.allies]) tickPayloads(state, plane);
   if (tickPlayerReload(player)) emit(state, 'reload-complete', player.position, player.id);
+  // The bomb button refers to the pose shown at this tick's start. Release
+  // before motion, then sweep it alongside ships through the same interval.
+  const bombPressed = Boolean(input.bomb) && !meta.bombHeld;
+  meta.bombHeld = Boolean(input.bomb);
+  if (bombPressed) firePayload(state, player, 'bomb');
   player.previous.copy(player.position); player.age += FIXED_DT;
   const targets: CombatTarget[] = [...state.enemies, ...state.ships].filter(item => item.health > 0);
   const assist = getFlightAssist(player, targets, input, state.mode);
@@ -531,10 +520,8 @@ function fixedStep(state: GameState, input: FlightInput): void {
     updateAircraftMotion(plane, plane.aiTurn, plane.aiClimb, FIXED_DT, plane.aiPhase === 'extend' ? 118 : 112);
   }
   updateShips(state); resolveContacts(state);
-  const bombPressed = Boolean(input.bomb) && !meta.bombHeld;
   const torpedoPressed = Boolean(input.torpedo) && !meta.torpedoHeld;
-  meta.bombHeld = Boolean(input.bomb); meta.torpedoHeld = Boolean(input.torpedo);
-  if (bombPressed) firePayload(state, player, 'bomb');
+  meta.torpedoHeld = Boolean(input.torpedo);
   if (torpedoPressed) firePayload(state, player, 'torpedo');
   for (const plane of state.allies) if (plane.aiBomb) firePayload(state, plane, 'bomb');
   const autoTarget = autoFireTarget(player, targets, state.mode, input.viewAspect);
