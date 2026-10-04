@@ -29,7 +29,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
   let waypoint = new Vector3();
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
   let slowInput = false;
-  let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1;
+  let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1, dodgeTurn = 0;
   return (snapshot: GameState): FlightInput => {
     const sampleDt = Math.max(1/60, snapshot.elapsed - lastTime); lastTime = snapshot.elapsed;
     // Once delayed delivery is observed, retain the damped response. Alternating
@@ -57,11 +57,21 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         const canDescend = snapshot.mode === 'easy'
           ? player.position.y - player.speed * 2 > 90 : player.position.y > 400;
         dodgeClimb = canDescend && relative.y >= 0 ? -1 : 1;
+        dodgeTurn = 0;
+        // CI38: climbing from 274m into an above-player descending hostile
+        // caused the collision. A lateral turn preserves vertical clearance.
+        // 230m covers the observed 41-tick delivery plus neutral pitch settling
+        // above the 90m escape floor at 141m/s; it is not an arbitrary-lag guarantee.
+        if (snapshot.mode === 'normal' && !canDescend && relative.y >= 0 && player.position.y > 230) {
+          const right = new Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+          dodgeTurn = relative.dot(right) >= 0 ? -1 : 1;
+          dodgeClimb = 0;
+        }
       }
     }
     if (snapshot.tick < dodgeUntil) {
       trimDirection = snapshot.mode === 'normal' ? 1 : 0;
-      return {turn:0,climb:dodgeClimb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
+      return {turn:dodgeTurn,climb:dodgeClimb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
     }
     const ships = snapshot.ships.map(ship => ({ ...ship, position: vector(ship.position), velocity: vector(ship.velocity) }));
     const targets = [...enemies, ...ships].filter(target => target.health > 0);

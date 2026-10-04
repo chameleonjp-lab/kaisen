@@ -40,8 +40,14 @@ export function recordTargetDamage(ledger: ScoreLedger, target: CombatTarget, ac
   const remaining = Math.max(0, Math.min(credit.remainingHealth, target.health));
   const consumed = credit.remainingHealth - remaining;
   // Ally fire, sea contact and collisions consume HP without crediting the player.
-  if (playerOwned) credit.playerDamage = Math.min(credit.initialHealth,
-    credit.playerDamage + Math.min(actualDamage, consumed));
+  if (playerOwned && consumed > 0) {
+    // HP subtraction can lose a few low bits (80 - .08). Keep the applied
+    // damage within that subtraction's precision; never round point values here.
+    const tolerance = 2 * Number.EPSILON * Math.max(1, credit.remainingHealth, remaining);
+    const creditedDamage = Math.abs(actualDamage - consumed) <= tolerance
+      ? actualDamage : Math.min(actualDamage, consumed);
+    credit.playerDamage = Math.min(credit.initialHealth, credit.playerDamage + creditedDamage);
+  }
   credit.remainingHealth = remaining;
 }
 

@@ -46,6 +46,8 @@ export async function expectScoreResult(page: Page, result: GameResult, mode: Ga
   await expect(page.locator('#result-score-version')).toHaveAttribute('data-score-rules-version', result.scoreRulesVersion);
   await expect(page.locator('#score-rounding-note')).toContainText('丸める前の値を合計');
   await expect(page.locator('#score-rounding-note')).toContainText('最後に一度だけ');
+  await expect(page.locator('#score-scope-note')).toContainText('撃破数には増援を含みます');
+  await expect(page.locator('#score-scope-note')).toContainText('増援の撃墜はHP回復のみ');
   await expect(page.locator('#score-breakdown > div')).toHaveCount(components.length);
   for (const [key, label] of components) {
     const row = page.locator(`#result-score-${key}`);
@@ -74,7 +76,7 @@ export async function inspectScoreResultLayout(page: Page, result: GameResult, o
       });
     }
     const name = `score-${result.mode}-${result.outcome}-${viewport.width}x${viewport.height}${options.enlarged ? '-text-200' : ''}`;
-    for (const id of ['result-title', 'result-mode', 'result-reason', 'result-time-label', 'result-time', 'result-score', ...components.map(([key]) => `result-score-${key}`), 'score-rounding-note', 'result-score-version', 'retry', 'result-home']) {
+    for (const id of ['result-title', 'result-mode', 'result-reason', 'result-time-label', 'result-time', 'result-score', ...components.map(([key]) => `result-score-${key}`), 'score-scope-note', 'score-rounding-note', 'result-score-version', 'retry', 'result-home']) {
       const locator = page.locator(`#${id}`);
       await locator.scrollIntoViewIfNeeded();
       await expect(locator).toBeInViewport();

@@ -84,6 +84,23 @@ test('fractions accumulate without per-hit rounding and final negative scores ar
   const penalty=createGame();penalty.stats.friendlyDamage=12;penalty.stats.friendlyKills=1;assert.equal(finalScore(scoreBreakdown(penalty)),-1620);
 });
 
+test('HP subtraction precision preserves true half-point totals without promoting a below-half score',()=>{
+  for(const [kind,index,damage]of [['aircraft',0,.08],['ship',1,.6]] as const){
+    const state=createGame(),target=kind==='aircraft'?state.enemies[index]:state.ships[index];
+    target.health-=damage;recordTargetDamage(state.scoring,target,damage,true);
+    assert.equal(state.scoring.targets.find(t=>t.id===target.id)!.playerDamage,damage);
+    assert.equal(scoreBreakdown(state).totalBeforeRounding,.5);assert.equal(finalScore(scoreBreakdown(state)),1);
+    recordTargetDamage(state.scoring,target,damage,true);assert.equal(scoreBreakdown(state).totalBeforeRounding,.5);
+  }
+  const below=createGame(),enemy=below.enemies[0],damage=.079999999999;
+  enemy.health-=damage;recordTargetDamage(below.scoring,enemy,damage,true);
+  assert.ok(scoreBreakdown(below).totalBeforeRounding<.5);assert.equal(finalScore(scoreBreakdown(below)),0);
+  const mixed=createGame();credit(mixed,'aircraft',0,.04/80);credit(mixed,'ship',1,.3/2400);
+  assert.equal(scoreBreakdown(mixed).totalBeforeRounding,.5);assert.equal(finalScore(scoreBreakdown(mixed)),1);
+  const negative=createGame();credit(negative,'aircraft',0,.08/80);negative.stats.friendlyDamage=.2;
+  assert.equal(scoreBreakdown(negative).totalBeforeRounding,-1.5);assert.equal(finalScore(scoreBreakdown(negative)),-1);
+});
+
 test('real shots credit initial aircraft, preserve own damage after ally kill, and cannot duplicate the kill',()=>{
   for(const mode of ['easy','normal'] as const){
     const state=quiet(mode),enemy=targetPlane(state);
