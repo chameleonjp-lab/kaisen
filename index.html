@@ -150,7 +150,21 @@
             <span id="result-time-label">経過時間</span
             ><strong id="result-time">00:00.00</strong>
           </div>
-          <p class="score-readout">スコア <b id="result-score">0</b></p>
+          <p class="result-score-total">最終スコア <strong id="result-score">0</strong></p>
+          <section class="score-breakdown" aria-labelledby="score-breakdown-title">
+            <h3 id="score-breakdown-title">スコアの内訳</h3>
+            <dl id="score-breakdown">
+              <div><dt>初期敵機への貢献</dt><dd id="result-score-aircraft">0</dd></div>
+              <div><dt>初期敵艦への貢献</dt><dd id="result-score-ships">0</dd></div>
+              <div><dt>クリアボーナス</dt><dd id="result-score-clear">0</dd></div>
+              <div><dt>速さボーナス</dt><dd id="result-score-speed">0</dd></div>
+              <div><dt>損傷回避ボーナス</dt><dd id="result-score-damageAvoidance">0</dd></div>
+              <div><dt>味方への損傷減点</dt><dd id="result-score-friendlyDamagePenalty">0</dd></div>
+              <div><dt>味方撃墜の減点</dt><dd id="result-score-friendlyKillPenalty">0</dd></div>
+            </dl>
+            <p id="score-rounding-note">内訳は小数第2位まで表示します。最終スコアは丸める前の値を合計し、最後に一度だけ整数に丸めます。表示した内訳の合計とは差が出ることがあります。</p>
+            <p id="result-score-version"></p>
+          </section>
           <p id="friendly-fire-result"></p>
           <dl class="result-stats">
             <div>

@@ -2,6 +2,7 @@ import type { Quaternion, Vector3 } from 'three';
 import type { NavalMountState } from './naval';
 import type { OrdnanceRound } from './ordnance';
 import type { ShipWreck } from './ship-wreck';
+import type { ScoreBreakdown, ScoreLedger } from './scoring';
 
 export type Team = 'friendly' | 'enemy';
 export type GameMode = 'normal' | 'easy';
@@ -54,12 +55,14 @@ export interface MissionStats {
   shots: number; hits: number; loops: number; damageTaken: number; friendlyDamage: number; friendlyKills: number; score: number;
 }
 export interface GameResult {
+  mode: GameMode; scoreRulesVersion: string; rulesVersion: string; scoreBreakdown: Readonly<ScoreBreakdown>;
   outcome: 'victory' | 'defeat'; time: number; playerAircraftKills: number; playerShipKills: number;
   allyAircraftKills: number; allyShipKills: number; alliesSurvived: number; score: number; friendlyDamage: number; friendlyKills: number;
 }
 export type EndReason = 'all-clear' | 'shot-down' | 'collision' | 'sea';
 export type DeathCause = 'enemy-aircraft' | 'naval-fire' | 'aircraft-collision' | 'ship-collision' | 'ship-wreck-collision' | 'sea' | null;
 export interface GameState {
+  scoring: ScoreLedger;
   phase: 'ready' | 'playing' | 'paused' | 'ended'; mode: GameMode;
   reinforcementsSpawned: boolean;
   player: Aircraft; allies: Aircraft[]; enemies: Aircraft[]; ships: Ship[];

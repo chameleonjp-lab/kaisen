@@ -20,6 +20,11 @@ for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }
     await page.keyboard.press('Tab'); await expect(page.locator('#rules-close')).toBeFocused();
     const text = await page.locator('#rules-content').innerText();
     expect(text).toContain('スマートフォンの操作'); expect(text).not.toContain('PCの操作'); expect(text).not.toContain('キーボード：');
+    expect(text).toContain('初期敵機のHPを自機が半分削ると250点');
+    expect(text).toContain('敗北しても貢献点と減点は残ります');
+    const speedRule = page.locator('#rules-content p').filter({ hasText: '速いクリアが必ず高得点になるわけではありません' });
+    await speedRule.scrollIntoViewIfNeeded(); await expect(speedRule).toBeInViewport();
+    await page.screenshot({ path: `test-results/evidence/score-rules-${browserName}-${viewport.width}x${viewport.height}.png` });
     await page.locator('#rules-content').evaluate(element => { element.scrollTop = element.scrollHeight; });
     await expect(page.locator('#rules-content')).toContainText('残り2発');
     await page.locator('#rules-back').tap(); await expect(page.locator('#home-rules')).toBeFocused();
@@ -70,6 +75,8 @@ test.describe('desktop keyboard editor', () => {
     await page.locator('#home-rules').click();
     const text = await page.locator('#rules-content').innerText();
     expect(text).toContain('PCの操作'); expect(text).toContain('F 射撃'); expect(text).not.toContain('スマートフォン'); expect(text).not.toContain('別の指');
+    expect(text).toContain('1HPにつき−10点'); expect(text).toContain('さらに−1,500点');
+    expect(text).toContain('最後に一度だけ整数に丸めます');
     await page.locator('#rules-close').click();
     await page.locator('#home-controls').click(); await page.locator('#keyboard-reset').click(); await page.locator('#control-cancel').click();
     await page.reload(); await page.locator('#home-controls').click();

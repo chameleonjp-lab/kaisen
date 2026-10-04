@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { expectScoreResult, inspectScoreResultLayout } from './score-result';
 
 const read = (page: Page) => page.evaluate(() => (window as any).__kaisenReadState());
 async function openNormal(page: Page) {
@@ -126,11 +127,17 @@ test('Normal real sea failure labels the result and preserves mode across retry 
   await page.keyboard.up('ArrowDown');
   await expect(page.locator('#result-mode')).toHaveText('ノーマル');
   await expect(page.locator('#result-reason')).toContainText('海面');
-  expect((await read(page)).result.outcome).toBe('defeat');
+  const result = (await read(page)).result;
+  expect(result.outcome).toBe('defeat');
+  await expectScoreResult(page, result, 'normal', 'defeat');
+  await inspectScoreResultLayout(page, result);
   await evidence(page, 'normal-sea-result');
   await page.locator('#retry').tap();
   expect((await read(page)).mode).toBe('normal');
   expect((await read(page)).stats.shots).toBe(0);
+  expect((await read(page)).stats.score).toBe(0);
+  expect((await read(page)).result).toBeNull();
+  await expect(page.locator('#result')).toBeHidden();
   await page.locator('#pause').tap(); await page.locator('#pause-home').tap();
   await expect(page.locator('input[value="normal"]')).toBeChecked();
   await page.locator('input[value="easy"]').check(); await page.locator('#start').tap();

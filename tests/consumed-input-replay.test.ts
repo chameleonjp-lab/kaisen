@@ -33,5 +33,11 @@ for(const scenario of evidence.cases) test(`${scenario.mode} replays historical 
   }
   if(state.result?.outcome==='victory') assert.ok([...state.enemies,...state.ships].every(target=>target.health===0));
   if(state.result?.outcome==='defeat') assert.equal(state.player.health,0);
-  assert.ok(Math.abs(state.stats.score-(-state.stats.friendlyDamage*10-state.stats.friendlyKills*1500))<1e-7);
+  const contribution=state.scoring.targets.reduce((sum,t)=>sum+t.maximumPoints*t.playerDamage/t.initialHealth,0);
+  const raw=contribution-state.stats.friendlyDamage*10-state.stats.friendlyKills*1500;
+  if(state.phase!=='ended')assert.ok(Math.abs(state.stats.score-raw)<1e-7);
+  else {
+    assert.equal(state.result?.scoreRulesVersion,'kaisen-contribution-1');
+    assert.equal(state.result?.score,Math.round(state.result!.scoreBreakdown.totalBeforeRounding));
+  }
 });

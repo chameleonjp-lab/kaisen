@@ -484,3 +484,15 @@ artifact `11227264174`（SHA256 `93ded9b0f0a1f5d874b37b2dd7a8d5f395070d0a9c7530b
 - 関連42単体pass。両モードの実stepGameで3発／2発撃沈・命中統計と勝利を検査し、自機／半分威力の至近弾値と魚雷を固定値で検査。2026-10-04 06:15 UTC確認、全254単体pass（27.267秒、fail/skip0）・型/build pass。JS800.62kB/gzip216.80、CSS27.80kB/gzip6.96。既存500kB警告あり
 - Node入力診断はEasy135.7167秒／HP80、Normal116.1167秒／HP80で勝利。各8発投下・7損傷、自機3艦／僚機1艦。人の試遊・実ブラウザ・iPhone性能ではない。値と実撃沈fixtureはevidence/bomb-guide-1800.json
 - 戦闘威力が変わる最終候補のため、旧CIの30分以内省略を使わず、次headの既存37ブラウザを含む全体CIを必要とする。現在はnot_runで、完全SHAとrunはPRのChecksに対応付ける。rule識別はkaisen-air-sea-11、HP／得点／ランキング条件は不変。iPhone実機は未実施
+
+
+## 2026-10-05 貢献スコア（S01–S04）
+- 基点main `5f4565ee550ce9a1351516aa31ba9b5232c36e05` / tree `922939b9d8d6233a2d75d3ff36b0861f4cf75c3e`。148blobを取得・Git SHA照合して隔離作業フォルダへ復元。2026-10-04 21:31 UTCの公開DOMはJS index-DaUyRxFF.jsで基点と一致。クラウドWebGL無効のため公開飛行は未確認で、制限経路を再試行していない
+- 利用者が採用した配点・境界はSCORING.md。新scoring.ts、実HP変更と結果確定への接続、GameResult内訳・mode/採点版、結果画面と説明を更新。初期敵/艦船体の有限枠、既存誤射減点・負値、増援0点・回復を維持
+- Node24.19.0/npm11.9.0、npm ci --ignore-scripts --no-audit --no-fund成功。依存/lockfile/build設定/workflow/採用ハーネス固定版は不変。新サービス/ランキング/DB接続なし
+- 関連30件passの後、独立担当がスコア・シミュレーション・増援・誤射・減衰・残骸・武器役割の58件を実行してpass。重大指摘なし。指摘された魚雷/至近弾の専用得点assertを追加し、scoring12件pass。UI担当のルール/HUD7件・source型・既存37ブラウザの読込/列挙pass
+- 2026-10-04 21:35 UTC確認、全270単体pass（42.752秒、fail/skip0）。最後の変更は200%文字時の時間表示折返しCSSとブラウザ到達assertのみで、採点本体/単体テストはその後不変。21:37 UTCの最終source型/buildもpass。JS804.88kB/gzip218.32、CSS28.74kB/gzip7.13。既存500kB警告を維持
+- 旧版と候補へ同じ通常入力を渡し、Easy8,143tick／Normal6,967tickの全滅まで毎tickの物理状態・HP・武器・敵・イベントが完全一致。除外は採点と結果の追加メタデータだけ。旧0点→28,336／29,021、比較JSONはdocs/evidence/scoring-physics-parity.json。試験操縦は内部観測を使う到達性診断で、実機試遊ではない
+- 既存37ブラウザケースを削らず、両モードの勝利・敗北・再出撃・説明へ内訳/丸め/版/320×568・568×320/200%文字/画面のスクロール到達を追加。偽の結果注入なし。画像は実際の結果に対するviewport・scroll・検査用文字拡大だけで、得点や時計は変更しない
+- 最終候補は勝敗・得点の境界なので全体CIを必須とし、過去SHAや30分条件による延期は使わない。コミット時点の実ブラウザはnot_run、完全headで実行されるPR Checksとartifactで結果を確定する。iPhone実機は未実施。本文・コードの保存と本人マージ・本番公開は区別する
+- 保護の観測: main protected:false、rulesetsは空配列。詳細protectionは接続アプリで403のためblockedで、保護なし／全制約取得済みとは主張しない。作業枝の不存在を認証済みrepoとmatching refsで確認し、書込直前に再照合する

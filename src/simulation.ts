@@ -1,10 +1,12 @@
 import { advanceShipMotion } from './ship-motion';
+import { createScoreLedger, recordTargetDamage, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from './scoring';
+import { RULES_VERSION } from './mission';
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
 import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
-import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
+import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
 import { beginPlayerReload, tickPlayerReload } from './ammunition';
 import { aircraftDamageMultiplier, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 import { releaseBomb, releaseTorpedo, checkTorpedoRelease, stepOrdnance, type OrdnanceKind } from './ordnance';
@@ -66,9 +68,11 @@ export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | G
   const player = makeAircraft(1, 'friendly', new Vector3(0, initialAltitude, 240), 0, 'player');
   const allies = [-1, 1, -2, 2].map((side, index) => makeAircraft(2 + index, 'friendly', new Vector3(side * 62, initialAltitude + index * 13, 280 + Math.abs(side) * 36), 0, index < 2 ? 'interceptor' : 'strike'));
   const enemies = Array.from({ length: 5 }, (_, index) => makeAircraft(10 + index, 'enemy', new Vector3((index - 2) * 115, 355 + (random() - 0.5) * 65, -350 - Math.abs(index - 2) * 85), 0));
+  const ships = makeFleet(mission.shipCount);
   const state: GameState = {
     phase: 'ready', reinforcementsSpawned: false, mode: mission.mode, config: mission, seed: normalized, player, allies, enemies,
-    ships: makeFleet(mission.shipCount), bullets: [], ordnance: [], events: [], elapsed: 0, tick: 0,
+    ships, bullets: [], ordnance: [], events: [], elapsed: 0, tick: 0,
+    scoring: createScoreLedger(enemies, ships),
     stats: { playerAircraftKills: 0, playerShipKills: 0, allyAircraftKills: 0, allyShipKills: 0, shots: 0, hits: 0, loops: 0, damageTaken: 0, friendlyDamage: 0, friendlyKills: 0, score: 0 },
     result: null, endReason: null, deathCause: null, allyRespawnAt: {},
   };
@@ -88,20 +92,23 @@ export function resumeGame(state: GameState): void { if (state.phase === 'paused
 function finish(state: GameState, reason: EndReason): void {
   if (state.phase === 'ended') return;
   state.phase = 'ended'; state.endReason = reason;
+  const breakdown = scoreBreakdown(state, reason === 'all-clear');
+  state.stats.score = finalScore(breakdown);
   state.result = Object.freeze({ outcome: reason === 'all-clear' ? 'victory' : 'defeat', time: state.elapsed,
+    mode: state.mode, rulesVersion: RULES_VERSION, scoreRulesVersion: SCORE_RULES_VERSION, scoreBreakdown: breakdown,
     playerAircraftKills: state.stats.playerAircraftKills, playerShipKills: state.stats.playerShipKills,
     allyAircraftKills: state.stats.allyAircraftKills, allyShipKills: state.stats.allyShipKills,
     alliesSurvived: state.allies.filter(item => item.health > 0).length, score: state.stats.score, friendlyDamage: state.stats.friendlyDamage, friendlyKills: state.stats.friendlyKills });
   emit(state, 'end', state.player.position, state.player.id);
 }
 function registerDestruction(state: GameState, target: CombatTarget, owner: number, team?: Team): void {
+  recordTargetDamage(state.scoring, target, 0, false);
   if (target.kind === 'ship') beginShipWreck(target, state.elapsed);
   emit(state, 'kill', target.position, owner, target, team);
   if (target.kind === 'aircraft' && target.team === 'friendly' && target !== state.player) {
     state.allyRespawnAt[target.id] = state.tick + ALLY_RESPAWN_TICKS;
     if (state.mode === 'normal' && owner === state.player.id && team === 'friendly') {
       state.stats.friendlyKills += 1;
-      state.stats.score -= FRIENDLY_KILL_PENALTY;
     }
   }
   if (target.team !== 'enemy' || team !== 'friendly') return;
@@ -315,6 +322,7 @@ function updatePayloads(state: GameState): void {
       const ship = 'shipId' in outcome ? state.ships.find(item => item.id === outcome.shipId) : undefined;
       if (outcome.type === 'impact' && ship && ship.health > 0 && round.team !== ship.team) {
         const actual = Math.min(ship.health, outcome.damage); ship.health -= actual;
+        recordTargetDamage(state.scoring, ship, actual, round.owner === state.player.id && round.team === 'friendly');
         if (round.owner === state.player.id && !hitCredited) { state.stats.hits++; hitCredited = true; }
         // Local blast damages nearby exposed mounts; hull damage is counted only once.
         const local = outcome.position.clone().sub(ship.position).applyQuaternion(ship.quaternion.clone().invert());
@@ -377,11 +385,11 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
   }
   const requestedDamage = bullet.damage * multiplier;
   const damage = requestedDamage >= target.health - EPSILON ? target.health : requestedDamage; target.health -= damage;
+  recordTargetDamage(state.scoring, target, damage, bullet.owner === state.player.id && bullet.team === 'friendly');
   if (target === state.player) state.stats.damageTaken += damage;
   if (bullet.owner === state.player.id && target.team !== bullet.team) state.stats.hits += 1;
   if (state.mode === 'normal' && bullet.owner === state.player.id && target.team === 'friendly') {
     state.stats.friendlyDamage += damage;
-    state.stats.score -= damage * FRIENDLY_DAMAGE_PENALTY;
   }
   if (target === state.player && target.health <= 0) {
     state.deathCause = bullet.kind === 'aa' ? 'naval-fire' : 'enemy-aircraft';
@@ -539,6 +547,7 @@ function fixedStep(state: GameState, input: FlightInput): void {
     }
   }
   // Resolve every in-flight round before choosing the outcome. Death wins a simultaneous all-clear.
+  state.stats.score = scoreBreakdown(state).totalBeforeRounding;
   if (player.health <= 0) finish(state, meta.deathReason ?? 'shot-down');
   else if (state.enemies.every(item => item.health <= 0) && state.ships.every(item => item.health <= 0)) finish(state, 'all-clear');
   else spawnReinforcements(state);

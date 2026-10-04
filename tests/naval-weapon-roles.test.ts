@@ -95,4 +95,5 @@ test('ordinary manual gun rounds suppress a visible AA mount while hull health r
   assert.equal(ship.guns[index].health,0);assert.equal(destroyed,1);
   assert.ok(state.stats.shots>0&&state.stats.hits>0);assert.equal(ship.health,hull);
   assert.ok(state.player.health>0,'suppression happens before entering the hull');
+  assert.equal(state.stats.score,0,'exposed mounts do not award hull contribution points');
 });
