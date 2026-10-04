@@ -93,10 +93,10 @@ test('bombs hit the visible deck before sea contact and cannot apply the same im
 });
 
 test('bombs hit shared bridge occluders, not an imaginary deck-only hit surface', () => {
-  const bomb = round('bomb', new Vector3(0, 38, -15), new Vector3(0, -100, 0));
+  const bomb = round('bomb', new Vector3(0, 38, -23), new Vector3(0, -100, 0));
   bomb.age = 1;
   const result = stepOrdnance(bomb, [ship()], 0, DT);
-  assert.equal(result.outcomes[0]?.type, 'impact'); close(bomb.position.y, 37);
+  assert.equal(result.outcomes[0]?.type, 'impact'); close(bomb.position.y, 37.5);
 });
 
 test('water is the terminal first contact when a ship would only be encountered afterwards', () => {
@@ -155,7 +155,8 @@ test('torpedo water entry consumes remaining fixed-step time and cannot teleport
 });
 
 test('the remaining water-entry interval still collides with a nearby hull before arming', () => {
-  const start = new Vector3(-19.6, oceanHeight(-19.6, 0, 0) + .03, 0);
+  const edge = -CAPITAL_SHIP.width / 2 - .15;
+  const start = new Vector3(edge, oceanHeight(edge, 0, 0) + .03, 0);
   const torpedo = round('torpedo', start, new Vector3(110, -20, 0));
   const result = stepOrdnance(torpedo, [ship()], 0, DT);
   assert.equal(result.active, false); assert.deepEqual(result.outcomes.map(o => o.type), ['splash', 'dud']);
@@ -273,9 +274,9 @@ test('visible AA turret is the first bomb contact before a later platform can ar
  assert.ok(bomb.position.y>21.69);assert.ok(bomb.age<.245);assert.equal(target.health,4000);
 });
 
-test('broad phase includes the visible AA platform beyond the armored hull half-beam',()=>{
+test('broad phase includes the relocated Iowa AA platform above the armored deck',()=>{
  const target=ship();target.guns=createNavalMounts(target.id);
- const bomb=round('bomb',new Vector3(19.7,14,18),new Vector3(0,-100,0));bomb.age=1;
+ const bomb=round('bomb',new Vector3(12.5,14,10.98),new Vector3(0,-100,0));bomb.age=1;
  const result=stepOrdnance(bomb,[target],0,DT);
  assert.equal(result.active,false);assert.equal(result.outcomes[0]?.type,'impact');
  assert.ok(Math.abs(bomb.position.y-13.25)<.001);

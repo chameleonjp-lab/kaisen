@@ -1,4 +1,5 @@
 import type { FlightInput } from './types';
+import { DEFAULT_KEY_BINDINGS, KeyboardSettings, keyboardEventHasShortcutModifier, type KeyAction } from './keyboard-settings';
 
 export type FlightControlButtons = {
   fire: HTMLButtonElement;
@@ -13,8 +14,8 @@ export type KaisenControlButtons = FlightControlButtons & { bomb: HTMLButtonElem
 type ControlName = keyof FlightControlButtons;
 export type FlightMode = 'normal' | 'easy';
 
-const STEERING_SHORTCUTS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
-const NORMAL_ACTION_SHORTCUTS = new Set(['Space', 'KeyW', 'KeyS']);
+const STEERING_ACTIONS = new Set<KeyAction>(['left', 'right', 'up', 'down']);
+const NORMAL_ACTIONS = new Set<KeyAction>(['fire', 'accelerate', 'brake']);
 
 function neutralInput(steeringRevision = 0): FlightInput {
   return { turn: 0, climb: 0, fire: false, loop: false, accelerate: false, brake: false, steeringRevision };
@@ -42,12 +43,15 @@ export class FlightControls {
   private readonly abort = new AbortController();
   private readonly joystick: HTMLElement;
   private readonly knob: HTMLElement | null;
+  private readonly unsubscribeKeys: () => void;
 
   constructor(
     private readonly surface: HTMLElement,
     private readonly buttons: FlightControlButtons,
     private readonly active: () => boolean,
+    private readonly keyboard = new KeyboardSettings(),
   ) {
+    this.unsubscribeKeys = keyboard.subscribe(() => this.clear());
     this.controlNames = (Object.keys(buttons) as ControlName[]).filter(name => Boolean(buttons[name]));
     const app = surface.closest<HTMLElement>('#app') ?? document.getElementById('app') ?? surface;
     let joystick = app.querySelector<HTMLElement>('#joystick');
@@ -102,13 +106,14 @@ export class FlightControls {
       return neutralInput(this.steeringRevision);
     }
 
-    const turn = this.turn + Number(this.keys.has('ArrowRight')) - Number(this.keys.has('ArrowLeft'));
-    const climb = this.climb + Number(this.keys.has('ArrowUp')) - Number(this.keys.has('ArrowDown'));
+    const keyHeld = (action: KeyAction) => this.keys.has(this.keyboard?.code(action) ?? DEFAULT_KEY_BINDINGS[action]);
+    const turn = this.turn + Number(keyHeld('right')) - Number(keyHeld('left'));
+    const climb = this.climb + Number(keyHeld('up')) - Number(keyHeld('down'));
     const pressed = (name: ControlName) => this.holds[name].size > 0;
     const normal = this.mode === 'normal';
-    const fire = normal && (pressed('fire') || this.keys.has('Space') || this.clickBursts.has('fire'));
-    const accelerate = normal && (pressed('accelerate') || this.keys.has('KeyW') || this.clickBursts.has('accelerate'));
-    const brake = normal && (pressed('brake') || this.keys.has('KeyS') || this.clickBursts.has('brake'));
+    const fire = normal && (pressed('fire') || keyHeld('fire') || this.clickBursts.has('fire'));
+    const accelerate = normal && (pressed('accelerate') || keyHeld('accelerate') || this.clickBursts.has('accelerate'));
+    const brake = normal && (pressed('brake') || keyHeld('brake') || this.clickBursts.has('brake'));
     const loop = this.loopEdge;
     const bomb = this.clickBursts.has('bomb'), torpedo = this.clickBursts.has('torpedo');
 
@@ -158,6 +163,7 @@ export class FlightControls {
 
   dispose(): void {
     this.clear();
+    this.unsubscribeKeys();
     this.abort.abort();
   }
 
@@ -271,31 +277,41 @@ export class FlightControls {
   }
 
   private keyDown(event: KeyboardEvent): void {
-    const allowed = STEERING_SHORTCUTS.has(event.code)
-      || event.code === 'KeyL'
-      || (event.code === 'KeyZ' && Boolean(this.buttons.bomb))
-      || (event.code === 'KeyX' && Boolean(this.buttons.torpedo))
-      || (this.mode === 'normal' && NORMAL_ACTION_SHORTCUTS.has(event.code));
+    // Do not let browser shortcuts leave a previously held flight key latched.
+    if (keyboardEventHasShortcutModifier(event)) {
+      if ([...this.keys].some(code => {
+        const action = this.keyboard.action(code);
+        return action && STEERING_ACTIONS.has(action);
+      })) this.steeringRevision += 1;
+      this.keys.clear();
+      return;
+    }
+    const action = this.keyboard.action(event.code);
+    const allowed = action && action !== 'pause'
+      && (this.mode === 'normal' || !NORMAL_ACTIONS.has(action))
+      && (action !== 'bomb' || Boolean(this.buttons.bomb))
+      && (action !== 'torpedo' || Boolean(this.buttons.torpedo));
     if (!this.active() || event.isComposing || !allowed || this.isTypingOrActivating(event.target)) return;
+    if (event.repeat && !this.keys.has(event.code)) return;
     event.preventDefault();
-    if (STEERING_SHORTCUTS.has(event.code) && !this.keys.has(event.code)) this.steeringRevision += 1;
+    if (STEERING_ACTIONS.has(action) && !this.keys.has(event.code)) this.steeringRevision += 1;
     const wasDown = this.keys.has(event.code);
     this.keys.add(event.code);
     if (!wasDown && !event.repeat) {
-      if (event.code === "KeyZ") this.clickBursts.add("bomb");
-      if (event.code === "KeyX") this.clickBursts.add("torpedo");
+      if (action === 'bomb' || action === 'torpedo') this.clickBursts.add(action);
+      if (action === 'loop' && this.buttons.loop.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
     }
-    if (event.code === 'KeyL' && !event.repeat && this.buttons.loop.getAttribute('aria-disabled') !== 'true') this.loopEdge = true;
   }
 
   private keyUp(event: KeyboardEvent): void {
     const wasDown = this.keys.delete(event.code);
-    if (wasDown && STEERING_SHORTCUTS.has(event.code)) this.steeringRevision += 1;
+    const action = this.keyboard.action(event.code);
+    if (wasDown && action && STEERING_ACTIONS.has(action)) this.steeringRevision += 1;
   }
 
   private isTypingOrActivating(target: EventTarget | null): boolean {
     if (!(target instanceof HTMLElement)) return false;
-    return target.isContentEditable || Boolean(target.closest('input, textarea, select, button, a, [role="dialog"]'));
+    return target.isContentEditable || Boolean(target.closest('input, textarea, select, button, a, dialog, [role="dialog"]'));
   }
 
   private capture(element: HTMLElement, pointer: number): void {
@@ -308,4 +324,3 @@ export class FlightControls {
     } catch { /* Capture can be lost during a blur or page transition. */ }
   }
 }
-

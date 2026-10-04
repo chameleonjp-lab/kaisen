@@ -16,9 +16,9 @@ function shot(owner:number,team:Bullet['team'],x:number,damage:number,kind:Bulle
   const position=new Vector3(x,1000,60);
   return {id:90000+x,owner,team,position,previous:position.clone(),velocity:new Vector3(0,0,-12000),life:1,damage,kind};
 }
-test('standard fleet has four real-size ships and exactly four times the previous HP',()=>{
+test('standard fleet has four Iowa-size ships and preserves the approved HP',()=>{
   const s=createGame();assert.equal(s.ships.length,4);assert.deepEqual(s.ships.map(s=>s.maxHealth),[4000,2400,2400,2400]);
-  for(const ship of s.ships)assert.deepEqual([ship.length,ship.width,ship.height],[263,38.9,42]);
+  for(const ship of s.ships)assert.deepEqual([ship.length,ship.width,ship.height],[270.43,32.97,42]);
   assert.ok(ENEMY_MG_DAMAGE < NAVAL_WEAPONS['light-aa'].damage);
   assert.ok(ENEMY_CANNON_DAMAGE < NAVAL_WEAPONS['light-aa'].damage);
 });

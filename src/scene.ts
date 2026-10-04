@@ -29,6 +29,7 @@ import { AIM_COLORS, aimIndicator, aimRadius } from "./aim-indicator";
 import { AircraftBatchFactory } from "./aircraft-batch";
 import { AircraftTracers } from "./aircraft-tracers";
 import { ShipFactory } from "./ships";
+import { MAX_NAVAL_SHOTS_PER_STEP } from "./naval";
 import { OrdnanceView } from "./ordnance-view";
 import { shipWreckPose, isShipObstacle } from "./ship-wreck";
 import { predictBombImpact } from "./ordnance";
@@ -46,7 +47,7 @@ import { Scene } from "three";
 import type { Aircraft, GameEvent, GameState } from "./types";
 
 const EFFECT_CAPACITY = 240;
-const NAVAL_FLASH_CAPACITY = 252; // All 36 AA barrels on the maximum seven ships.
+const NAVAL_FLASH_CAPACITY = MAX_NAVAL_SHOTS_PER_STEP * 7;
 const POINT_CAPACITY = EFFECT_CAPACITY + NAVAL_FLASH_CAPACITY + MAX_BULLETS;
 const TRACER_CAPACITY = MAX_BULLETS;
 

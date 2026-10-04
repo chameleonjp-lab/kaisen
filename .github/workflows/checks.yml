@@ -26,7 +26,7 @@ jobs:
         env:
           BUILD_COMMIT: ${{ github.event.pull_request.head.sha }}
         run: node scripts/prepare-pages.mjs
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
       - name: Preserve browser evidence
         if: always()

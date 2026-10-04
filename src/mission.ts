@@ -1,12 +1,12 @@
 import { Quaternion, Vector3 } from 'three';
-import { createNavalMounts } from './naval';
+import { CAPITAL_SHIP, createNavalMounts } from './naval';
 import type { Aircraft, GameMode, MissionConfig, Ship, Team } from './types';
 import { CRUISE_SPEED, updateQuaternion } from './flight';
 import { AIRCRAFT_HEALTH, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 export { AIRCRAFT_HEALTH } from './aircraft-damage';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-air-sea-7';
+export const RULES_VERSION = 'kaisen-air-sea-8';
 export const FIXED_DT = 1 / 60;
 export const AIRCRAFT_BULLET_LIFETIME = 1.5;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 4, mode: 'easy' });
@@ -32,7 +32,7 @@ export const ALLY_RESPAWN_TICKS = 40 * 60;
 /** Proposed penalty per actual friendly HP; destruction adds the requested fixed 1500. */
 export const FRIENDLY_DAMAGE_PENALTY = 10;
 export const FRIENDLY_KILL_PENALTY = 1500;
-/** Enemy airborne rounds are weaker than even the 0.8 HP light naval round. */
+/** Enemy airborne rounds are weaker than the 0.8 HP light naval round. */
 export const ENEMY_MG_DAMAGE = AIRCRAFT_BASE_DAMAGE.enemy.mg;
 export const ENEMY_CANNON_DAMAGE = AIRCRAFT_BASE_DAMAGE.enemy.cannon;
 
@@ -63,7 +63,7 @@ export function makeFleet(count: 3 | 4 | 5 | 7): Ship[] {
     const rank = Math.ceil(index / 2);
     const x = index === 0 ? 0 : (index % 2 === 1 ? -1 : 1) * (230 + (rank - 1) * 200);
     // A foreground broadside capital ship establishes scale before the deeper fleet.
-    // All hulls retain their physical 263 m length; no aircraft/camera scaling.
+    // All hulls use the Iowa dimensions shared with geometry; no aircraft/camera scaling.
     const foregroundFleet = [[0, -220], [-360, -650], [360, -700], [0, -1050]];
     const position = count === 4
       ? new Vector3(foregroundFleet[index][0], 0, foregroundFleet[index][1])
@@ -74,7 +74,7 @@ export function makeFleet(count: 3 | 4 | 5 | 7): Ship[] {
       kind: 'ship', id: 100 + index, team: 'enemy', variant: flagship ? 'flagship' : 'escort',
       position, previous: position.clone(), yaw, quaternion: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw), previousQuaternion: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw),
       velocity, health: flagship ? 4000 : 2400, maxHealth: flagship ? 4000 : 2400,
-      length: 263, width: 38.9, height: 42,
+      length: CAPITAL_SHIP.length, width: CAPITAL_SHIP.width, height: CAPITAL_SHIP.height,
       guns: createNavalMounts(100 + index),
       wreck: null, age: 0, superstructureHealth: 240, maxSuperstructureHealth: 240,
     };

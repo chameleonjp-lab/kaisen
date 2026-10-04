@@ -54,7 +54,7 @@ test('destroyed mounts retain their geometry but become dark and drooped without
     assert.ok(endpoint(barrels, barrel).y < definition.pivot[1]);
     bodies.getMatrixAt(index, matrix); const size = new Vector3(); matrix.decompose(new Vector3(), new Quaternion(), size);
     assert.ok(size.x > 0 && size.y > 0 && size.z > 0);
-    assert.equal(barrels.count, 57); assert.equal(bodies.count, 21); assert.equal(JSON.stringify(ship), saved);
+    assert.equal(barrels.count, 61); assert.equal(bodies.count, 21); assert.equal(JSON.stringify(ship), saved);
   } finally { factory.dispose(); }
 });
 

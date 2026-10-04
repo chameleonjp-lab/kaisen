@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { InstancedMesh, Matrix4, Mesh, Quaternion, Raycaster, Vector3 } from 'three';
-import { makeAircraft, makeFleet } from '../src/mission';
+import { MAX_BULLETS, makeAircraft, makeFleet } from '../src/mission';
 import { ShipFactory } from '../src/ships';
 import {
   CAPITAL_SHIP, MAX_LIVE_NAVAL_ROUNDS_PER_SHIP, MAX_NAVAL_SHOTS_PER_STEP, NAVAL_GRAVITY,
-  NAVAL_MOUNTS, NAVAL_PLATFORM_PARTS, NAVAL_WEAPONS, createNavalMounts, navalAnglesAllowed, navalBarrelClear,
+  NAVAL_MOUNTS, NAVAL_PLATFORM_PARTS, NAVAL_STRUCTURE_PARTS, NAVAL_WEAPONS, createNavalMounts, navalAnglesAllowed, navalBarrelClear,
   navalDirection, navalMuzzleLocal, segmentNavalHullEntry, shipCollisionBoxes, solveNavalAim, stepNavalGuns, wrapNavalAngle,
 } from '../src/naval';
 import type { NavalMountState, NavalShot } from '../src/naval';
@@ -19,14 +19,14 @@ function targetAt(x: number, y = 180, z = 0, id = 1) {
 }
 function close(a: number, b: number, error = 1e-8) { assert.ok(Math.abs(a - b) < error, `${a} versus ${b}`); }
 
-test('capitalships preserve meter scale and early-fit visible turret/barrel counts', () => {
-  for (const ship of makeFleet(3)) assert.deepEqual([ship.length, ship.width, ship.height], [263, 38.9, 42]);
-  for (const [kind, count, barrels] of [['main', 3, 9], ['secondary', 4, 12], ['heavy-aa', 6, 12], ['light-aa', 8, 24]] as const) {
+test('Iowa-inspired capitalships preserve meter scale and explicit game-fit turret/barrel counts', () => {
+  for (const ship of makeFleet(3)) assert.deepEqual([ship.length, ship.width, ship.height], [270.43, 32.97, 42]);
+  for (const [kind, count, barrels] of [['main', 3, 9], ['secondary', 4, 8], ['heavy-aa', 6, 12], ['light-aa', 8, 32]] as const) {
     const mounts = NAVAL_MOUNTS.filter(m => m.weapon === kind); assert.equal(mounts.length, count);
     assert.equal(mounts.reduce((sum, m) => sum + NAVAL_WEAPONS[m.weapon].barrels, 0), barrels);
   }
-  close(CAPITAL_SHIP.length / 12, 21.9166666667, 1e-9);
-  assert.equal(NAVAL_WEAPONS.main.roundsPerMinute, 1.8); assert.equal(NAVAL_WEAPONS.main.historicalMaxRange, 42000);
+  close(CAPITAL_SHIP.length / 12, 22.5358333333, 1e-9);
+  assert.equal(NAVAL_WEAPONS.main.caliberMm, 406.4); assert.equal(NAVAL_WEAPONS.main.damage, 0);
   assert.equal(new Set(NAVAL_MOUNTS.map(m => m.id)).size, 21);
 });
 
@@ -96,7 +96,7 @@ test('AA retention immediately releases dead, out-of-range and out-of-arc target
   }
 });
 
-test('same-tick twin/triple volleys originate at all real barrel ends without phantom grouped rounds', () => {
+test('same-tick twin/quad volleys originate at all real barrel ends without phantom grouped rounds', () => {
   const ship = shipAtOrigin(), target = targetAt(700);
   const kinds = new Set<string>();
   for (let tick = 0; tick < 500; tick++) {
@@ -118,7 +118,7 @@ test('same-tick twin/triple volleys originate at all real barrel ends without ph
   assert.deepEqual([...kinds].sort(), ['heavy-aa', 'light-aa']);
 });
 
-test('per-barrel rate retains 220rpm bursts, 15-round magazine gaps, and 10rpm heavy cycle', () => {
+test('per-barrel rate uses 120rpm bursts, four-round clip gaps, and unchanged 10rpm heavy cycle', () => {
   const ship = shipAtOrigin(), target = targetAt(700), fires = new Map<string, number[]>();
   for (let tick = 0; tick < 60 * 90; tick++) {
     for (const shot of stepNavalGuns(ship, [target], tick, DT)) if (shot.barrelIndex === 0) {
@@ -126,11 +126,11 @@ test('per-barrel rate retains 220rpm bursts, 15-round magazine gaps, and 10rpm h
     }
   }
   const light = fires.get('light-starboard-2')!, heavy = fires.get('heavy-starboard-2')!;
-  assert.ok(light.length > 140 && light.length < 175, `sustained90s=${light.length}`);
+  assert.ok(light.length > 115 && light.length < 130, `sustained90s=${light.length}`);
   const gaps = light.slice(1).map((tick, i) => (tick - light[i]) * DT);
-  assert.ok(gaps.some(gap => Math.abs(gap - 16 * DT) < 1e-8)); assert.ok(gaps.some(gap => Math.abs(gap - 17 * DT) < 1e-8));
-  const reloadGaps = gaps.map((gap, i) => ({ gap, i })).filter(g => g.gap > 4);
-  assert.ok(reloadGaps.length >= 9); assert.equal(reloadGaps[0].i, 14);
+  assert.ok(gaps.some(gap => Math.abs(gap - 30 * DT) < 1e-8)); assert.ok(gaps.some(gap => Math.abs(gap - 84 * DT) < 1e-8 || Math.abs(gap - 85 * DT) < 1e-8));
+  const reloadGaps = gaps.map((gap, i) => ({ gap, i })).filter(g => g.gap > 1);
+  assert.ok(reloadGaps.length >= 28); assert.equal(reloadGaps[0].i, 3);
   assert.ok(heavy.length >= 14 && heavy.length <= 15);
   heavy.slice(1).forEach((tick, i) => close((tick - heavy[i]) * DT, 6, DT + 1e-8));
 });
@@ -152,7 +152,7 @@ test('finite range, low-altitude light-AA envelope, dead targets and invalid tic
   assert.deepEqual(stepNavalGuns(ship, [targetAt(600)], 902, DT), []); assert.equal(JSON.stringify(ship.guns), dead);
 });
 
-test('hull and pagoda block a barrel/path even independently of firing-arc checks', () => {
+test('hull and bridge block a barrel/path even independently of firing-arc checks', () => {
   const mount = NAVAL_MOUNTS.find(m => m.id === 'light-starboard-1')!;
   assert.equal(navalBarrelClear(mount, { yaw: -Math.PI / 2, elevation: 10 * RAD }, 1), true);
   assert.equal(navalBarrelClear(mount, { yaw: Math.PI / 2, elevation: 10 * RAD }, 1), false, 'inboard through bridge');
@@ -161,8 +161,8 @@ test('hull and pagoda block a barrel/path even independently of firing-arc check
   assert.equal(navalAnglesAllowed(mount, -Math.PI / 2, 89 * RAD), false);
   assert.equal(navalAnglesAllowed(mount, NaN, 10 * RAD), false);
   const ship = shipAtOrigin(), boxes = shipCollisionBoxes(ship);
-  assert.equal(boxes[0].min.y, 9); assert.equal(boxes.length, 12 + NAVAL_PLATFORM_PARTS.length);
-  assert.ok(boxes.some(box => box.min.z < -16 && box.max.z > -16 && box.max.y === 37));
+  assert.equal(boxes[0].min.y, 9); assert.equal(boxes.length, NAVAL_STRUCTURE_PARTS.length + 7 + NAVAL_PLATFORM_PARTS.length);
+  assert.ok(boxes.some(box => box.min.z < -23 && box.max.z > -23 && box.max.y === 37.5));
 });
 
 test('ballistic flight time accounts for gravity, moving targets and inherited ship velocity', () => {
@@ -194,14 +194,14 @@ test('7-ship full-arc synthetic load is deterministic and remains below conserva
     live = live.filter(s => s.death > tick * DT); shotsA.forEach(s => live.push({ death: tick * DT + s.life }));
     max = Math.max(max, live.length); assert.ok(live.length <= MAX_LIVE_NAVAL_ROUNDS_PER_SHIP);
   }
-  assert.ok(max > 80); assert.ok(MAX_LIVE_NAVAL_ROUNDS_PER_SHIP * 7 + 256 < 2048);
+  assert.ok(max > 80); assert.ok(MAX_LIVE_NAVAL_ROUNDS_PER_SHIP * 7 + 256 < MAX_BULLETS);
 });
 
-test('render batches preserve 57 independent barrel endpoints and read state without mutation', () => {
+test('render batches preserve 61 independent barrel endpoints and read state without mutation', () => {
   const factory = new ShipFactory(), ship = shipAtOrigin(), root = factory.create(ship);
   ship.guns.forEach((g: NavalMountState, i) => { if (i > 6) { g.yaw += 12 * RAD; g.elevation = 37 * RAD; } });
   const before = JSON.stringify(ship.guns); factory.update(ship, root); assert.equal(JSON.stringify(ship.guns), before);
-  const barrels = root.getObjectByName('naval-barrels') as InstancedMesh; assert.equal(barrels.count, 57);
+  const barrels = root.getObjectByName('naval-barrels') as InstancedMesh; assert.equal(barrels.count, 61);
   assert.equal((root.getObjectByName('naval-mounts') as InstancedMesh).count, 21);
   const matrix = new Matrix4(); let index = 0;
   NAVAL_MOUNTS.forEach((definition, i) => {
@@ -248,7 +248,8 @@ test('tapered bow/stern collision matches visible geometry, without an invisible
 
 
 test('low-flying aircraft remain engageable by light AA with safe outboard depression', () => {
-  const ship = shipAtOrigin(), target = targetAt(500, 5);
+  // At 400 m, even the full +1.89-degree dispersion remains below the horizontal.
+  const ship = shipAtOrigin(), target = targetAt(400, 5);
   const shots: NavalShot[] = [];
   for (let tick = 0; tick < 600; tick++) shots.push(...stepNavalGuns(ship, [target], tick, DT));
   const light = shots.filter(s => s.mountId.startsWith('light-'));
@@ -258,7 +259,7 @@ test('low-flying aircraft remain engageable by light AA with safe outboard depre
     const definition = NAVAL_MOUNTS.find(d => d.id === gun.mountId)!;
     if (definition.weapon === 'light-aa' && gun.salvo > 0) {
       assert.ok(gun.elevation < 0); assert.ok(gun.elevation >= -10 * RAD);
-      for (let barrel = 0; barrel < 3; barrel++) assert.ok(navalBarrelClear(definition, gun, barrel));
+      for (let barrel = 0; barrel < NAVAL_WEAPONS[definition.weapon].barrels; barrel++) assert.ok(navalBarrelClear(definition, gun, barrel));
     }
   }
 });
@@ -282,7 +283,7 @@ test('depressed legal forward rays cannot pass through adjacent AA platforms or 
     }
   }
   // The pivot is above its own platform: a properly outboard depressed barrel remains free.
-  for (let barrel = 0; barrel < 3; barrel++) {
+  for (let barrel = 0; barrel < NAVAL_WEAPONS[definition.weapon].barrels; barrel++) {
     assert.equal(navalBarrelClear(definition, { yaw: -90 * RAD, elevation: -6 * RAD }, barrel), true);
   }
   assert.equal(NAVAL_PLATFORM_PARTS.length, 36);

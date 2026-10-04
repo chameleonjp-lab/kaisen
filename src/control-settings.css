@@ -1,0 +1,106 @@
+/* Imported after the game HUD styles: the editor never inherits live payload typography. */
+#control-settings {
+  width: min(96vw, 520px);
+  max-width: 520px;
+  height: min(760px, calc(var(--settings-viewport-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 18px));
+  overflow: auto;
+  color-scheme: dark;
+}
+#control-settings .settings-shell {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(80px, 1fr) auto;
+  gap: 8px;
+  height: 100%;
+  padding: 12px 14px;
+}
+#control-settings .settings-header { min-height: 44px; }
+#control-settings .settings-header h2 { font-size: 1.05rem; letter-spacing: .03em; }
+#control-settings .settings-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 2px 5px 14px 1px;
+  scroll-padding-block: 12px;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+#control-settings .settings-main:focus-visible { outline: 2px solid #ffe2a4; outline-offset: -2px; }
+.settings-input-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.settings-input-picker button {
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #92ada6;
+  border-radius: 4px;
+  background: #0c2733;
+  color: #edf2e9;
+  font-size: .85rem;
+}
+.settings-input-picker button[aria-pressed="true"] { border-color: #ffe2a4; color: #ffe2a4; background: #344948; }
+.settings-scroll-hint { margin: 0; color: #c6d7d2; font-size: .68rem; line-height: 1.4; }
+#control-settings .settings-hint, #control-settings .settings-mode-note { font-size: .76rem; line-height: 1.6; }
+#control-settings .control-select-label { font-size: .76rem; }
+#control-settings .control-target {
+  min-height: 44px;
+  color: #edf2e9;
+  -webkit-text-fill-color: #edf2e9;
+  opacity: 1;
+  border: 1px solid #8da5a4;
+  border-radius: 4px;
+  color-scheme: dark;
+}
+#control-settings .control-target:disabled { color: #d3ddd9; -webkit-text-fill-color: #d3ddd9; opacity: 1; }
+#control-settings .control-target option { background: #0c2733; color: #edf2e9; }
+#control-settings .control-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+#control-settings .setting-range { font-size: .73rem; }
+#control-settings .setting-range > span { flex-wrap: wrap; white-space: normal; }
+#control-settings .setting-range input[type="range"] { min-height: 44px; }
+#control-settings .control-reset { display: block; min-height: 44px; font-size: .76rem; line-height: 1.5; }
+#control-settings .settings-footer { padding-top: 8px; border-top: 1px solid #abc6c54d; background: #17323f; }
+#control-settings .settings-footer button { min-height: 48px; font-size: .9rem; }
+#control-settings .control-preview { flex: none; margin: 4px auto 10px; }
+#control-settings .preview-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid #e4c88bcc;
+  border-radius: 50%;
+  background: #173b4b;
+  color: #fff0c8;
+  font-size: var(--preview-font-size, 12px);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  word-break: keep-all;
+  touch-action: none;
+}
+#control-settings .preview-control.is-selected { border-color: #fff0b5; box-shadow: 0 0 0 2px #ffe7a8; }
+#control-settings .preview-control > span { pointer-events: none; white-space: nowrap; }
+#control-settings .preview-control.external-label > span {
+  position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+  border-radius: 3px; padding: 2px 3px; background: #071e2bf2; color: #fff0c8;
+  font-size: 10px; line-height: 1.2;
+}
+#control-settings .preview-control.external-label[data-label-align="left"] > span { left: 0; transform: none; }
+#control-settings .preview-control.external-label[data-label-align="right"] > span { left: auto; right: 0; transform: none; }
+.keyboard-settings-list { display: grid; gap: 6px; }
+.keyboard-setting-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(105px, 45%); align-items: center; gap: 12px; }
+.keyboard-setting-row > span { font-size: .85rem; }
+.keyboard-setting-row small { display: block; color: #c6d7d2; font-size: .65rem; }
+.keyboard-setting-row button { min-height: 44px; padding: 8px; border: 1px solid #93aaa6; border-radius: 4px; background: #0c2733; color: #fff0c8; overflow-wrap: anywhere; }
+.keyboard-setting-row button[aria-pressed="true"] { border-color: #ffe2a4; background: #435447; }
+.settings-keyboard-note { min-height: 1.5em; margin: 10px 0 0; color: #ffe2a4; font-size: .8rem; line-height: 1.5; }
+@media (max-width: 350px) {
+  #control-settings .control-settings-grid { grid-template-columns: 1fr; }
+  #control-settings .settings-shell { padding-inline: 10px; }
+}
+@media (max-height: 500px) {
+  #control-settings .settings-shell { gap: 4px; padding-block: 6px; }
+  #control-settings .settings-header .eyebrow, .settings-scroll-hint { display: none; }
+  #control-settings .settings-shell { grid-template-rows: auto auto minmax(80px, 1fr) auto; }
+}
+
+#control-settings .preview-control.external-label[data-label-vertical="below"] > span { bottom: auto; top: calc(100% + 2px); }

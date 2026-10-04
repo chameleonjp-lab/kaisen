@@ -62,7 +62,7 @@ test('Normal bullets follow the bore line, while Easy alone predicts a crossing 
     for (const bullet of bullets) {
       const angle = bullet.velocity.clone().normalize().angleTo(forward);
       if (mode === 'normal') assert.ok(angle < 1e-10, 'manual shot is not corrected toward the target');
-      else assert.ok(angle > .005 && angle <= .0200000001, 'Easy only partially corrects toward straight lead');
+      else assert.ok(angle > .005 && angle <= .0280000001, 'Easy only partially corrects toward straight lead');
     }
     const velocities = bullets.map(b => b.velocity.toArray());
     target.position.x += 200;

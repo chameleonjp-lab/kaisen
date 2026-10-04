@@ -51,7 +51,12 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       const time = -relative.dot(velocity) / Math.max(1, velocity.lengthSq());
       if (relative.length() < 240 && time > 0 && time < 1.5 && relative.clone().addScaledVector(velocity,time).length() < 40) {
         dodgeUntil = snapshot.tick + 120;
-        dodgeClimb = player.position.y > 400 && relative.y >= 0 ? -1 : 1;
+        // Estimate clearance for Easy's full two-second dodge at cruise speed.
+        // The old 400m cutoff sent a 323m approach into higher traffic. Normal
+        // accelerates while dodging, so retain its existing altitude margin.
+        const canDescend = snapshot.mode === 'easy'
+          ? player.position.y - player.speed * 2 > 90 : player.position.y > 400;
+        dodgeClimb = canDescend && relative.y >= 0 ? -1 : 1;
       }
     }
     if (snapshot.tick < dodgeUntil) {

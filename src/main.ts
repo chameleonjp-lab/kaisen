@@ -1,4 +1,5 @@
 import "./style.css";
+import "./control-settings.css";
 import {
   createGame,
   startGame,
@@ -9,6 +10,9 @@ import {
 import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
+import { KeyboardSettings, ControlInputPresentation } from "./keyboard-settings";
+import { missionProgress, payloadReadout } from "./mission-hud";
+import { RulesGuide } from "./rules-guide";
 import { AllyAnnouncements } from "./ally-announcements";
 import { checkTorpedoRelease } from "./ordnance";
 import { KaisenScene } from "./scene";
@@ -41,9 +45,14 @@ const buttons = {
     torpedo: el<HTMLButtonElement>("torpedo"),
 };
 for (const button of Object.values(buttons)) button.dataset.flightControl = "true";
-const settings = new ControlSettings(buttons);
-const controls = new FlightControls(canvas, buttons, () => screen === "playing" && state.phase === "playing" && !settings.isOpen);
+const keyboardSettings = new KeyboardSettings();
+const inputPresentation = new ControlInputPresentation();
+const settings = new ControlSettings(buttons, keyboardSettings, inputPresentation);
+let rules: RulesGuide | null = null;
+const controls = new FlightControls(canvas, buttons, () => screen === "playing" && state.phase === "playing" && !settings.isOpen && !rules?.isOpen, keyboardSettings);
 controls.setMode(selectedMode);
+function presentationMode() { return inputPresentation.value; }
+function keyboardDescription() { return keyboardSettings.describe(state.mode); }
 function modeName(mode: GameMode): string { return mode === "easy" ? "イージー" : "ノーマル"; }
 function syncMode() {
   app.dataset.mode = state.mode;
@@ -53,17 +62,24 @@ function syncMode() {
   el("friendly-fire-guide").hidden = state.mode !== "normal";
   el("hud-mode").textContent = modeName(state.mode);
   el("result-mode").textContent = modeName(state.mode);
-  el("flight-tip").textContent = state.mode === "normal"
-    ? "ドラッグで操縦"
-    : "触れた位置からドラッグして操縦";
+  syncInstructions();
+}
+function syncInstructions() {
+  const touch = presentationMode() === "touch";
+  app.dataset.input = presentationMode();
+  el("flight-tip").textContent = touch ? "ドラッグで操縦" : "キーで操縦";
+  el("input-guide").textContent = touch ? "画面をドラッグして操縦" : "キーボードで操縦";
   el("mode-guide").textContent = state.mode === "easy"
     ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"
-    : "照準補助なし・手動射撃 · 加速・減速・宙返りをボタンで操作";
-  el("keyboard-guide").textContent = state.mode === "easy"
-    ? "キーボード：矢印で操縦 · L宙返り · Z爆弾 · X魚雷"
-    : "キーボード：矢印で操縦 · Space射撃 · W/S加減速 · L宙返り · Z爆弾 · X魚雷";
+    : touch ? "照準補助なし・手動射撃 · 射撃・加減速はボタンを長押し" : "照準補助なし・手動射撃 · 射撃・加減速はキーを長押し";
+  el("keyboard-guide").hidden = touch;
+  el("keyboard-guide").textContent = keyboardDescription();
 }
 syncMode();
+const unsubscribeKeyboard = keyboardSettings.subscribe(syncInstructions);
+const unsubscribePresentation = inputPresentation.subscribe(syncInstructions);
+rules = new RulesGuide(() => ({ mode: state.mode, input: presentationMode(), keyboardDescription: keyboardDescription() }), () => controls.clear());
+for (const id of ["home-rules", "pause-rules"]) { const button = el(id); button.addEventListener("click", () => rules?.open(button)); }
 for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="game-mode"]')) {
   radio.addEventListener("change", () => {
     if (screen !== "home" || !radio.checked) return;
@@ -105,6 +121,7 @@ function formatTime(seconds: number) {
 }
 function setScreen(next: typeof screen) {
   settings.close();
+  rules?.close();
   screen = next;
   app.dataset.screen = next;
   el("home").hidden = next !== "home";
@@ -161,7 +178,7 @@ function begin() {
     !graphicsReady ||
     contextLost ||
     document.hidden ||
-    screen === "playing" || settings.isOpen
+    screen === "playing" || settings.isOpen || rules?.isOpen
   )
     return;
   generation++;
@@ -226,7 +243,7 @@ function pause(reason: string) {
   syncAudio();
 }
 function resume() {
-  if (settings.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
+  if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
   pauseReasons.clear();
   resumeGame(state);
   accumulator = 0;
@@ -274,12 +291,13 @@ function finish() {
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
   el("score").textContent = String(Math.round(state.stats.score));
-  el("enemy-count").textContent = String(
-    state.enemies.filter((p) => p.health > 0).length,
-  );
-  el("enemy-total").textContent = `/ ${state.enemies.length}`;
-  el("bomb").textContent = state.player.bombReloadTicks > 0 ? `爆弾 ${(state.player.bombReloadTicks / 60).toFixed(1)}s` : `爆弾 ${state.player.bombs}`;
-  el("torpedo").textContent = state.player.torpedoReloadTicks > 0 ? `魚雷 ${(state.player.torpedoReloadTicks / 60).toFixed(1)}s` : `魚雷 ${state.player.torpedoes}`;
+  const progress = missionProgress(state);
+  el("enemy-count").textContent = String(progress.aircraftDestroyed);
+  el("enemy-total").textContent = `残り${progress.aircraftRemaining}機`;
+  el("bomb-ammo").textContent = payloadReadout(state.player.bombs, state.player.bombReloadTicks);
+  el("torpedo-ammo").textContent = payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks);
+  el("bomb").setAttribute("aria-label", `爆弾を投下・${payloadReadout(state.player.bombs, state.player.bombReloadTicks)}`);
+  el("torpedo").setAttribute("aria-label", `魚雷を投下・${payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks)}`);
   const torpedoCheck = checkTorpedoRelease(state.player, state.elapsed);
   el("torpedo").dataset.ready = String(torpedoCheck.allowed && state.player.torpedoReloadTicks === 0);
   el("payload-status").textContent = torpedoCheck.allowed ? "魚雷投下可能" : "";
@@ -290,9 +308,8 @@ function updateHUD() {
   el("reload-status").textContent = reloading ? `再装填中 あと${(state.player.reloadTicksRemaining / 60).toFixed(1)}秒` : "";
   el("reload-status").dataset.progress = String(1 - state.player.reloadTicksRemaining / 360);
   positionReloadStatus();
-  el("ship-count").textContent = String(
-    state.ships.filter((s) => s.health > 0).length,
-  );
+  el("ship-count").textContent = String(progress.shipsDestroyed);
+  el("ship-total").textContent = `残り${progress.shipsRemaining}隻`;
   el("allies-count").textContent = String(
     state.allies.filter((p) => p.health > 0).length,
   );
@@ -447,13 +464,14 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("blur", () => pause("blur"));
 document.addEventListener("keydown", (e) => {
   // Native dialog owns Escape and Tab while configuration is open.
-  if (settings.isOpen) return;
-  if (e.key === "Escape") {
+  if (settings.isOpen || rules?.isOpen) return;
+  if (keyboardSettings.matchesPause(e)) {
+    e.preventDefault();
     if (screen === "playing") pause("manual");
     else if (screen === "paused") resume();
   }
   if (e.key === "Tab" && screen === "paused") {
-    const items = [el("pause-reload"), el("resume"), el("pause-restart"), el("pause-home"), el("pause-controls")].filter(
+    const items = [el("pause-reload"), el("resume"), el("pause-restart"), el("pause-home"), el("pause-rules"), el("pause-controls")].filter(
       (x) => !x.hidden && !(x as HTMLButtonElement).disabled,
     );
     const index = items.indexOf(document.activeElement as HTMLElement);
@@ -563,6 +581,7 @@ if (import.meta.env.DEV) {
           allyActivity: allyAnnouncements.snapshot(),
           controlsInput: controls.peek(),
           settingsOpen: settings.isOpen,
+          rulesOpen: rules?.isOpen ?? false,
           render: scene?.diagnostics(),
           audio: {
             enabled: audio.enabled,
@@ -592,6 +611,8 @@ window.addEventListener("pagehide", (event) => {
   cancelAnimationFrame(frameId);
   controls.dispose();
   settings.dispose();
+  rules?.dispose();
+  unsubscribeKeyboard(); unsubscribePresentation(); inputPresentation.dispose();
   audio.dispose();
   scene?.dispose();
 });

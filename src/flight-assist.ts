@@ -6,9 +6,9 @@ import { EASY_AIM_RADIUS, FLIGHT_CAMERA_BANK_FACTOR, FLIGHT_FOV, projectFlightTa
 export const PLAYER_MAX_PITCH = 0.95;
 export const EASY_AUTO_FIRE_RANGE = 1200;
 export const OFFSCREEN_RESPONSE_MULTIPLIER = 1.65;
-/** Shared with Faitofuraito PR13. Changes projectile launch only, never the camera or stick. */
-export const EASY_SHOT_CORRECTION_STRENGTH = 0.25;
-export const EASY_SHOT_MAX_ANGLE = 0.02;
+/** Kaisen tuning of Faitofuraito PR13. Projectile launch only; camera and stick are unchanged. */
+export const EASY_SHOT_CORRECTION_STRENGTH = 0.35;
+export const EASY_SHOT_MAX_ANGLE = 0.028;
 export const EASY_SHOT_PREDICTION_GATE = 0.16;
 
 export function applyEasyShotCorrection(forward: Vector3, predicted: Vector3): Vector3 {

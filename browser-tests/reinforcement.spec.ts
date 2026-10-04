@@ -33,7 +33,8 @@ test('repeated 40-second replenishment stays bounded and pause freezes its clock
   expect(wave.enemies).toHaveLength(5);
   expect(wave.enemies.some((e:any) => e.generation === 'reinforcement')).toBe(true);
   expect(new Set(wave.enemies.map((e:any) => e.id)).size).toBe(5);
-  await expect(page.locator('#enemy-total')).toHaveText('/ 5');
+  await expect(page.locator('#enemy-total')).toHaveText(`残り${wave.enemies.filter((enemy:any)=>enemy.health>0).length}機`);
+  await expect(page.locator('#enemy-count')).toHaveText(String(wave.stats.playerAircraftKills+wave.stats.allyAircraftKills));
   await expect(page.locator('#announcement')).toContainText('機が復活');
   await mkdir('test-results/evidence', {recursive:true});
   await writeFile('test-results/evidence/reinforcement-real-flight.json', JSON.stringify({note:'Actual 40-second touch flight; no clock or world injection', paused, wave},null,2));
