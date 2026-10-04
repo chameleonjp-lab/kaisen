@@ -98,7 +98,7 @@ test('only player reinforcement kills heal once, capped at max HP; reinforcement
     assert.equal(events.length, expected > hp ? 1 : 0);
     if (events.length) assert.equal(events[0].amount, expected - hp);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
-    assert.equal(s.stats.score, 0);
+    assert.equal(s.stats.score, generation === 'initial' && owner === 1 ? 500 / 80 : 0);
   }
 });
 test('all damage resolves before healing so a same-tick lethal hit cannot be resurrected', () => {

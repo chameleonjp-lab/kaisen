@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { expectScoreResult, inspectScoreResultLayout } from './score-result';
 
 const records: unknown[] = [];
 async function state(page: Page) {
@@ -239,10 +240,15 @@ test("real flight to sea failure, result, replay, and home", async ({
   await expect(page.locator("#result-reason")).toContainText("海面");
   expect(s.result.time).toBeGreaterThan(0);
   expect(s.elapsed).toBe(s.result.time);
+  await expectScoreResult(page, s.result, 'easy', 'defeat');
+  await inspectScoreResultLayout(page, s.result, { narrow: true, enlarged: true });
   await capture(page, "result-sea");
   await page.locator("#retry").click();
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
   expect((await state(page)).player.health).toBe(80);
+  expect((await state(page)).result).toBeNull();
+  expect((await state(page)).stats.score).toBe(0);
+  await expect(page.locator('#result')).toBeHidden();
   await expect(page.locator("#health")).toHaveText("100");
   await page.locator("#pause").click();
   await page.locator("#pause-home").click();

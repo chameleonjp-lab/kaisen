@@ -120,6 +120,7 @@ function formatTime(seconds: number) {
   const cs = Math.floor(Math.max(0, seconds) * 100 + 1e-6);
   return `${String(Math.floor(cs / 6000)).padStart(2, "0")}:${String(Math.floor(cs / 100) % 60).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
 }
+const scoreComponentFormat = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 2 });
 function setScreen(next: typeof screen) {
   settings.close();
   rules?.close();
@@ -277,7 +278,15 @@ function finish() {
   el("result-reason").textContent = r.outcome === "victory"
     ? "敵航空隊と敵艦隊を全滅させました"
     : state.deathCause ? causes[state.deathCause] : "自機が撃墜されました";
-  el("result-score").textContent = String(Math.round(r.score));
+  // Result values are committed by the simulation. Formatting never recalculates them.
+  el("result-mode").textContent = modeName(r.mode);
+  el("result-score").textContent = String(r.score);
+  el("result-score-version").textContent = "得点ルール1 · 貢献スコア";
+  el("result-score-version").dataset.scoreRulesVersion = r.scoreRulesVersion;
+  for (const key of ["aircraft", "ships", "clear", "speed", "damageAvoidance", "friendlyDamagePenalty", "friendlyKillPenalty"] as const) {
+    const value = r.scoreBreakdown[key];
+    el(`result-score-${key}`).textContent = scoreComponentFormat.format(value === 0 ? 0 : value);
+  }
   el("friendly-fire-result").textContent = `誤射 ${r.friendlyDamage.toFixed(1)} HP · 味方撃墜 ${r.friendlyKills}機`;
   el("result-time-label").textContent =
     r.outcome === "victory" ? "クリアタイム" : "経過時間";
@@ -290,6 +299,7 @@ function finish() {
   const allySummary = allyAnnouncements.summary();
   el("ally-report").hidden = allySummary.length === 0;
   el("ally-report-lines").textContent = allySummary.join("\n");
+  el("result").scrollTop = 0;
 }
 function updateBombCue() {
   const bombCue = bombReleaseCue(state, currentBombGuide(state));

@@ -1,0 +1,68 @@
+{
+  "baseline": "5f4565ee550ce9a1351516aa31ba9b5232c36e05",
+  "conditions": "Same six-tick legal-input diagnostic pilot from baseline observation; identical accepted inputs fed to both fixed-step simulations. Exact full physical state comparison every tick, excluding scoring/result metadata only. Not human play or phone performance.",
+  "outcomes": [
+    {
+      "mode": "easy",
+      "tick": 8143,
+      "time": 135.71666666666667,
+      "hp": 80,
+      "oldScore": 0,
+      "newScore": 28336,
+      "breakdown": {
+        "aircraft": 0,
+        "ships": 7050,
+        "clear": 12000,
+        "speed": 9285.666666666666,
+        "damageAvoidance": 0,
+        "friendlyDamagePenalty": 0,
+        "friendlyKillPenalty": 0,
+        "totalBeforeRounding": 28335.666666666664
+      },
+      "stats": {
+        "playerAircraftKills": 9,
+        "playerShipKills": 3,
+        "allyAircraftKills": 8,
+        "allyShipKills": 1,
+        "shots": 454,
+        "hits": 119,
+        "loops": 0,
+        "damageTaken": 80.59199999999984,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 28336
+      }
+    },
+    {
+      "mode": "normal",
+      "tick": 6967,
+      "time": 116.11666666666666,
+      "hp": 80,
+      "oldScore": 0,
+      "newScore": 29021,
+      "breakdown": {
+        "aircraft": 0,
+        "ships": 7050,
+        "clear": 12000,
+        "speed": 9677.666666666668,
+        "damageAvoidance": 293.0000000000003,
+        "friendlyDamagePenalty": 0,
+        "friendlyKillPenalty": 0,
+        "totalBeforeRounding": 29020.666666666668
+      },
+      "stats": {
+        "playerAircraftKills": 5,
+        "playerShipKills": 3,
+        "allyAircraftKills": 7,
+        "allyShipKills": 1,
+        "shots": 194,
+        "hits": 53,
+        "loops": 0,
+        "damageTaken": 33.119999999999955,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 29021
+      }
+    }
+  ]
+}

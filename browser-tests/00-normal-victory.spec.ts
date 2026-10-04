@@ -3,6 +3,7 @@ import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { expectScoreResult, inspectScoreResultLayout } from './score-result';
 
 // This route verifies mixed real input: CDP touch steering plus the ordinary
 // Space key for manual fire and W/S throttle. Three-finger button ownership has a separate test.
@@ -129,6 +130,8 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     // for ammunition. The Node route separately requires a complete 360-tick reload.
     await expect(page.locator('#result-title')).toHaveText('作戦成功');
     await expect(page.locator('#result-mode')).toHaveText('ノーマル');
+    await expectScoreResult(page, result.result, 'normal', 'victory');
+    await inspectScoreResultLayout(page, result.result, { narrow: true });
     const submitted = result.render.queue.submittedCount;
     await expect.poll(async () => (await read()).render.queue.completedCount).toBeGreaterThanOrEqual(submitted + 1);
     await mkdir('test-results/evidence', { recursive: true });

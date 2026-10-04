@@ -3,6 +3,7 @@ import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilo
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
+import { expectScoreResult, inspectScoreResultLayout } from './score-result';
 // This long real-input route avoids video readback. Final screenshots and state
 // are saved separately; no product state or result is injected.
 test.use({ trace: "off" });
@@ -161,6 +162,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
   expect(result.enemies.every((t: any) => t.health <= 0)).toBe(true);
   expect(result.ships.every((t: any) => t.health <= 0)).toBe(true);
   await expect(page.locator("#result-title")).toHaveText("作戦成功");
+  await expectScoreResult(page, result.result, 'easy', 'victory');
+  await inspectScoreResultLayout(page, result.result, { narrow: true });
   await capture(page, "result-victory");
   expect(activityCaptured).toBe(true);
   expect(result.allyActivity.totals.reduce((sum:number,row:any)=>sum+row.victory,0)).toBe(result.stats.allyAircraftKills);

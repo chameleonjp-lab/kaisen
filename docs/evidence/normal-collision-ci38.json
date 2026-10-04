@@ -1,0 +1,70 @@
+{
+  "sourceRun": "https://github.com/chameleonjp-lab/kaisen/actions/runs/37237056777",
+  "originalReplay": {
+    "method": "Simultaneous baseline-runtime and repo current simulation replay of all 763 consumed input entries. Compare JSON-normalized complete state each tick, excluding only top-level scoring/result and stats.score. Separately reconstruct the browser pilot at every one of 742 historical observation ticks and compare every requested field with numeric tolerance1e-7. Compare replay terminal physical fields with original browser evidence.",
+    "seed": 1262569811,
+    "entries": 763,
+    "dropped": 0,
+    "recordedObservationSamples": 742,
+    "physicalRuntimeDifference": null,
+    "reconstructedPilotMismatchCount": 0,
+    "recordedPhysicalMaterialDifferences": [],
+    "recordedPhysicalMaxNumericDifference": 1.3699263945454732e-11,
+    "baseline": {
+      "tick": 7895,
+      "elapsed": 131.58333333333334,
+      "cause": "aircraft-collision",
+      "hp": 0,
+      "score": 0
+    },
+    "current": {
+      "tick": 7895,
+      "elapsed": 131.58333333333334,
+      "cause": "aircraft-collision",
+      "hp": 0,
+      "score": 7050
+    },
+    "sourceEvidence": "ci38/evidence/normal-victory-route-state.json",
+    "sourceEvidenceSha256": "e039913555c67fc61122e0a8409c76d7d3e5457cafcb3f304ceda0f9d7e3a86f"
+  },
+  "lateralContinuation": {
+    "note": "One scratch candidate. Exact consumed CI38 inputs until dodge acceptance7837. Generated pilot thereafter uses original request/acceptance ticks through7885, then repeats recorded request/acceptance cadence. Steering delivery at acceptance; keyboard/fire/throttle one tick later. Modeled Node continuation, not browser acceptance or an exact unrecorded run.",
+    "candidate": "Normal && !canDescend && relative.y>=0 && altitude>230 => full lateral turn away from relative horizontal side, climb0; other dodge branches unchanged",
+    "prefixRequestDifferences": 0,
+    "dodgeDecision": {
+      "turn": 1,
+      "climb": 0,
+      "fire": false,
+      "loop": false,
+      "bomb": false,
+      "torpedo": false,
+      "accelerate": true,
+      "brake": false
+    },
+    "tick": 11191,
+    "phase": "ended",
+    "reason": "all-clear",
+    "cause": null,
+    "hp": 80,
+    "stats": {
+      "playerAircraftKills": 6,
+      "playerShipKills": 3,
+      "allyAircraftKills": 13,
+      "allyShipKills": 1,
+      "shots": 546,
+      "hits": 48,
+      "loops": 0,
+      "damageTaken": 30.319999999999965,
+      "friendlyDamage": 0,
+      "friendlyKills": 0,
+      "score": 27630
+    },
+    "minDistance": 73.26506918714844,
+    "minTarget": {
+      "tick": 7848,
+      "id": 6398
+    },
+    "minAltitude": 277.6672761046677
+  },
+  "scope": "Only the external test pilot changes. Product flight, collision, AI, weapons and HP remain unchanged. Modeled Node continuation is not browser or human playability evidence."
+}
