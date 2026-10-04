@@ -6,15 +6,17 @@ import { AIRCRAFT_HEALTH, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 export { AIRCRAFT_HEALTH } from './aircraft-damage';
 
 /** Provisional rules. Changing balance or fleet size separates local records. */
-export const RULES_VERSION = 'kaisen-air-sea-8';
+export const RULES_VERSION = 'kaisen-air-sea-9';
 export const FIXED_DT = 1 / 60;
 export const AIRCRAFT_BULLET_LIFETIME = 1.5;
 export const DEFAULT_MISSION_CONFIG: Readonly<MissionConfig> = Object.freeze({ shipCount: 4, mode: 'easy' });
 export const MAX_BULLETS = 2048;
 export const MAX_EVENTS_PER_STEP = 1024;
 export const LOW_ALTITUDE_WARNING = 65;
-/** Provisional lower sea-attack staging altitude, keeping the inherited chase camera. */
+/** Normal sea-attack staging altitude; its original camera and entry remain unchanged. */
 export const INITIAL_FLIGHT_ALTITUDE = 220;
+/** Easy starts 80m higher to leave more room to plan a sea approach. */
+export const EASY_INITIAL_FLIGHT_ALTITUDE = 300;
 export const AI_DECISION_TICKS = 6;
 /** Tunable gameplay load, equivalent to 12 seconds at the inherited firing rates. */
 export const PLAYER_MG_CAPACITY = 288;

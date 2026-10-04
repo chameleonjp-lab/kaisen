@@ -6,6 +6,8 @@ import { EASY_AIM_RADIUS, FLIGHT_CAMERA_BANK_FACTOR, FLIGHT_FOV, projectFlightTa
 export const PLAYER_MAX_PITCH = 0.95;
 export const EASY_AUTO_FIRE_RANGE = 1200;
 export const OFFSCREEN_RESPONSE_MULTIPLIER = 1.65;
+/** Gentle sea-target steering; aircraft tracking and projectile correction are independent. */
+export const EASY_SHIP_TRACKING_STRENGTH = 0.25;
 /** Kaisen tuning of Faitofuraito PR13. Projectile launch only; camera and stick are unchanged. */
 export const EASY_SHOT_CORRECTION_STRENGTH = 0.35;
 export const EASY_SHOT_MAX_ANGLE = 0.028;
@@ -91,7 +93,8 @@ export function getFlightAssist(
   const shortEdgeY = projection.y * Math.max(1, 1 / aspect);
   const screenRadius = Math.hypot(shortEdgeX, shortEdgeY) / 2;
   const manualWeight = clamp(Math.max(Math.abs(manualTurn), Math.abs(manualClimb)) / 0.35, 0, 1);
-  const assistFade = clamp((screenRadius - EASY_AIM_RADIUS) / (EASY_AIM_RADIUS * 2), 0, 1) * (1 - manualWeight);
+  const targetStrength = target.enemy.kind === 'ship' ? EASY_SHIP_TRACKING_STRENGTH : 1;
+  const assistFade = clamp((screenRadius - EASY_AIM_RADIUS) / (EASY_AIM_RADIUS * 2), 0, 1) * (1 - manualWeight) * targetStrength;
   if (assistFade <= 0) {
     return { turn: manualTurn, climb: manualClimb, responseMultiplier, hasVisibleTarget: true };
   }

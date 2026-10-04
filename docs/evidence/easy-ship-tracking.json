@@ -1,0 +1,745 @@
+{
+  "note": "Offline fixed-step diagnostic; ship-only fixture removes other combatants only in this report, never in browser acceptance. Camera and ship geometry fixed.",
+  "variants": [
+    {
+      "name": "baseline",
+      "full-world": {
+        "initial": 220,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.6576391446792229,
+          "depth": 493.7888106946763,
+          "distance": 502.881934453804,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.4104215234267157,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -48.857309857206786,
+        "altitudeLost": 193.73416195048262,
+        "phase": "ended",
+        "deathCause": "ship-collision",
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 197.23065363947836,
+            "pitchDeg": -16.265015371688648
+          },
+          {
+            "tick": 120,
+            "altitude": 163.50366115397998,
+            "pitchDeg": -19.386094029940338
+          },
+          {
+            "tick": 180,
+            "altitude": 122.71444252443276,
+            "pitchDeg": -24.108977238495207
+          },
+          {
+            "tick": 240,
+            "altitude": 70.40721814228495,
+            "pitchDeg": -33.3046750413834
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 220,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.6576391446792229,
+          "depth": 493.7888106946763,
+          "distance": 502.881934453804,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.4104215234267157,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -48.857309857206786,
+        "altitudeLost": 193.73416195048262,
+        "phase": "ended",
+        "deathCause": "ship-collision",
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 197.23065363947836,
+            "pitchDeg": -16.265015371688648
+          },
+          {
+            "tick": 120,
+            "altitude": 163.50366115397998,
+            "pitchDeg": -19.386094029940338
+          },
+          {
+            "tick": 180,
+            "altitude": 122.71444252443276,
+            "pitchDeg": -24.108977238495207
+          },
+          {
+            "tick": 240,
+            "altitude": 70.40721814228495,
+            "pitchDeg": -33.3046750413834
+          }
+        ]
+      }
+    },
+    {
+      "name": "h220_s025",
+      "full-world": {
+        "initial": 220,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.6576391446792229,
+          "depth": 493.7888106946763,
+          "distance": 502.881934453804,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.10260538085667892,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -9.752865131959803,
+        "altitudeLost": 38.162988635891736,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 211.2107587172264,
+            "pitchDeg": -6.448535065852074
+          },
+          {
+            "tick": 120,
+            "altitude": 197.29265022120606,
+            "pitchDeg": -8.08998549909413
+          },
+          {
+            "tick": 180,
+            "altitude": 181.83701136410826,
+            "pitchDeg": -0.1234036530565027
+          },
+          {
+            "tick": 240,
+            "altitude": 196.47870472876295,
+            "pitchDeg": 9.645583933773347
+          },
+          {
+            "tick": 300,
+            "altitude": 223.8942231115976,
+            "pitchDeg": 24.453493728051306
+          },
+          {
+            "tick": 360,
+            "altitude": 261.032516454287,
+            "pitchDeg": 3.8433946923270605
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 220,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.6576391446792229,
+          "depth": 493.7888106946763,
+          "distance": 502.881934453804,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.10260538085667892,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -9.752865131959803,
+        "altitudeLost": 40.34124179668282,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 211.2107587172264,
+            "pitchDeg": -6.448535065852074
+          },
+          {
+            "tick": 120,
+            "altitude": 197.29265022120606,
+            "pitchDeg": -8.08998549909413
+          },
+          {
+            "tick": 180,
+            "altitude": 181.36077038413612,
+            "pitchDeg": -3.846355427984134
+          },
+          {
+            "tick": 240,
+            "altitude": 179.68424487942906,
+            "pitchDeg": -0.05767831829919765
+          },
+          {
+            "tick": 300,
+            "altitude": 179.65913444942717,
+            "pitchDeg": -0.0008649196529315862
+          },
+          {
+            "tick": 360,
+            "altitude": 179.65875820331718,
+            "pitchDeg": -1.2969969099076554e-05
+          }
+        ]
+      }
+    },
+    {
+      "name": "h300_s100",
+      "full-world": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.545959045786771,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -52.55993143140656,
+        "altitudeLost": 268.4972385836881,
+        "phase": "ended",
+        "deathCause": "ship-collision",
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 269.0284256372109,
+            "pitchDeg": -23.816142132675864
+          },
+          {
+            "tick": 120,
+            "altitude": 221.73100002488042,
+            "pitchDeg": -26.820212939161195
+          },
+          {
+            "tick": 180,
+            "altitude": 168.10139092283245,
+            "pitchDeg": -31.082294343870306
+          },
+          {
+            "tick": 240,
+            "altitude": 105.24645254986737,
+            "pitchDeg": -38.276389861202105
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.545959045786771,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -52.55993143140656,
+        "altitudeLost": 268.4972385836881,
+        "phase": "ended",
+        "deathCause": "ship-collision",
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 269.0284256372109,
+            "pitchDeg": -23.816142132675864
+          },
+          {
+            "tick": 120,
+            "altitude": 221.73100002488042,
+            "pitchDeg": -26.820212939161195
+          },
+          {
+            "tick": 180,
+            "altitude": 168.10139092283245,
+            "pitchDeg": -31.082294343870306
+          },
+          {
+            "tick": 240,
+            "altitude": 105.24645254986737,
+            "pitchDeg": -38.276389861202105
+          }
+        ]
+      }
+    },
+    {
+      "name": "h300_s015",
+      "full-world": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.08189385686801565,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -5.324437814585589,
+        "altitudeLost": 10.667896150595936,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 292.9881616003791,
+            "pitchDeg": -5.084510725320889
+          },
+          {
+            "tick": 120,
+            "altitude": 289.8227302655409,
+            "pitchDeg": 1.049192433753431
+          },
+          {
+            "tick": 180,
+            "altitude": 292.6244397776197,
+            "pitchDeg": 1.7501098244941695
+          },
+          {
+            "tick": 240,
+            "altitude": 296.61587658880285,
+            "pitchDeg": 2.6129226692605023
+          },
+          {
+            "tick": 300,
+            "altitude": 305.7265692470701,
+            "pitchDeg": 9.000939959634433
+          },
+          {
+            "tick": 360,
+            "altitude": 318.34620229415617,
+            "pitchDeg": 14.835643857759637
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.08189385686801565,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -5.324437814585589,
+        "altitudeLost": 11.646289610324686,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 292.9881616003791,
+            "pitchDeg": -5.084510725320889
+          },
+          {
+            "tick": 120,
+            "altitude": 288.4456662021146,
+            "pitchDeg": -0.20818329819228668
+          },
+          {
+            "tick": 180,
+            "altitude": 288.35508866676093,
+            "pitchDeg": -0.0031218286407828605
+          },
+          {
+            "tick": 240,
+            "altitude": 288.3537310483265,
+            "pitchDeg": -4.681362120322701e-05
+          },
+          {
+            "tick": 300,
+            "altitude": 288.35371069485245,
+            "pitchDeg": -7.019972529977365e-07
+          },
+          {
+            "tick": 360,
+            "altitude": 288.3537103896753,
+            "pitchDeg": -1.0526853735091909e-08
+          }
+        ]
+      }
+    },
+    {
+      "name": "h300_s025",
+      "full-world": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.13648976144669275,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -10.036964252622548,
+        "altitudeLost": 30.273018450948598,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 288.5870438875075,
+            "pitchDeg": -8.435489532236438
+          },
+          {
+            "tick": 120,
+            "altitude": 270.94551770265167,
+            "pitchDeg": -7.3937562141483175
+          },
+          {
+            "tick": 180,
+            "altitude": 273.71597220380994,
+            "pitchDeg": 3.0026950119995637
+          },
+          {
+            "tick": 240,
+            "altitude": 280.4448153494895,
+            "pitchDeg": 4.424305781047597
+          },
+          {
+            "tick": 300,
+            "altitude": 295.0882621082561,
+            "pitchDeg": 14.276417075379623
+          },
+          {
+            "tick": 360,
+            "altitude": 317.7926841503772,
+            "pitchDeg": 15.481292680728124
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.13648976144669275,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -10.036964252622548,
+        "altitudeLost": 32.337796272166884,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 288.5870438875075,
+            "pitchDeg": -8.435489532236438
+          },
+          {
+            "tick": 120,
+            "altitude": 270.9442217241731,
+            "pitchDeg": -7.420300143966209
+          },
+          {
+            "tick": 180,
+            "altitude": 267.71139190467596,
+            "pitchDeg": -0.11127168083984738
+          },
+          {
+            "tick": 240,
+            "altitude": 267.6629405198096,
+            "pitchDeg": -0.0016685830379776128
+          },
+          {
+            "tick": 300,
+            "altitude": 267.6622146085692,
+            "pitchDeg": -2.5021365127339428e-05
+          },
+          {
+            "tick": 360,
+            "altitude": 267.6622037278331,
+            "pitchDeg": -3.7520980292024143e-07
+          }
+        ]
+      }
+    },
+    {
+      "name": "h300_s035",
+      "full-world": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.19108566602536983,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -15.968525621379605,
+        "altitudeLost": 65.26988379079106,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 284.4188287371643,
+            "pitchDeg": -11.756797931604467
+          },
+          {
+            "tick": 120,
+            "altitude": 259.65382116348997,
+            "pitchDeg": -14.138083569574698
+          },
+          {
+            "tick": 180,
+            "altitude": 234.73427937842928,
+            "pitchDeg": -0.8960028712544181
+          },
+          {
+            "tick": 240,
+            "altitude": 244.17843017469286,
+            "pitchDeg": 6.996313905024268
+          },
+          {
+            "tick": 300,
+            "altitude": 266.66877308817067,
+            "pitchDeg": 21.841781090847867
+          },
+          {
+            "tick": 360,
+            "altitude": 301.3059340065988,
+            "pitchDeg": 3.4878660680726443
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 300,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9134475119212477,
+          "depth": 495.62548720723197,
+          "distance": 540.1872268019672,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.19108566602536983,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -15.968525621379605,
+        "altitudeLost": 68.11238050591507,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 284.4188287371643,
+            "pitchDeg": -11.756797931604467
+          },
+          {
+            "tick": 120,
+            "altitude": 259.65382116348997,
+            "pitchDeg": -14.138083569574698
+          },
+          {
+            "tick": 180,
+            "altitude": 234.09353570714143,
+            "pitchDeg": -4.975214137113215
+          },
+          {
+            "tick": 240,
+            "altitude": 231.92062155427624,
+            "pitchDeg": -0.07460620579140817
+          },
+          {
+            "tick": 300,
+            "altitude": 231.88810641916857,
+            "pitchDeg": -0.001118763090229433
+          },
+          {
+            "tick": 360,
+            "altitude": 231.88761949408493,
+            "pitchDeg": -1.6776497863450532e-05
+          }
+        ]
+      }
+    },
+    {
+      "name": "h320_s025",
+      "full-world": {
+        "initial": 320,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9771036378531052,
+          "depth": 496.0846563353709,
+          "distance": 550.9357857318764,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.14424989149983436,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -10.059151507501733,
+        "altitudeLost": 27.325635399346652,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 308.004183990728,
+            "pitchDeg": -8.879011665407031
+          },
+          {
+            "tick": 120,
+            "altitude": 292.71429744372034,
+            "pitchDeg": -0.8064761386536379
+          },
+          {
+            "tick": 180,
+            "altitude": 295.1849450830042,
+            "pitchDeg": 1.967191649075792
+          },
+          {
+            "tick": 240,
+            "altitude": 299.8831850588329,
+            "pitchDeg": 3.189125285814442
+          },
+          {
+            "tick": 300,
+            "altitude": 311.31162102064656,
+            "pitchDeg": 11.764490641734486
+          },
+          {
+            "tick": 360,
+            "altitude": 319.4447077980688,
+            "pitchDeg": 0.3248016582836453
+          }
+        ]
+      },
+      "ship-only": {
+        "initial": 320,
+        "initialProjection": {
+          "x": 0,
+          "y": -0.9771036378531052,
+          "depth": 496.0846563353709,
+          "distance": 550.9357857318764,
+          "visible": true,
+          "inCircle": false
+        },
+        "initialCommand": {
+          "turn": 0,
+          "climb": -0.14424989149983436,
+          "responseMultiplier": 1,
+          "hasVisibleTarget": true
+        },
+        "minPitchDeg": -10.059151507501733,
+        "altitudeLost": 29.088614538658135,
+        "phase": "playing",
+        "deathCause": null,
+        "samples": [
+          {
+            "tick": 60,
+            "altitude": 308.004183990728,
+            "pitchDeg": -8.879011665407031
+          },
+          {
+            "tick": 120,
+            "altitude": 292.1454158965409,
+            "pitchDeg": -2.7890663275180896
+          },
+          {
+            "tick": 180,
+            "altitude": 290.9298679448632,
+            "pitchDeg": -0.041823658371705284
+          },
+          {
+            "tick": 240,
+            "altitude": 290.911662356016,
+            "pitchDeg": -0.0006271698820263236
+          },
+          {
+            "tick": 300,
+            "altitude": 290.9113895507698,
+            "pitchDeg": -9.404774145415698e-06
+          },
+          {
+            "tick": 360,
+            "altitude": 290.91138546134187,
+            "pitchDeg": -1.41030013176824e-07
+          }
+        ]
+      }
+    }
+  ],
+  "normalIdentical": true,
+  "aircraftAssistIdentical": true,
+  "sourceCommit": "c750abdeb16a7ab8897fdd151271910e149c0662",
+  "selected": {
+    "easyAltitude": 300,
+    "shipAssistStrength": 0.25,
+    "reason": "moderate +80m entry with visible foreground target; slower nose-down tracking; manual authority retained"
+  },
+  "provenance": {
+    "seed": 73,
+    "fixedStepSeconds": 0.016666666666666666,
+    "durationLimitSeconds": 6,
+    "aspect": 0.4612676056338028,
+    "normalComparison": "3 seeds \u00d7600 steps, all GameState JSON equal",
+    "aircraftComparison": "54 identical-geometry input/position/aspect cases",
+    "candidateNumbers": "implementation tuning, not values specified by user"
+  }
+}

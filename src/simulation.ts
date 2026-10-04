@@ -3,7 +3,7 @@ import { assignTargets, targetFor, updateAI } from './ai';
 import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
-import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
+import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, FRIENDLY_DAMAGE_PENALTY, FRIENDLY_KILL_PENALTY, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
 import { beginPlayerReload, tickPlayerReload } from './ammunition';
 import { aircraftDamageMultiplier, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
 import { releaseBomb, releaseTorpedo, checkTorpedoRelease, stepOrdnance, type OrdnanceKind } from './ordnance';
@@ -61,8 +61,9 @@ export function createGame(seed = 0x4b414953, config: Partial<MissionConfig> | G
   let randomState = normalized;
   const random = () => { randomState ^= randomState << 13; randomState ^= randomState >>> 17; randomState ^= randomState << 5; return (randomState >>> 0) / 0x100000000; };
   const mission = resolveMissionConfig(config);
-  const player = makeAircraft(1, 'friendly', new Vector3(0, INITIAL_FLIGHT_ALTITUDE, 240), 0, 'player');
-  const allies = [-1, 1, -2, 2].map((side, index) => makeAircraft(2 + index, 'friendly', new Vector3(side * 62, INITIAL_FLIGHT_ALTITUDE + index * 13, 280 + Math.abs(side) * 36), 0, index < 2 ? 'interceptor' : 'strike'));
+  const initialAltitude = mission.mode === 'easy' ? EASY_INITIAL_FLIGHT_ALTITUDE : INITIAL_FLIGHT_ALTITUDE;
+  const player = makeAircraft(1, 'friendly', new Vector3(0, initialAltitude, 240), 0, 'player');
+  const allies = [-1, 1, -2, 2].map((side, index) => makeAircraft(2 + index, 'friendly', new Vector3(side * 62, initialAltitude + index * 13, 280 + Math.abs(side) * 36), 0, index < 2 ? 'interceptor' : 'strike'));
   const enemies = Array.from({ length: 5 }, (_, index) => makeAircraft(10 + index, 'enemy', new Vector3((index - 2) * 115, 355 + (random() - 0.5) * 65, -350 - Math.abs(index - 2) * 85), 0));
   const state: GameState = {
     phase: 'ready', reinforcementsSpawned: false, mode: mission.mode, config: mission, seed: normalized, player, allies, enemies,

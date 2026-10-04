@@ -1,0 +1,34 @@
+import { test, expect } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { steerAndObserve } from './touch-command';
+
+test('Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude',async({page,context})=>{
+ test.setTimeout(60000);await page.setViewportSize({width:393,height:648});
+ const read=()=>page.evaluate(()=>(window as any).__kaisenReadState(false));
+ await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
+ const ready=await read();expect(ready.mode).toBe('easy');expect(ready.player.position.y).toBe(300);
+ await page.locator('#start').tap();await expect.poll(async()=>(await read()).phase).toBe('playing');
+ await page.locator('#pause').tap();const opening=await read();
+ expect(opening.elapsed).toBeLessThan(2);expect(opening.player.position.y).toBeGreaterThan(295);
+ await mkdir('test-results/evidence',{recursive:true});
+ await page.screenshot({path:'test-results/evidence/easy-elevated-opening.png',style:'#pause-screen {visibility:hidden!important}'});
+ await page.locator('#resume').tap();
+ await expect.poll(async()=>{const s=await read();expect(s.phase).toBe('playing');return s.elapsed;},{timeout:15000}).toBeGreaterThanOrEqual(6);
+ await page.locator('#pause').tap();const tracked=await read();
+ expect(tracked.player.position.y).toBeGreaterThan(250);expect(tracked.player.pitch).toBeGreaterThan(-.22);
+ await page.screenshot({path:'test-results/evidence/easy-gentle-ship-follow.png',style:'#pause-screen {visibility:hidden!important}'});
+ await page.locator('#resume').tap();
+ const cdp=await context.newCDPSession(page),origin={x:90,y:500};
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
+ const accepted=await steerAndObserve(page,cdp,origin,0,.6);
+ await expect.poll(async()=>{const s=await read();expect(s.phase).toBe('playing');return s.tick;},{timeout:10000}).toBeGreaterThanOrEqual(accepted.tick+90);
+ const manual=await read();expect(manual.player.pitch).toBeGreaterThan(.4);
+ expect(manual.controlsInput.climb).toBeCloseTo(.6,4);
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await page.locator('#pause').tap();await page.locator('#pause-restart').tap();
+ await expect.poll(async()=>(await read()).phase).toBe('playing');await page.locator('#pause').tap();
+ const replay=await read();expect(replay.elapsed).toBeLessThan(2);expect(replay.player.position.y).toBeGreaterThan(295);
+ await page.locator('#pause-home').tap();await page.locator('input[value="normal"]').check();
+ const normal=await read();expect(normal.player.position.y).toBe(220);
+ await writeFile('test-results/evidence/easy-ship-tracking.json',JSON.stringify({note:'Real UI launch, neutral flight, actual touch climb and restart. Only pause overlay hidden in screenshots. No world or clock injection.',ready,opening,tracked,manual,replay,normal},null,2));
+});
