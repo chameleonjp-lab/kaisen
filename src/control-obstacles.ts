@@ -37,3 +37,14 @@ export function measureHudObstacles(app: HTMLElement): ControlObstacle[] {
       .map(item => ({ x:(item.left-origin.left+item.width/2)*scaleX, y:(item.top-origin.top+item.height/2)*scaleY, width:item.width*scaleX, height:item.height*scaleY }));
   } finally { host.remove(); }
 }
+
+/** Convert visual viewport pixels into the editor's unscaled layout space.
+ * getBoundingClientRect includes inherited zoom/transforms; offsets do not.
+ */
+export function settingsViewportSize(element: HTMLElement, width: number, height: number): { width: number; height: number } {
+  const rect = element.getBoundingClientRect();
+  const x = element.offsetWidth > 0 ? rect.width / element.offsetWidth : 1;
+  const y = element.offsetHeight > 0 ? rect.height / element.offsetHeight : 1;
+  return { width: width / (Number.isFinite(x) && x > 0 ? x : 1),
+    height: height / (Number.isFinite(y) && y > 0 ? y : 1) };
+}

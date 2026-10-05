@@ -1091,3 +1091,7 @@ p {
 #throttle.layout-blocked { visibility: hidden; pointer-events: none; }
 #throttle-layout-note { position: absolute; left: 12px; bottom: 12px; max-width: 180px; padding: 8px; background: #142a37; color: #fff4c9; font-size: 12px; }
 .preview-throttle.layout-blocked { border-color: #ffab98; }
+
+/* Decorative button text must not extend the input hit area beyond the button.
+ * In enlarged text, an overflow label must not steal the adjacent Pause control. */
+#hud #fire > *, #hud #loop > *, #hud #bomb > *, #hud #torpedo > * { pointer-events: none; }

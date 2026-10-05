@@ -1,4 +1,4 @@
-import { measureHudObstacles, controlLayoutSize, type ControlObstacle } from './control-obstacles';
+import { measureHudObstacles, controlLayoutSize, settingsViewportSize, type ControlObstacle } from './control-obstacles';
 // Adapted from faitofuraito@025cad4930b487628675a0e20a88323aae0fac89 src/control-settings.ts. See docs/PROVENANCE.md.
 import { persistSettingsBatch, readSettingsValue, hasSettingsRecovery } from './settings-storage';
 import type { KaisenControlButtons } from './input';
@@ -202,6 +202,7 @@ export class ControlSettings {
     this.apply(this.saved[this.activeMode], this.activeMode);
     this.observer = new ResizeObserver(() => this.refreshLayout());
     this.observer.observe(this.app);
+    if (document.documentElement && document.documentElement !== this.app) this.observer.observe(document.documentElement);
     window.visualViewport?.addEventListener('resize', this.refreshLayout, { signal: this.abort.signal });
   }
 
@@ -688,7 +689,9 @@ export class ControlSettings {
   private refreshLayout = (): void => {
     this.utilityObstacles = measureHudObstacles(this.app);
     this.apply(this.saved[this.activeMode], this.activeMode);
-    this.dialog?.style.setProperty('--settings-viewport-height', `${window.visualViewport?.height ?? window.innerHeight}px`);
+    const viewport = settingsViewportSize(this.app, window.visualViewport?.width ?? window.innerWidth, window.visualViewport?.height ?? window.innerHeight);
+    this.dialog?.style.setProperty('--settings-viewport-width', `${viewport.width}px`);
+    this.dialog?.style.setProperty('--settings-viewport-height', `${viewport.height}px`);
     if (!this.dialog?.open) return;
     this.releaseDrag();
     const appRect = controlLayoutSize(this.app);

@@ -55,3 +55,13 @@ test('pending rollback is visible after reload and unchanged Save restores it wi
   await page.locator('#control-save').tap();await expect(page.locator('#control-settings')).toBeHidden();
   expect(await page.evaluate(()=>localStorage.getItem('kaisen-controls-v2'))).toBe(previous);expect(await page.evaluate(()=>localStorage.getItem('kaisen-controls-recovery-v1'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('kaisen-controls-v1'))).toBe(legacy);
 });
+
+test('settings footer and close remain reachable at 200 percent CSS zoom',async({page},info)=>{
+ await page.goto('/');await page.locator('#home-controls').click();await page.locator('#control-editor-touch').click();await page.locator('#control-mode').selectOption('normal');
+ await page.addStyleTag({content:'html { zoom: 2; }'});
+ await page.locator('#control-opacity').scrollIntoViewIfNeeded();await expect(page.locator('#control-opacity')).toBeInViewport();
+ await page.locator('#control-save').scrollIntoViewIfNeeded();await expect(page.locator('#control-save')).toBeInViewport({ratio:1});
+ const dialog=await page.locator('#control-settings').boundingBox(),viewport=page.viewportSize()!;expect(dialog!.x).toBeGreaterThanOrEqual(0);expect(dialog!.x+dialog!.width).toBeLessThanOrEqual(viewport.width);
+ await page.screenshot({path:info.outputPath('lever-settings-css-zoom-200.png')});
+ await page.locator('#control-cancel').click();await expect(page.locator('#control-settings')).toBeHidden();
+});

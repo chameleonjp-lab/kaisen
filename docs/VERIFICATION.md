@@ -526,3 +526,11 @@ Normalはtick7,895／131.5833秒に敵機衝突で敗北し、戦果7,050点と�
 独立レビューで発見したfocused PCキー解除、zoom時レール端点、保存readback、HUD utility重なりを修正。最終実行関連候補の `npm test` は296/296成功、`npm run build`（型検査込み）成功。新規8回帰と既存全体をまとめて実行。既存500kB chunk警告は残る。共通仕様はTHROTTLE_LEVER_CONTRACT.md、pure core/fixtureは他作と同一hash。
 
 ローカルChromiumはOS socket EPERM、cloud localhostはERR_BLOCKED_BY_CLIENTでblocked。アクセス境界の迂回は行わない。PR headをcheckoutする既存CIで全unit/type/build/Pages成果物検査/Chromium/WebKitを実行し、同条件のbefore/after状態と画像を検証する。検査コードと一覧確認は実ブラウザpassではない。画像目視・最終head CI・実iPhone/実touch AT・操作感は未検証で、確定結果はPRへ別記。main更新・merge・配備・公開は本変更の対象外。
+
+## CIで検出した設定ズーム不具合への対応
+
+センリョウの実Chromium/WebKitで200%CSS zoom時に設定の保存ボタンが画面外になることを検出。同じ4作共通のviewport値を、拡大後の画面ピクセルからlayout CSS pxへ幅・高さとも変換し、rootの寸法変化にも追随する修正を追加しました。全4作へ同じhelperと倍率.5/1/2の回帰を適用。実browser gateは保存ボタン全体の可視と左右境界を確認します。
+
+この実行関連候補の全単体は297/297、型/build成功。browser一覧は成功ですが本実行は最終headのCIを別判定します。中間CIの失敗は隠さず、PRに新headの結果を記録します。画像artifactは生成/保存と目視を区別し、現時点の取得・目視は未確認です。
+
+FFの次CIではレバーとpauseが非重複のまま、拡大された宙返りラベルがボタン外へ張り出してpause中心の入力を取得することを座標ログから特定。文字サイズと既存配置を保ち、装飾子のpointer-eventsを無効化してボタン本体を入力域の正本にしました。設定の拡大・多指解除・utility中心の検査は維持します。

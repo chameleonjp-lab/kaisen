@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightControls } from '../src/input';
-import { ThrottleControl } from '../src/throttle-control';
+import { settingsViewportSize } from '../src/control-obstacles';
 import { persistSettingsBatch, readSettingsValue, SETTINGS_RECOVERY_KEY } from '../src/settings-storage';
 const normal = 'kaisen-controls-v2', keyboard = 'kaisen-keyboard-v1';
 function storage() {
@@ -74,4 +74,12 @@ test('zoomed visible handle endpoints produce full continuous throttle',()=>{
     f.win.dispatchEvent(pointer('pointermove',9,312));assert.equal(f.controls.sampleThrottle(),-1);
     f.win.dispatchEvent(pointer('pointermove',9,228));assert.equal(f.controls.sampleThrottle(),0);
   }finally{f.cleanup();}
+});
+
+test('dialog viewport height uses layout units at CSS zoom without double scaling',()=>{
+  for(const scale of [.5,1,2]) {
+    const element={offsetWidth:393,offsetHeight:852,getBoundingClientRect:()=>({width:393*scale,height:852*scale})};
+    assert.deepEqual(settingsViewportSize(element as any,393,852),{width:393/scale,height:852/scale});
+  }
+  assert.deepEqual(settingsViewportSize({offsetWidth:0,offsetHeight:0,getBoundingClientRect:()=>({width:0,height:0})} as any,393,852),{width:393,height:852});
 });
