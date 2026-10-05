@@ -47,7 +47,7 @@ export interface GameEvent {
 export interface FlightInput {
   turn: number; climb: number; fire: boolean; loop: boolean;
   bomb?: boolean; torpedo?: boolean;
-  accelerate?: boolean; brake?: boolean; viewAspect?: number; steeringRevision?: number;
+  throttle?: number; accelerate?: boolean; brake?: boolean; viewAspect?: number; steeringRevision?: number;
 }
 export interface MissionConfig { shipCount: 3 | 4 | 5 | 7; mode: GameMode; }
 export interface MissionStats {

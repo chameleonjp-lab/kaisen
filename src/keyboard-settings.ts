@@ -1,3 +1,4 @@
+import { readSettingsValue } from './settings-storage';
 export const KEYBOARD_STORAGE_KEY = 'kaisen-keyboard-v1';
 export const KEY_ACTIONS = ['left', 'right', 'up', 'down', 'fire', 'loop', 'accelerate', 'brake', 'bomb', 'torpedo', 'pause'] as const;
 export type KeyAction = typeof KEY_ACTIONS[number];
@@ -136,7 +137,7 @@ export class KeyboardSettings {
 
   constructor() {
     let raw: string | null = null;
-    try { raw = localStorage.getItem(KEYBOARD_STORAGE_KEY); } catch { /* Storage is optional. */ }
+    try { raw = readSettingsValue(KEYBOARD_STORAGE_KEY, localStorage); } catch { /* Storage is optional. */ }
     this.current = parseKeyBindings(raw);
   }
 

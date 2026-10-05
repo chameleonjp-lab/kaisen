@@ -28,6 +28,15 @@ jobs:
         run: node scripts/prepare-pages.mjs
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
+      - name: Read pinned unchanged flight baseline for comparison
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3d751051dc6212482a129e8da596ddd349b2f9f5
+          path: .throttle-baseline
+          persist-credentials: false
+      - run: npm ci --prefix .throttle-baseline --ignore-scripts --no-audit --no-fund
+      - name: Compare baseline and lever at identical viewport and input
+        run: node scripts/capture-throttle-comparison.mjs .throttle-baseline
       - name: Preserve browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

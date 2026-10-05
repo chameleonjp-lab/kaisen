@@ -41,14 +41,14 @@ for(const viewport of [{width:393,height:852},{width:568,height:320}]) {
   test.setTimeout(90000);await page.setViewportSize(viewport);await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
   await page.locator('#home-controls').tap();await expect(page.locator('#control-settings')).toBeVisible();
   await page.locator('#control-mode').selectOption('normal');
-  await expect(page.locator('#control-target option')).toHaveCount(6);
+  await expect(page.locator('#control-target option')).toHaveCount(5);
   await expect(page.locator('#control-target option[value="bomb"]')).toHaveText('爆弾');
   await expect(page.locator('#control-target option[value="torpedo"]')).toHaveText('魚雷');
   await page.locator('#control-target').selectOption('fire');
   await page.locator('#control-x').focus();await page.keyboard.press('ArrowLeft');
   const wanted=await page.locator('#control-x').inputValue();await page.locator('#control-save').tap();
   await expect(page.locator('#control-settings')).not.toBeVisible();
-  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('kaisen-controls-v1')!).controls.fire.x)).toBe(Number(wanted)/100);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('kaisen-controls-v2')!).controls.fire.x)).toBe(Number(wanted)/100);
   await page.locator('input[value="normal"]').check();await page.locator('#start').tap();await page.locator('#pause').tap();
   const paused=await read(page);await page.locator('#pause-controls').tap();
   await expect(page.locator('#control-mode')).toBeDisabled();await expect(page.locator('#control-mode')).toHaveValue('normal');
