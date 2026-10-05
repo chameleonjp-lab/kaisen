@@ -176,3 +176,62 @@ for(const viewport of [{width:320,height:568},{width:568,height:320}]) {
   expect(miniature!.height/miniature!.width).toBeCloseTo(lever!.height/lever!.width,1);
  });
 }
+
+// Presentation-only stress fixtures: the live flight is paused through its real UI.
+// We change notification text/font and HUD visibility, never simulation state.
+for (const viewport of [{width:393,height:648},{width:320,height:568},{width:568,height:320},{width:852,height:393}]) {
+  test(`notices avoid sight, radar, HUD and controls with long text ${viewport.width}x${viewport.height}`,async({page},info)=>{
+    await page.setViewportSize(viewport);await openNormal(page);
+    for(const mode of ['normal','easy'] as const){
+      if(mode==='easy'){
+        await page.locator('#pause-home').tap();await page.locator('input[value="easy"]').check();await page.locator('#start').tap();
+      }
+      await page.locator('#pause').tap();await expect.poll(async()=>(await read(page)).phase).toBe('paused');
+      for(const fontScale of [1,2]){
+        await page.evaluate(scale=>{
+          const ally=document.getElementById('ally-announcements')!;
+          ally.textContent='僚機1 戦闘不能（復帰40秒） ×12\n僚機2 戦闘不能（復帰40秒） ×12';
+          ally.dataset.fullText=ally.textContent;
+          ally.style.fontSize=`${11*scale}px`;
+          document.getElementById('payload-status')!.style.fontSize=`${10*scale}px`;
+        },fontScale);
+        await expect(page.locator('#ally-announcements')).toHaveAttribute('data-layout',/clear|summary/);
+        await expect(page.locator('#payload-status')).toHaveAttribute('data-layout',/clear|summary/);
+        if(fontScale===1)await expect(page.locator('#ally-announcements')).toHaveAttribute('data-layout','clear');
+        // ResizeObserver runs after frame callbacks; the next two paints include its relayout.
+        await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+        const geometry=await page.evaluate(()=>{
+          const state=(window as any).__kaisenReadState(false),f=document.getElementById('flight')!.getBoundingClientRect();
+          const rect=(e:Element)=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,x:r.x,y:r.y,width:r.width,height:r.height};};
+          const obstacles=[...document.querySelectorAll('#hud [data-flight-control], .hud-top, .flight-data, #announcement, #warning, #reload-status, #flight-tip, #throttle-layout-note')]
+            .filter(e=>!e.closest('[hidden]')&&e.textContent?.trim()&&e.getBoundingClientRect().width>0).map(rect);
+          const sight=state.mode==='normal'?state.gunSight:{x:f.width/2,y:f.height/2};
+          const radius=(state.mode==='normal'?Math.max(26,Math.min(38,Math.min(f.width,f.height)*.085)):Math.min(f.width,f.height)*.135)+7;
+          obstacles.push({id:'sight-and-reload-ring',x:f.x+sight.x-radius,y:f.y+sight.y-radius,width:radius*2,height:radius*2});
+          const r=f.width<360?42:49;
+          obstacles.push({id:'radar-and-label',x:f.right-18-r*2,y:f.y+Math.min(f.height*.33,180)-r,width:r*2,height:r*2+18});
+          const notices=['ally-announcements','payload-status'].map(id=>({...rect(document.getElementById(id)!),layout:document.getElementById(id)!.dataset.layout,visibility:getComputedStyle(document.getElementById(id)!).visibility}));
+          return {notices,obstacles,viewport:{width:innerWidth,height:innerHeight},note:'Paused real flight; notification text and font are a presentation fixture only'};
+        });
+        await mkdir('test-results/evidence',{recursive:true});
+        const label=`notices-${mode}-${viewport.width}x${viewport.height}-text${fontScale}`;
+        await writeFile(`test-results/evidence/${label}.json`,JSON.stringify(geometry,null,2));
+        if(geometry.notices.some(n=>n.id==='ally-announcements'&&n.layout==='summary')){
+          await expect(page.locator('#pause-ally-news')).toContainText('僚機1 戦闘不能（復帰40秒） ×12');
+          await expect(page.locator('#pause-ally-news')).toContainText('僚機2 戦闘不能（復帰40秒） ×12');
+        }
+        for(const n of geometry.notices){
+          expect(n.layout,`${mode} text ${fontScale}: ${n.id} has a final visible slot`).toMatch(/^(clear|summary)$/);
+          expect(n.visibility).toBe('visible');
+          expect(n.x,`${mode} ${n.id} left`).toBeGreaterThanOrEqual(0);expect(n.y).toBeGreaterThanOrEqual(0);
+          expect(n.x+n.width).toBeLessThanOrEqual(viewport.width+.5);expect(n.y+n.height).toBeLessThanOrEqual(viewport.height+.5);
+          for(const o of [...geometry.obstacles,...geometry.notices.filter(other=>other.id!==n.id)]){
+            expect(n.x+n.width<=o.x+.5||o.x+o.width<=n.x+.5||n.y+n.height<=o.y+.5||o.y+o.height<=n.y+.5,`${mode} text ${fontScale}: ${n.id} avoids ${o.id}`).toBe(true);
+          }
+        }
+        await page.screenshot({path:`test-results/evidence/${label}.png`,style:'#pause-screen {visibility:hidden!important}'});
+        await writeFile(`test-results/evidence/${label}.json`,JSON.stringify(geometry,null,2));
+      }
+    }
+  });
+}

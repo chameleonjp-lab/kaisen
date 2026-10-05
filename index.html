@@ -95,13 +95,13 @@
           <div class="ammo" aria-label="残弾数">機銃 <b id="mg-ammo">288</b> · 機関砲 <b id="cannon-ammo">96</b></div>
         </div>
         <div id="ally-announcements" class="ally-announcements" role="status" aria-live="polite" aria-atomic="true"></div>
-        <p id="payload-status" class="payload-status"></p>
+        <p id="payload-status" class="payload-status" aria-hidden="true"></p>
         <p id="reload-status" class="reload-status" hidden></p>
         <p id="warning" class="warning" role="status" hidden>
           低空注意 · 機首を上げて
         </p>
         <button id="bomb" class="flight-button payload-button" aria-label="爆弾を投下"><span class="payload-name">爆弾</span><small id="bomb-ammo">残り2発</small><small id="bomb-hint">有効圏外</small></button>
-        <button id="torpedo" class="flight-button payload-button" aria-label="魚雷を投下"><span class="payload-name">魚雷</span><small id="torpedo-ammo">残り1発</small></button>
+        <button id="torpedo" class="flight-button payload-button" aria-label="魚雷を投下"><span class="payload-name">魚雷</span><small id="torpedo-ammo">残り1発</small><small id="torpedo-hint">高度↓</small></button>
         <p id="flight-tip" class="flight-tip">触れた位置からドラッグして操縦</p>
         <div class="bottom-controls">
           <button id="loop" class="loop-button">
@@ -130,6 +130,7 @@
           <p class="eyebrow">PAUSED</p>
           <h2 id="pause-title">一時停止</h2>
           <p id="pause-reason">タイムの計測も止まっています</p>
+          <section id="pause-ally-report" class="pause-ally-report" hidden><h3>直近の僚機報告</h3><p id="pause-ally-news"></p></section>
           <button id="pause-reload" class="primary" hidden>再読み込み</button>
           <button id="resume" class="primary">飛行を再開</button
           ><button id="pause-restart" class="secondary">はじめから出撃</button

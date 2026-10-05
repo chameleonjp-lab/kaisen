@@ -998,8 +998,8 @@ p {
 
 /* A separate, non-interactive lane keeps ally news from replacing reload/wave alerts. */
 .ally-announcements {
-  position: absolute; top: calc(245px + var(--safe-top)); right: max(18px, env(safe-area-inset-right));
-  width: min(220px, calc(100% - 164px)); white-space: pre-line; text-align: right;
+  position: absolute; top: calc(245px + var(--safe-top)); left: 18px; right: auto;
+  width: 160px; max-width: calc(100% - 16px); white-space: pre-line; overflow-wrap: anywhere; text-align: left;
   font-size: 11px; line-height: 1.65; color: #cef0ff; text-shadow: 0 1px 4px #001c2c, 0 1px 9px #001c2c;
   pointer-events: none;
 }
@@ -1008,15 +1008,16 @@ p {
 .ally-report summary { cursor: pointer; min-height: 44px; padding: 10px 0; }
 #ally-report-lines { white-space: pre-line; margin: 0; }
 @media (orientation: landscape) and (max-height: 600px) {
-  .ally-announcements { top: calc(163px + var(--safe-top)); width: 205px; font-size: 10px; }
+  .ally-announcements { font-size: 11px; }
 }
 
 .payload-button { font-size: 11px; line-height: 1.35; padding: 3px; border-color: #bdd9cf99; background: #174251d9; }
 .payload-button .payload-name { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .payload-button small { display: block; font-size: 9px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 #bomb[data-ready="true"], #torpedo[data-ready="true"] { border-color: #b7f2c6; background: #31604de0; }
-.payload-status { position: absolute; left: 18px; top: calc(230px + var(--safe-top)); width: 130px; margin: 0; text-align: right; color: #cde2d3; font-size: 10px; text-shadow: 0 1px 5px #001925; pointer-events: none; }
-@media (orientation: landscape) and (max-height: 600px) { .payload-status { top: calc(208px + var(--safe-top)); width: 130px; } }
+.payload-status { position: absolute; left: 18px; top: calc(230px + var(--safe-top)); width: 160px; margin: 0; padding: 4px 6px; border-radius: 4px; background: #082637d9; text-align: center; color: #e1eee5; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; text-shadow: 0 1px 5px #001925; pointer-events: none; }
+#torpedo { line-height: 1.2; }
+#torpedo-hint { font-size: 8px; line-height: 1.2; }
 
 /* The central sight/aircraft lane stays clear; utility controls live between tallies. */
 .hud-top { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); gap: 8px; }
@@ -1095,3 +1096,9 @@ p {
 /* Decorative button text must not extend the input hit area beyond the button.
  * In enlarged text, an overflow label must not steal the adjacent Pause control. */
 #hud #fire > *, #hud #loop > *, #hud #bomb > *, #hud #torpedo > * { pointer-events: none; }
+
+/* Only used when enlarged text cannot fit between the protected flight controls. */
+.ally-announcements[data-layout="summary"] { line-height: 1.2; }
+.pause-ally-report { text-align: left; padding: 8px 10px; border: 1px solid #799fa666; border-radius: 4px; margin: 12px 0; }
+.pause-ally-report h3 { font-size: 12px; margin: 0 0 5px; }
+.pause-ally-report p { font-size: 12px; line-height: 1.6; white-space: pre-line; margin: 0; }
