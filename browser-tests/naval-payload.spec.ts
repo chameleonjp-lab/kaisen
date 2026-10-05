@@ -18,6 +18,9 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
     const hit=await page.locator(`#${id}`).evaluate(element=>{const r=element.getBoundingClientRect();return element.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));});
     expect(hit,`${id} center is physically reachable`).toBe(true);
   }
+  await expect(page.locator('#torpedo-hint')).toHaveText('高度↓');
+  await expect(page.locator('#payload-status')).toContainText('20〜80m');
+  await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','false');
   await page.locator('#torpedo').tap();
   await expect(page.locator('#announcement')).toContainText('魚雷');
   expect((await read(page)).player.torpedoes).toBe(1);
@@ -31,6 +34,8 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect.poll(async()=>(await read(page)).player.bombReloadTicks).toBeGreaterThan(0);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await page.locator('#pause').tap();const paused=await read(page);
+  await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','false');
+  await expect(page.locator('#torpedo-hint')).toHaveText('停止中');
   await page.waitForTimeout(600);expect((await read(page)).player.bombReloadTicks).toBe(paused.player.bombReloadTicks);
   expect((await read(page)).ordnance).toEqual(paused.ordnance);
   await page.locator('#resume').tap();
@@ -45,7 +50,12 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   }
   await steerAndObserve(page,cdp,origin,0,0);
   await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','true');
+  await expect(page.locator('#torpedo-hint')).toHaveText('投下可能');
+  await expect(page.locator('#payload-status')).toContainText('投下可能');
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'torpedo')).toBe(true);
+  await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','false');
+  await expect(page.locator('#torpedo-hint')).toHaveText('装填中');
+  await expect(page.locator('#payload-status')).toContainText('装填');
   await expect.poll(async()=>(await read(page)).ordnance.some((o:any)=>o.owner===1&&o.kind==='torpedo'&&o.phase==='water'),{timeout:12000}).toBe(true);
   const water=await read(page);
   expect(water.player.health).toBeGreaterThan(0);expect(water.player.bombs).toBe(2);

@@ -12,10 +12,10 @@ import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
 import { KeyboardSettings, ControlInputPresentation } from "./keyboard-settings";
-import { missionProgress, payloadReadout } from "./mission-hud";
+import { missionProgress, payloadReadout, torpedoReleaseCue, placeHudNotice, type HudRect } from "./mission-hud";
 import { RulesGuide } from "./rules-guide";
 import { AllyAnnouncements } from "./ally-announcements";
-import { checkTorpedoRelease } from "./ordnance";
+import { aimRadius } from "./aim-indicator";
 import { KaisenScene } from "./scene";
 import { FlightAudio } from "./audio";
 import type { FlightInput, GameEvent, GameMode, GameState } from "./types";
@@ -33,6 +33,8 @@ let state = createGame(undefined, selectedMode);
 let screen: "home" | "playing" | "paused" | "result" = "home";
 let scene: KaisenScene | null = null;
 let graphicsReady = false;
+let noticeLayoutDirty = true;
+let lastAllyNotice = "";
 let contextLost = false;
 const audio = new FlightAudio();
 audio.enabled = false;
@@ -56,6 +58,7 @@ function keyboardDescription() { return keyboardSettings.describe(state.mode); }
 function modeName(mode: GameMode): string { return mode === "easy" ? "イージー" : "ノーマル"; }
 function syncMode() {
   app.dataset.mode = state.mode;
+  noticeLayoutDirty = true;
   controls.setMode(state.mode);
   settings.setActiveMode(state.mode);
   el("normal-controls").hidden = state.mode !== "normal";
@@ -124,6 +127,7 @@ function setScreen(next: typeof screen) {
   settings.close();
   rules?.close();
   screen = next;
+  noticeLayoutDirty = true;
   app.dataset.screen = next;
   el("home").hidden = next !== "home";
   el("hud").hidden = next !== "playing" && next !== "paused";
@@ -185,6 +189,10 @@ function begin() {
   generation++;
   announcementUntil = 0; announcementPriority = 0;
   allyAnnouncements.clear();
+  lastAllyNotice = "";
+  el("pause-ally-report").hidden = true;
+  el("ally-announcements").dataset.fullText = "";
+  el("ally-announcements").removeAttribute("aria-label");
   el("ally-announcements").textContent = "";
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   audio.resetFlight();
@@ -210,6 +218,10 @@ function begin() {
 }
 function home() {
   allyAnnouncements.clear();
+  lastAllyNotice = "";
+  el("pause-ally-report").hidden = true;
+  el("ally-announcements").dataset.fullText = "";
+  el("ally-announcements").removeAttribute("aria-label");
   el("ally-announcements").textContent = "";
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   generation++;
@@ -228,7 +240,10 @@ function pause(reason: string) {
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   pauseReasons.add(reason);
   pauseGame(state);
+  el("pause-ally-news").textContent = lastAllyNotice;
+  el("pause-ally-report").hidden = !lastAllyNotice;
   updateBombCue();
+  updateTorpedoCue();
   accumulator = 0;
   if (screen !== "paused") setScreen("paused");
   el("pause-reason").textContent = contextLost
@@ -249,6 +264,7 @@ function resume() {
   pauseReasons.clear();
   resumeGame(state);
   updateBombCue();
+  updateTorpedoCue();
   accumulator = 0;
   lastFrame = 0;
   setScreen("playing");
@@ -260,6 +276,7 @@ function finish() {
   controls.clear();
   audio.finishFlight();
   setScreen("result");
+  updateTorpedoCue();
   el("announcement").textContent = "";
   const r = state.result;
   el("result-title").textContent =
@@ -306,6 +323,17 @@ function updateBombCue() {
   el("bomb-hint").textContent = bombCue.text;
   el("bomb").setAttribute("aria-label", `爆弾を投下・${payloadReadout(state.player.bombs, state.player.bombReloadTicks)}・${bombCue.text}（予測）`);
 }
+function updateTorpedoCue() {
+  const torpedoCue = torpedoReleaseCue(state);
+  el("torpedo").setAttribute("aria-label", `魚雷を投下・${payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks)}・${torpedoCue.text}`);
+  el("torpedo").dataset.ready = String(torpedoCue.ready);
+  el("torpedo-hint").textContent = torpedoCue.short;
+  if (el("payload-status").dataset.fullText !== torpedoCue.text) {
+    el("payload-status").dataset.fullText = torpedoCue.text;
+    el("payload-status").textContent = torpedoCue.text;
+    noticeLayoutDirty = true;
+  }
+}
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
   el("score").textContent = String(Math.round(state.stats.score));
@@ -315,10 +343,7 @@ function updateHUD() {
   el("bomb-ammo").textContent = payloadReadout(state.player.bombs, state.player.bombReloadTicks);
   el("torpedo-ammo").textContent = payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks);
   updateBombCue();
-  el("torpedo").setAttribute("aria-label", `魚雷を投下・${payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks)}`);
-  const torpedoCheck = checkTorpedoRelease(state.player, state.elapsed);
-  el("torpedo").dataset.ready = String(torpedoCheck.allowed && state.player.torpedoReloadTicks === 0);
-  el("payload-status").textContent = torpedoCheck.allowed ? "魚雷投下可能" : "";
+  updateTorpedoCue();
   el("mg-ammo").textContent = String(state.player.mg);
   el("cannon-ammo").textContent = String(state.player.cannon);
   const reloading = state.player.reloadTicksRemaining > 0;
@@ -348,8 +373,98 @@ function updateHUD() {
   el("flight-tip").hidden = state.elapsed > 8;
   if (state.elapsed > announcementUntil) el("announcement").textContent = "";
   const allyText = allyAnnouncements.update(state.elapsed).join("\n");
-  if (el("ally-announcements").textContent !== allyText) el("ally-announcements").textContent = allyText;
+  if (el("ally-announcements").dataset.fullText !== allyText) {
+    el("ally-announcements").dataset.fullText = allyText;
+    el("ally-announcements").textContent = allyText;
+    if (allyText) lastAllyNotice = allyText;
+    else el("ally-announcements").removeAttribute("aria-label");
+    noticeLayoutDirty = true;
+  }
+  positionHudNotices();
 }
+
+const noticeResize = new ResizeObserver(() => { noticeLayoutDirty = true; });
+for (const element of [app, ...Object.values(buttons), ...document.querySelectorAll<HTMLElement>(".hud-top, .flight-data, #announcement, #warning, #reload-status, #flight-tip, #throttle-layout-note, #ally-announcements, #payload-status")]) noticeResize.observe(element);
+const noticeAttributes = new WeakMap<Element, string>();
+const noticeMutations = new MutationObserver(records => {
+  for (const record of records) {
+    const element = record.target as Element, value = `${element.getAttribute('style')}|${element.hasAttribute('hidden')}`;
+    if (noticeAttributes.get(element) !== value) { noticeAttributes.set(element, value); noticeLayoutDirty = true; }
+  }
+});
+for (const element of Object.values(buttons)) noticeMutations.observe(element, { attributes:true, attributeFilter:['style','hidden'] });
+for (const id of ['warning','reload-status','flight-tip','throttle-layout-note']) noticeMutations.observe(el(id), { attributes:true, attributeFilter:['hidden'] });
+function positionHudNotices() {
+  if (!noticeLayoutDirty || !scene || el("hud").hidden) return;
+  noticeLayoutDirty = false;
+  const root = app.getBoundingClientRect(), flight = canvas.getBoundingClientRect();
+  const scaleX = root.width / app.offsetWidth, scaleY = root.height / app.offsetHeight;
+  if (!(scaleX > 0 && scaleY > 0)) return;
+  const viewport = window.visualViewport;
+  const probe = app.querySelector<HTMLElement>('.control-safe-area-probe') ?? document.querySelector<HTMLElement>('.control-safe-area-probe');
+  const safe = probe ? getComputedStyle(probe) : null;
+  const inset = (side: 'Top'|'Right'|'Bottom'|'Left') => Math.max(0, parseFloat(safe?.[`padding${side}`] ?? '0') || 0) * (side === 'Left' || side === 'Right' ? scaleX : scaleY);
+  const bounds = { x: Math.max(root.left, viewport?.offsetLeft ?? 0) + 8, y: Math.max(root.top, viewport?.offsetTop ?? 0) + 8,
+    width: Math.min(root.right, (viewport?.offsetLeft ?? 0) + (viewport?.width ?? innerWidth)) - Math.max(root.left, viewport?.offsetLeft ?? 0) - 16,
+    height: Math.min(root.bottom, (viewport?.offsetTop ?? 0) + (viewport?.height ?? innerHeight)) - Math.max(root.top, viewport?.offsetTop ?? 0) - 16 };
+  bounds.x += inset('Left'); bounds.y += inset('Top');
+  bounds.width -= inset('Left') + inset('Right'); bounds.height -= inset('Top') + inset('Bottom');
+  const rect = (element: HTMLElement): HudRect => { const r = element.getBoundingClientRect(); return { x:r.x, y:r.y, width:r.width, height:r.height }; };
+  const visible = (element: HTMLElement) => !element.closest('[hidden]') && element.getBoundingClientRect().width > 0;
+  const obstacles = [...Object.values(buttons), ...document.querySelectorAll<HTMLElement>(".hud-top, .flight-data, #announcement, #warning, #reload-status, #flight-tip, #throttle-layout-note")]
+    .filter(element => visible(element) && (element.textContent?.trim() || element === buttons.throttle)).map(rect);
+  const sight = state.mode === "normal" ? scene.gunSight(state) : { x:flight.width / 2, y:flight.height / 2 };
+  const radius = aimRadius(state.mode, flight.width, flight.height) + 12;
+  obstacles.push({ x:flight.left + sight.x - radius, y:flight.top + sight.y - radius, width:radius * 2, height:radius * 2 });
+  const radarRadius = flight.width < 360 ? 42 : 49;
+  obstacles.push({ x:flight.right - 18 - radarRadius * 2, y:flight.top + Math.min(flight.height * .33, 180) - radarRadius,
+    width:radarRadius * 2, height:radarRadius * 2 + 18 });
+  // Ally news has no duplicate on its control; reserve its space before the payload detail.
+  for (const id of ["ally-announcements", "payload-status"] as const) {
+    const notice = el(id), full = notice.dataset.fullText ?? notice.textContent ?? "";
+    if (!full.trim()) continue;
+    notice.textContent = full;
+    notice.dataset.layout = "clear";
+    const preferred = (measured: HudRect) => {
+      const torpedo = rect(buttons.torpedo);
+      return id === "payload-status"
+        ? { x:torpedo.x + torpedo.width / 2 - measured.width / 2, y:torpedo.y - measured.height - 8 }
+        : { x:bounds.x + bounds.width - measured.width, y:flight.top + Math.min(flight.height * .33, 180) + radarRadius + 24 };
+    };
+    const fit = (widths: number[]) => {
+      for (const width of widths) {
+        notice.style.width = `${Math.min(width, bounds.width / scaleX)}px`;
+        const measured = rect(notice), placed = placeHudNotice(bounds, measured, obstacles, preferred(measured));
+        if (placed) return placed;
+      }
+      return null;
+    };
+    let placed = fit([160, 200, 130, 260, bounds.width / scaleX]);
+    if (!placed) {
+      // Crowded/large-text fallback retains the full news in the existing pause UI.
+      // No new scrolling control competes with steering. The weapon keeps its full accessible label.
+      notice.dataset.layout = "summary";
+      if (id === "ally-announcements") {
+        lastAllyNotice = full;
+        el("pause-ally-news").textContent = full;
+        el("pause-ally-report").hidden = false;
+        notice.textContent = `僚機の報告${full.split("\n").length}件\n一時停止で確認`;
+      } else notice.textContent = `魚雷：${torpedoReleaseCue(state).short}`;
+      notice.setAttribute("aria-label", full);
+      placed = fit([160, 200, 130, 96, 260, bounds.width / scaleX]);
+    } else notice.removeAttribute("aria-label");
+    // No text is allowed to cover a control/sight even with an impossible custom layout.
+    // The complete ally report remains available from Pause; the torpedo label remains on its button.
+    notice.style.visibility = placed ? "visible" : "hidden";
+    if (!placed) notice.dataset.layout = "unavailable";
+    if (placed) {
+      notice.style.left = `${(placed.x - root.left) / scaleX}px`;
+      notice.style.top = `${(placed.y - root.top) / scaleY}px`;
+      obstacles.push(placed);
+    }
+  }
+}
+
 function positionReloadStatus() {
   if (state.mode === "normal" && scene) {
     const sight = scene.gunSight(state);
@@ -462,7 +577,7 @@ function frame() {
   }
   if (scene && !contextLost) {
     scene.render(state, screen === "playing" || screen === "paused", dt);
-    if (screen === "paused") positionReloadStatus();
+    if (screen === "paused") { positionReloadStatus(); positionHudNotices(); }
     if (scene.diagnostics().queue.status === "failed") {
       renderStatus = "failed";
       if (screen === "home") preparationFailed(new Error("GPU frame completion unavailable"));
@@ -515,8 +630,8 @@ canvas.addEventListener("webglcontextrestored", () => {
   el<HTMLButtonElement>("resume").disabled = false;
   el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
 });
-window.addEventListener("resize", () => scene?.resize());
-window.visualViewport?.addEventListener("resize", () => scene?.resize());
+window.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
+window.visualViewport?.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) pause("restored");
 });
@@ -630,6 +745,8 @@ window.addEventListener("pagehide", (event) => {
   disposed = true;
   cancelAnimationFrame(frameId);
   controls.dispose();
+  noticeResize.disconnect();
+  noticeMutations.disconnect();
   settings.dispose();
   rules?.dispose();
   unsubscribeKeyboard(); unsubscribePresentation(); inputPresentation.dispose();
