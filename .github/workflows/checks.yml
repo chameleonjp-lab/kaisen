@@ -27,7 +27,6 @@ jobs:
           BUILD_COMMIT: ${{ github.event.pull_request.head.sha }}
         run: node scripts/prepare-pages.mjs
       - run: npx playwright install --with-deps chromium webkit
-      - run: npm run test:browser
       - name: Read pinned unchanged flight baseline for comparison
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -37,11 +36,14 @@ jobs:
       - run: npm ci --prefix .throttle-baseline --ignore-scripts --no-audit --no-fund
       - name: Compare baseline and lever at identical viewport and input
         run: node scripts/capture-throttle-comparison.mjs .throttle-baseline
+      - run: npm run test:browser
       - name: Preserve browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: kaisen-browser-${{ github.event.pull_request.head.sha }}
-          path: test-results/
+          path: |
+            test-results/
+            comparison-results/
           retention-days: 7
           if-no-files-found: warn
