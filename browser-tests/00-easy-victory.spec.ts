@@ -55,6 +55,15 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }, info) => {
   await mkdir("test-results/evidence", { recursive: true });
   const snapshot = await state(page).catch(() => null);
+  if (info.status !== "passed") {
+    console.error('EASY_VICTORY_PAUSE_DIAGNOSTICS ' + JSON.stringify({
+      status: info.status, phase: snapshot?.phase, screen: snapshot?.screen, mode: snapshot?.mode,
+      tick: snapshot?.tick, elapsed: snapshot?.elapsed, graphicsReady: snapshot?.graphicsReady,
+      pauseReasons: snapshot?.pauseReasons, lastInterruption: snapshot?.lastInterruption,
+      renderStatus: snapshot?.renderStatus, queue: snapshot?.render?.queue,
+      controlsInput: snapshot?.controlsInput, errors,
+    }));
+  }
   await writeFile(
     "test-results/evidence/touch-victory-state.json",
     JSON.stringify({ status: info.status, errors, snapshot, samples,
