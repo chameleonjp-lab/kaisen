@@ -40,8 +40,7 @@ const allyAnnouncements = new AllyAnnouncements();
 const buttons = {
     fire: el<HTMLButtonElement>("fire"),
     loop: el<HTMLButtonElement>("loop"),
-    accelerate: el<HTMLButtonElement>("accelerate"),
-    brake: el<HTMLButtonElement>("brake"),
+    throttle: el<HTMLElement>("throttle"),
     bomb: el<HTMLButtonElement>("bomb"),
     torpedo: el<HTMLButtonElement>("torpedo"),
 };
@@ -72,7 +71,7 @@ function syncInstructions() {
   el("input-guide").textContent = touch ? "画面をドラッグして操縦" : "キーボードで操縦";
   el("mode-guide").textContent = state.mode === "easy"
     ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"
-    : touch ? "照準補助なし・手動射撃 · 射撃・加減速はボタンを長押し" : "照準補助なし・手動射撃 · 射撃・加減速はキーを長押し";
+    : touch ? "照準補助なし・手動射撃 · 射撃は長押し · 速度レバーは上下、離すと速度を保持" : "照準補助なし・手動射撃 · 射撃・加減速はキーを長押し";
   el("keyboard-guide").hidden = touch;
   el("keyboard-guide").textContent = keyboardDescription();
 }
@@ -386,17 +385,17 @@ function frame() {
       if (frameIntervals.length > 3600) frameIntervals.shift();
     }
     accumulator += dt;
-    const input = controls.sample();
+    const input = controls.sample(false);
     pendingLoop ||= input.loop; pendingBomb ||= Boolean(input.bomb); pendingTorpedo ||= Boolean(input.torpedo);
     input.viewAspect = scene?.camera.aspect ?? 1;
     const events: GameEvent[] = [];
     let first = true;
     const begin = performance.now();
     while (accumulator + 1e-9 >= FIXED_DT && state.phase === "playing") {
+      const consumed = { ...input, throttle: controls.sampleThrottle(), loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo };
       if (import.meta.env.DEV) {
         // Record the input actually consumed by a fixed step. A later DOM read
         // only bounds handler arrival and cannot reconstruct separate key/payload timing.
-        const consumed = { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo };
         const signature = JSON.stringify(consumed);
         if (signature !== inputAuditSignature) {
           if (inputAudit.length < 20000) inputAudit.push({tick:state.tick+1,input:consumed});
@@ -404,7 +403,7 @@ function frame() {
           inputAuditSignature=signature;
         }
       }
-      stepGame(state, { ...input, loop: first && pendingLoop, bomb: first && pendingBomb, torpedo: first && pendingTorpedo }, FIXED_DT);
+      stepGame(state, consumed, FIXED_DT);
       events.push(...state.events);
       accumulator -= FIXED_DT;
       first = false;

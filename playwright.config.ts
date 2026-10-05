@@ -5,7 +5,7 @@ export default defineConfig({
   expect: { timeout: 15000 },
   workers: 1,
   projects: [
-    { name: "webkit-ui", testMatch: /mobile-settings-ui\.spec\.ts/, use: { browserName: "webkit", launchOptions: {} } },
+    { name: "webkit-ui", testMatch: /(?:mobile-settings-ui|throttle-lever-ui)\.spec\.ts/, use: { browserName: "webkit", launchOptions: {} } },
     { name: "chromium", use: { browserName: "chromium" } },
   ],
   retries: 0,

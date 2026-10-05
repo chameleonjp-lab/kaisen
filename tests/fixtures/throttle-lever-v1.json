@@ -1,0 +1,47 @@
+{
+  "contractVersion": 1,
+  "deadzone": 0.08,
+  "axis": [
+    { "raw": -2, "expected": -1 },
+    { "raw": -1, "expected": -1 },
+    { "raw": -0.54, "expected": -0.5 },
+    { "raw": -0.08, "expected": 0 },
+    { "raw": -0.079, "expected": 0 },
+    { "raw": 0, "expected": 0 },
+    { "raw": 0.079, "expected": 0 },
+    { "raw": 0.08, "expected": 0 },
+    { "raw": 0.54, "expected": 0.5 },
+    { "raw": 1, "expected": 1 },
+    { "raw": 2, "expected": 1 }
+  ],
+  "pointer": [
+    { "y": -100, "top": 100, "bottom": 200, "expected": 1 },
+    { "y": 100, "top": 100, "bottom": 200, "expected": 1 },
+    { "y": 123, "top": 100, "bottom": 200, "expected": 0.5 },
+    { "y": 146, "top": 100, "bottom": 200, "expected": 0 },
+    { "y": 150, "top": 100, "bottom": 200, "expected": 0 },
+    { "y": 154, "top": 100, "bottom": 200, "expected": 0 },
+    { "y": 177, "top": 100, "bottom": 200, "expected": -0.5 },
+    { "y": 200, "top": 100, "bottom": 200, "expected": -1 },
+    { "y": 400, "top": 100, "bottom": 200, "expected": -1 },
+    { "y": 100, "top": 100, "bottom": 100, "expected": 0 }
+  ],
+  "combine": [
+    { "pointer": 0.5, "accelerate": false, "brake": false, "expected": 0.5 },
+    { "pointer": 0.5, "accelerate": true, "brake": false, "expected": 1 },
+    { "pointer": 0.5, "accelerate": false, "brake": true, "expected": -0.5 },
+    { "pointer": 0.5, "accelerate": true, "brake": true, "expected": 0.5 },
+    { "pointer": 0, "accelerate": true, "brake": true, "expected": 0 },
+    { "pointer": 0, "accelerate": false, "brake": false, "focused": 1, "expected": 1 }
+  ],
+  "advance": [
+    { "start": 110, "axis": 1, "dt": 1, "mode": "normal", "expected": 128 },
+    { "start": 110, "axis": -1, "dt": 1, "mode": "normal", "expected": 92 },
+    { "start": 110, "axis": 0.5, "dt": 1, "mode": "normal", "expected": 119 },
+    { "start": 119, "axis": 0, "dt": 1, "mode": "normal", "expected": 119 },
+    { "start": 140, "axis": 1, "dt": 1, "mode": "normal", "expected": 141 },
+    { "start": 66, "axis": -1, "dt": 1, "mode": "normal", "expected": 65 },
+    { "start": 110, "axis": 1, "dt": 1, "mode": "easy", "expected": 110 },
+    { "start": 110, "axis": -1, "dt": 1, "mode": "easy", "expected": 110 }
+  ]
+}

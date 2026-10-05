@@ -47,7 +47,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         expect(state.pauseReasons).toEqual(['render']);
         expect(state.render.queue.failure).toBeNull();
         expect(state.lastInterruption?.reason).toBe('stalled');
-        const emptyInput = {turn:0,climb:0,steerPointer:null,
+        const emptyInput = {turn:0,climb:0,steerPointer:null,throttle:0,throttlePointer:null,
           heldPointers:{fire:[],loop:[],accelerate:[],brake:[],bomb:[],torpedo:[]},keys:[]};
         expect(state.controlsInput, 'Product must clear input before driver cleanup').toEqual(emptyInput);
         await page.keyboard.up('Space'); await page.keyboard.up('w'); await page.keyboard.up('s');

@@ -111,8 +111,11 @@
         </div>
         <div id="normal-controls" hidden>
           <button id="fire" class="flight-button fire-button" aria-label="射撃（長押し）">射撃</button>
-          <button id="accelerate" class="flight-button throttle-button" aria-label="加速（長押し）">加速</button>
-          <button id="brake" class="flight-button throttle-button" aria-label="減速（長押し）">減速</button>
+          <div id="throttle" class="flight-button throttle-lever" role="slider" tabindex="0" aria-label="速度レバー" aria-describedby="throttle-help" aria-orientation="vertical" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-valuetext="保持（速度を維持）">
+            <span class="throttle-up">加速</span><span class="throttle-center">保持</span><span class="throttle-down">減速</span><i class="throttle-handle" aria-hidden="true"></i>
+          </div>
+          <p id="throttle-layout-note" role="status" hidden>速度レバーを配置できません。画面を回転するか、停止画面の操作設定で配置を調整してください。</p>
+          <span id="throttle-help" class="visually-hidden">上で加速、下で減速。離すと中央に戻り、調整した速度を保持します。フォーカス中は矢印キーで調整できます。</span>
         </div>
       </section>
       <section

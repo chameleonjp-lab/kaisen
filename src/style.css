@@ -981,7 +981,7 @@ p {
 
 .control-safe-area-probe { position: absolute; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 #app .bottom-controls { position: static; }
-#app #hud button[data-flight-control] {
+#app #hud [data-flight-control] {
   position: absolute; left: var(--control-x); top: var(--control-y);
   right: auto; bottom: auto !important; width: var(--control-size); height: var(--control-size);
   transform: translate(-50%, -50%); margin: 0; opacity: var(--control-opacity);
@@ -1070,3 +1070,28 @@ p {
 
 #bomb[data-ready="true"] .payload-name { color: #e2ffe7; }
 #bomb-hint { font-size: 8px; line-height: 1.15; color: #eff7ef; }
+
+/* Spring-centred rate lever: rectangular bounds match the settings preview. */
+#app #hud #throttle {
+  height: var(--control-height, 128px);
+  border-radius: 22px;
+  padding: 0;
+  overflow: visible;
+  isolation: isolate;
+}
+.throttle-lever::before { content: ''; position: absolute; top: 22px; bottom: 22px; left: calc(50% - 2px); width: 4px; background: #a5c4c8; border-radius: 2px; }
+.throttle-lever > span { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 700; z-index: 2; pointer-events: none; text-shadow: 0 1px 3px #00131d; }
+.throttle-up { top: 2px; }.throttle-down { bottom: 2px; }.throttle-center { top: calc(50% - 7px); }
+.throttle-handle { position: absolute; width: 44px; height: 44px; left: calc(50% - 22px); top: calc((100% - 44px) * (1 - var(--throttle-axis, 0)) / 2); border-radius: 12px; background: #315667; border: 2px solid #f2dfad; box-shadow: 0 2px 5px #00131d99; pointer-events: none; }
+#throttle:focus-visible { outline: 3px solid #fff4c9; outline-offset: 4px; }
+#control-settings .preview-control.preview-throttle { height: var(--control-height); border-radius: 8px; }
+.preview-throttle::before { content: ''; position: absolute; width: 2px; top: 10%; bottom: 10%; left: calc(50% - 1px); background: #bad4cf; }
+.preview-throttle > i { position: absolute; width: 70%; height: 24%; left: 15%; top: 38%; border-radius: 3px; border: 1px solid #ffe2a4; background: #315667; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+#throttle.layout-blocked { visibility: hidden; pointer-events: none; }
+#throttle-layout-note { position: absolute; left: 12px; bottom: 12px; max-width: 180px; padding: 8px; background: #142a37; color: #fff4c9; font-size: 12px; }
+.preview-throttle.layout-blocked { border-color: #ffab98; }
+
+/* Decorative button text must not extend the input hit area beyond the button.
+ * In enlarged text, an overflow label must not steal the adjacent Pause control. */
+#hud #fire > *, #hud #loop > *, #hud #bomb > *, #hud #torpedo > * { pointer-events: none; }

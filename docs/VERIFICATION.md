@@ -518,3 +518,25 @@ Normalはtick7,895／131.5833秒に敵機衝突で敗北し、戦果7,050点と�
 
 
 最終修正候補の作業境界: 2026-10-04 22:19 UTC確認、全274単体pass（47.931秒、fail/skip0）・型/build pass。JS804.96kB/gzip218.36、CSS28.74kB/gzip7.13。原稿だけを直すたびのpushは行わず、精度・説明・試験操縦と固定回帰を一括保存する。現在候補の実ブラウザはこれから実行し、CI38の36passを新headの合格へ転用しない。既存37ケースと勝利条件を保持する。
+
+## 2026-10-05 速度レバー置換（Draft PR候補）
+
+対象base `3d751051dc6212482a129e8da596ddd349b2f9f5`。Normalの旧加速/減速2ボタンを連続上下速度レバーへ置換、EasyとPC割当・65..141m/s・18m/s毎秒・空力を維持。旧v1 rawは非破壊で読み取り、明示保存だけ作品固有v2へ移行。recovery journal/write/rollback読戻しと未来形式拒否を実装。機体・scene・camera・audioのファイル差分はゼロ。
+
+独立レビューで発見したfocused PCキー解除、zoom時レール端点、保存readback、HUD utility重なりを修正。最終実行関連候補の `npm test` は296/296成功、`npm run build`（型検査込み）成功。新規8回帰と既存全体をまとめて実行。既存500kB chunk警告は残る。共通仕様はTHROTTLE_LEVER_CONTRACT.md、pure core/fixtureは他作と同一hash。
+
+ローカルChromiumはOS socket EPERM、cloud localhostはERR_BLOCKED_BY_CLIENTでblocked。アクセス境界の迂回は行わない。PR headをcheckoutする既存CIで全unit/type/build/Pages成果物検査/Chromium/WebKitを実行し、同条件のbefore/after状態と画像を検証する。検査コードと一覧確認は実ブラウザpassではない。画像目視・最終head CI・実iPhone/実touch AT・操作感は未検証で、確定結果はPRへ別記。main更新・merge・配備・公開は本変更の対象外。
+
+## CIで検出した設定ズーム不具合への対応
+
+センリョウの実Chromium/WebKitで200%CSS zoom時に設定の保存ボタンが画面外になることを検出。同じ4作共通のviewport値を、拡大後の画面ピクセルからlayout CSS pxへ幅・高さとも変換し、rootの寸法変化にも追随する修正を追加しました。全4作へ同じhelperと倍率.5/1/2の回帰を適用。実browser gateは保存ボタン全体の可視と左右境界を確認します。
+
+この実行関連候補の全単体は297/297、型/build成功。browser一覧は成功ですが本実行は最終headのCIを別判定します。中間CIの失敗は隠さず、PRに新headの結果を記録します。画像artifactは生成/保存と目視を区別し、現時点の取得・目視は未確認です。
+
+FFの次CIではレバーとpauseが非重複のまま、拡大された宙返りラベルがボタン外へ張り出してpause中心の入力を取得することを座標ログから特定。文字サイズと既存配置を保ち、装飾子のpointer-eventsを無効化してボタン本体を入力域の正本にしました。設定の拡大・多指解除・utility中心の検査は維持します。
+
+## 比較ハーネスのtick同期
+
+開始後の固定200ms待ちだけでは準備rAFの位相で本体tickが1回ずれることをCIで検出しました。実UIから開始し、既存の読取専用観測を使って中立入力のまま論理tick12へ揃えて比較します。tick超過・準備失敗・state不一致は引き続き失敗とし、ゲーム状態の注入や差分の許容で通しません。時計step数と正確なtickを条件JSONへ残します。
+
+比較ハーネスをfull browser suiteより先に実行し、対象tick等の前提失敗を早期に検出します。全unit/type/build/成果物/ブラウザgateは維持し、比較PNG/conditionsは別のcomparison-resultsへ保存して後のPlaywright出力初期化で失わないようにします。

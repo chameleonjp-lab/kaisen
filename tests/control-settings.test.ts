@@ -31,15 +31,15 @@ test('only exact legacy payload defaults move to the lower edge without mutating
 });
 
 test('layout and keyboard persistence roll back together when any write fails', () => {
-  const storage = storageFixture(); storage.values.set('normal', 'before');
+  const storage = storageFixture(); storage.values.set('kaisen-controls-v2', 'before');
   const write = storage.setItem;
-  storage.setItem = (key, value) => { if (key === 'keys' && value === 'new keys') throw new Error('quota'); write(key, value); };
-  assert.equal(persistControlSettings([{ key: 'normal', value: 'after' }, { key: 'easy', value: 'new easy' }, { key: 'keys', value: 'new keys' }], storage), false);
-  assert.equal(storage.getItem('normal'), 'before');
-  assert.equal(storage.getItem('easy'), null);
-  assert.equal(storage.getItem('keys'), null);
-  assert.equal(persistControlSettings([{ key: 'normal', value: 'after' }], storage), true);
-  assert.equal(storage.getItem('normal'), 'after');
+  storage.setItem = (key, value) => { if (key === 'kaisen-keyboard-v1' && value === 'new keys') throw new Error('quota'); write(key, value); };
+  assert.equal(persistControlSettings([{ key: 'kaisen-controls-v2', value: 'after' }, { key: 'kaisen-controls-easy-v2', value: 'new easy' }, { key: 'kaisen-keyboard-v1', value: 'new keys' }], storage), false);
+  assert.equal(storage.getItem('kaisen-controls-v2'), 'before');
+  assert.equal(storage.getItem('kaisen-controls-easy-v2'), null);
+  assert.equal(storage.getItem('kaisen-keyboard-v1'), null);
+  assert.equal(persistControlSettings([{ key: 'kaisen-controls-v2', value: 'after' }], storage), true);
+  assert.equal(storage.getItem('kaisen-controls-v2'), 'after');
 });
 
 test('unavailable storage reads cannot cause partial writes', () => {
@@ -92,7 +92,7 @@ test('save applies both drafts only after successful persistence; cancel restore
     assert.equal(dialog.returnValue, 'save');
     assert.equal(keyboard.code('bomb'), 'KeyB');
     assert.equal(JSON.parse(storage.getItem(KEYBOARD_STORAGE_KEY)!).bindings.bomb, 'KeyB');
-    assert.equal(JSON.parse(storage.getItem('kaisen-controls-v1')!).controls.bomb.x, .2);
+    assert.equal(JSON.parse(storage.getItem('kaisen-controls-v2')!).controls.bomb.x, .2);
     editor.draft.normal.bomb.x = .7; editor.keyDraft.bomb = 'KeyC'; editor.capturing = 'bomb';
     editor.onClosed();
     assert.equal(editor.draft.normal.bomb.x, .2); assert.equal(editor.keyDraft.bomb, 'KeyB');
@@ -158,4 +158,18 @@ test('default touch controls keep safe edges and payloads separate in portrait a
     }
     assert.ok(rects.bomb.y > height * .8 && rects.torpedo.y > height * .8, 'payloads stay near the lower edge');
   }
+});
+
+test('an explicit unchanged Save retries pending recovery, and opening/cancelling never writes', () => {
+  const descriptor=Object.getOwnPropertyDescriptor(globalThis,'localStorage'),storage=storageFixture();
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:storage});
+  try {
+    const key='kaisen-controls-v2',previous=JSON.stringify({version:2,controls:DEFAULT_LAYOUT});
+    storage.values.set(key,'partial');storage.values.set('kaisen-controls-recovery-v1',JSON.stringify({version:1,previous:[{key,value:previous,next:'partial'}]}));
+    const {editor,dialog}=dialogFixture();editor.recoveryPending=true;
+    editor.onClosed();assert.equal(storage.getItem(key),'partial');
+    editor.save();assert.equal(dialog.returnValue,'save');assert.equal(storage.getItem(key),previous);assert.equal(storage.getItem('kaisen-controls-recovery-v1'),null);
+    const future='{"version":3}';storage.values.set(key,future);storage.values.set('kaisen-controls-recovery-v1',JSON.stringify({version:1,previous:[{key,value:previous,next:'partial'}]}));
+    const second=dialogFixture();second.editor.recoveryPending=true;second.editor.save();assert.equal(second.dialog.returnValue,'');assert.equal(storage.getItem(key),future);assert.equal(second.editor.saveFailedAwaitingUse,true);
+  } finally {if(descriptor)Object.defineProperty(globalThis,'localStorage',descriptor);else Reflect.deleteProperty(globalThis,'localStorage');}
 });

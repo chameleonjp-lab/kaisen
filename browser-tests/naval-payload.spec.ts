@@ -14,7 +14,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
   await page.locator('input[value="normal"]').check();await page.locator('#start').tap();
-  for(const id of ['fire','loop','accelerate','brake','bomb','torpedo']) {
+  for(const id of ['fire','loop','throttle','bomb','torpedo']) {
     const hit=await page.locator(`#${id}`).evaluate(element=>{const r=element.getBoundingClientRect();return element.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));});
     expect(hit,`${id} center is physically reachable`).toBe(true);
   }
