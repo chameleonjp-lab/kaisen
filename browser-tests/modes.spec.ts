@@ -95,7 +95,8 @@ test('Normal real simultaneous touch steering, fire and throttle release on paus
   await expect.poll(async () => (await read(page)).player.speed).toBeGreaterThan(112);
   expect(Math.abs((await read(page)).player.yaw)).toBeGreaterThan(.04);
   const heldSpeed = (await read(page)).player.speed;
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [moved, fire] });
+  // Same Chromium WebTouch semantics as touch-command.ts: name the ending contact.
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [accelerate] });
   await expect(page.locator('#throttle')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#fire')).toHaveAttribute('aria-pressed', 'true');
   expect((await read(page)).controlsInput.steerPointer).not.toBeNull();
@@ -167,7 +168,11 @@ for(const viewport of [{width:320,height:568},{width:568,height:320}]) {
    expect(await page.locator('#'+id).evaluate(element=>{const r=element.getBoundingClientRect();return element.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})).toBe(true);
   }
   await page.locator('#pause').tap();await page.locator('#pause-controls').tap();await page.locator('#control-target').selectOption('throttle');
-  const preview=await page.locator('#control-preview').boundingBox();const miniature=await page.locator('[data-control="throttle"]').boundingBox();const ratio=preview!.width/viewport.width;
-  expect(miniature!.height/ratio).toBeCloseTo(lever!.height,0);
+  // Layout CSS-pixel sizing uses offsetWidth; boundingBox retains fractional
+  // borders and must not be substituted as the layout scaling denominator.
+  const ratio=await page.locator('#control-preview').evaluate(element=>(element as HTMLElement).offsetWidth/document.getElementById('app')!.offsetWidth);
+  const miniature=await page.locator('[data-control="throttle"]').boundingBox();
+  expect(miniature!.height).toBeCloseTo(lever!.height*ratio,1);
+  expect(miniature!.height/miniature!.width).toBeCloseTo(lever!.height/lever!.width,1);
  });
 }
