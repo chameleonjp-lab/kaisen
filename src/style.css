@@ -1098,7 +1098,7 @@ p {
 #hud #fire > *, #hud #loop > *, #hud #bomb > *, #hud #torpedo > * { pointer-events: none; }
 
 /* Only used when enlarged text cannot fit between the protected flight controls. */
-.ally-announcements[data-layout="summary"] { line-height: 1.35; }
+.ally-announcements[data-layout="summary"] { line-height: 1.2; }
 .pause-ally-report { text-align: left; padding: 8px 10px; border: 1px solid #799fa666; border-radius: 4px; margin: 12px 0; }
 .pause-ally-report h3 { font-size: 12px; margin: 0 0 5px; }
 .pause-ally-report p { font-size: 12px; line-height: 1.6; white-space: pre-line; margin: 0; }

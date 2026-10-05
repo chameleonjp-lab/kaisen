@@ -448,10 +448,10 @@ function positionHudNotices() {
         lastAllyNotice = full;
         el("pause-ally-news").textContent = full;
         el("pause-ally-report").hidden = false;
-        notice.textContent = `僚機の報告${full.split("\n").length}件\n一時停止で確認`;
+        notice.textContent = `僚機報告${full.split("\n").length}件\nⅡで全文`;
       } else notice.textContent = `魚雷：${torpedoReleaseCue(state).short}`;
       notice.setAttribute("aria-label", full);
-      placed = fit([160, 200, 130, 96, 260, bounds.width / scaleX]);
+      placed = fit([160, 200, 130, 96, 88, 260, bounds.width / scaleX]);
     } else notice.removeAttribute("aria-label");
     // No text is allowed to cover a control/sight even with an impossible custom layout.
     // The complete ally report remains available from Pause; the torpedo label remains on its button.

@@ -210,22 +210,25 @@ for (const viewport of [{width:393,height:648},{width:320,height:568},{width:568
           obstacles.push({id:'sight-and-reload-ring',x:f.x+sight.x-radius,y:f.y+sight.y-radius,width:radius*2,height:radius*2});
           const r=f.width<360?42:49;
           obstacles.push({id:'radar-and-label',x:f.right-18-r*2,y:f.y+Math.min(f.height*.33,180)-r,width:r*2,height:r*2+18});
-          const notices=['ally-announcements','payload-status'].map(id=>({...rect(document.getElementById(id)!),layout:document.getElementById(id)!.dataset.layout}));
+          const notices=['ally-announcements','payload-status'].map(id=>({...rect(document.getElementById(id)!),layout:document.getElementById(id)!.dataset.layout,visibility:getComputedStyle(document.getElementById(id)!).visibility}));
           return {notices,obstacles,viewport:{width:innerWidth,height:innerHeight},note:'Paused real flight; notification text and font are a presentation fixture only'};
         });
+        await mkdir('test-results/evidence',{recursive:true});
+        const label=`notices-${mode}-${viewport.width}x${viewport.height}-text${fontScale}`;
+        await writeFile(`test-results/evidence/${label}.json`,JSON.stringify(geometry,null,2));
         if(geometry.notices.some(n=>n.id==='ally-announcements'&&n.layout==='summary')){
           await expect(page.locator('#pause-ally-news')).toContainText('僚機1 戦闘不能（復帰40秒） ×12');
           await expect(page.locator('#pause-ally-news')).toContainText('僚機2 戦闘不能（復帰40秒） ×12');
         }
         for(const n of geometry.notices){
+          expect(n.layout,`${mode} text ${fontScale}: ${n.id} has a final visible slot`).toMatch(/^(clear|summary)$/);
+          expect(n.visibility).toBe('visible');
           expect(n.x,`${mode} ${n.id} left`).toBeGreaterThanOrEqual(0);expect(n.y).toBeGreaterThanOrEqual(0);
           expect(n.x+n.width).toBeLessThanOrEqual(viewport.width+.5);expect(n.y+n.height).toBeLessThanOrEqual(viewport.height+.5);
           for(const o of [...geometry.obstacles,...geometry.notices.filter(other=>other.id!==n.id)]){
             expect(n.x+n.width<=o.x+.5||o.x+o.width<=n.x+.5||n.y+n.height<=o.y+.5||o.y+o.height<=n.y+.5,`${mode} text ${fontScale}: ${n.id} avoids ${o.id}`).toBe(true);
           }
         }
-        await mkdir('test-results/evidence',{recursive:true});
-        const label=`notices-${mode}-${viewport.width}x${viewport.height}-text${fontScale}`;
         await page.screenshot({path:`test-results/evidence/${label}.png`,style:'#pause-screen {visibility:hidden!important}'});
         await writeFile(`test-results/evidence/${label}.json`,JSON.stringify(geometry,null,2));
       }

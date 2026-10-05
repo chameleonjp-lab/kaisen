@@ -95,3 +95,16 @@ test('notice placement handles enlarged text, short landscape, and explicitly re
   }
   assert.equal(placeHudNotice({x:0,y:0,width:100,height:100},{width:40,height:40},[{x:0,y:0,width:100,height:100}],{x:0,y:0}),null);
 });
+
+
+test('CI45 Easy compact report fits both previously unavailable 200-percent viewports', () => {
+  const fixtures=[{"viewport": {"width": 568, "height": 320}, "obstacles": [{"id": "hud-top", "x": 12, "y": 12, "width": 544, "height": 64}, {"id": "flight-data", "x": 18, "y": 77, "width": 118, "height": 113}, {"id": "bomb", "x": 195.921875, "y": 260.796875, "width": 51.1875, "height": 51.1875}, {"id": "torpedo", "x": 309.515625, "y": 260.796875, "width": 51.1875, "height": 51.1875}, {"id": "flight-tip", "x": 90, "y": 270.3125, "width": 77, "height": 18.6875}, {"id": "loop", "x": 445.84375, "y": 185.59375, "width": 51.1875, "height": 51.1875}, {"id": "announcement", "x": 198.359375, "y": 171, "width": 171.28125, "height": 17}, {"id": "sight-and-reload-ring", "x": 228.8, "y": 104.8, "width": 110.4, "height": 110.4}, {"id": "radar-and-label", "x": 452, "y": 56.60000000000001, "width": 98, "height": 116}], "size": {"width": 160, "height": 62.8}}, {"viewport": {"width": 320, "height": 568}, "obstacles": [{"id": "hud-top", "x": 12, "y": 16, "width": 296, "height": 97}, {"id": "flight-data", "x": 18, "y": 136, "width": 118, "height": 113}, {"id": "bomb", "x": 98.796875, "y": 507.90625, "width": 52, "height": 52}, {"id": "torpedo", "x": 162.796875, "y": 507.90625, "width": 52, "height": 52}, {"id": "flight-tip", "x": 20, "y": 458.3125, "width": 77, "height": 18.6875}, {"id": "loop", "x": 229.59375, "y": 338.875, "width": 72, "height": 72}, {"id": "announcement", "x": 74.359375, "y": 419, "width": 171.28125, "height": 17}, {"id": "sight-and-reload-ring", "x": 104.8, "y": 228.8, "width": 110.4, "height": 110.4}, {"id": "radar-and-label", "x": 218, "y": 138, "width": 84, "height": 102}], "size": {"width": 160, "height": 62.8}}];
+  for(const f of fixtures){
+    const bounds={x:8,y:8,width:f.viewport.width-16,height:f.viewport.height-16};
+    assert.equal(placeHudNotice(bounds,{width:200,height:69.375},f.obstacles,{x:bounds.width-200,y:240}),null,'old expanded summary does not fit the captured scene');
+    const placed=placeHudNotice(bounds,f.size,f.obstacles,{x:bounds.width-f.size.width,y:240});
+    assert.ok(placed,JSON.stringify(f.viewport));
+    assert.ok(!f.obstacles.some(o=>overlaps(placed,o)));
+    assert.ok(placed.x+placed.width<=f.viewport.width-8&&placed.y+placed.height<=f.viewport.height-8);
+  }
+});
