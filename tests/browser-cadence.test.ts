@@ -11,7 +11,7 @@ test('Easy fleet pilot clears actual CI26 request/acceptance delays without satu
   const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci26.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'easy'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
-  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
   let pending:{tick:number;input:FlightInput}|null=null;
   for(let tick=0;tick<60*600&&state.phase==='playing';tick++) {
     if(pending&&tick>=pending.tick){held=pending.input;pending=null;}
@@ -21,7 +21,7 @@ test('Easy fleet pilot clears actual CI26 request/acceptance delays without satu
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+cycle.deliveryTicks,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+cycle.deliveryTicks,input:{...request,viewAspect:393/852,steeringActive:true,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
     stepGame(state,held);
   }
@@ -33,7 +33,7 @@ test('Easy fleet pilot clears actual CI26 request/acceptance delays without satu
 for (const mode of ['easy','normal'] as const) test(`${mode} browser pilot clears with recorded uneven sampling plus one-tick delivery lag`, context=>{
   const state=createGame(undefined,mode),pilot=createBrowserMissionPilot();startGame(state);
   let next=cadence.startTick,index=0;
-  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
   let pending:{tick:number;input:FlightInput}|null=null;
   for(let tick=0;tick<60*600&&state.phase==='playing';tick++) {
     if(pending&&tick>=pending.tick){held=pending.input;pending=null;}
@@ -44,7 +44,7 @@ for (const mode of ['easy','normal'] as const) test(`${mode} browser pilot clear
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+1,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+1,input:{...request,viewAspect:393/852,steeringActive:true,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
     assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);
@@ -59,7 +59,7 @@ for (const lag of [1,5]) test(`Normal fleet-first pilot clears acceptance-relati
   const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-cadence-ci20.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'normal'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
-  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
   let pending:{tick:number;input:FlightInput}|null=null;
   for(let tick=0;tick<60*600&&state.phase==='playing';tick++) {
     if(pending&&tick>=pending.tick){held=pending.input;pending=null;}
@@ -71,7 +71,7 @@ for (const lag of [1,5]) test(`Normal fleet-first pilot clears acceptance-relati
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+lag,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+lag,input:{...request,viewAspect:393/852,steeringActive:true,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
     assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);
@@ -86,7 +86,7 @@ test('Normal recovery pilot clears actual CI21 observed request/acceptance timin
   const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci21.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'normal'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
-  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
   let pending:{tick:number;input:FlightInput}|null=null;
   for(let tick=0;tick<60*600&&state.phase==='playing';tick++) {
     if(pending&&tick>=pending.tick){held=pending.input;pending=null;}
@@ -98,7 +98,7 @@ test('Normal recovery pilot clears actual CI21 observed request/acceptance timin
       const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),distance=Math.hypot(dx,dy);
       assert.ok(distance<=36+1e-9);
       const response=distance/36<=.08?0:(distance/36-.08)/.92;
-      pending={tick:tick+cycle.deliveryTicks,input:{...request,viewAspect:393/852,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
+      pending={tick:tick+cycle.deliveryTicks,input:{...request,viewAspect:393/852,steeringActive:true,turn:distance?dx/distance*response:0,climb:distance?-dy/distance*response:0}};
     }
     assert.ok(!(held.accelerate&&held.brake),'delayed dodge delivery must release the previous opposite throttle');
     stepGame(state,held);

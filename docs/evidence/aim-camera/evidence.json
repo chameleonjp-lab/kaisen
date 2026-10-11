@@ -1,0 +1,1979 @@
+{
+  "schema_version": 1,
+  "repository": "chameleonjp-lab/kaisen",
+  "base_main": "519fd0d50dfb2ce9a1145c0b58a1301b5c74d032",
+  "branch": "codex/zero-series-aim-camera-20261012",
+  "recorded_at": "2026-10-11T19:06:21.478Z",
+  "source_sha256": {
+    "src/ai.ts": "8d6050f92f08b55b053430c706c46ca37683a65901e20a86dcf9fc2242da59c2",
+    "src/aim-indicator.ts": "7fe63983b420549e0ecf582a8c883e56804c5555c16e1d82312c9e7c33a72c94",
+    "src/aircraft-batch.ts": "cd69fdcd03507faffca251b311f253f4ccd10aa0bb11fbfc767626a4960c5428",
+    "src/aircraft-damage.ts": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83",
+    "src/aircraft-tracers.ts": "fb6cd860fcabe4f541b75ae167a6fb4b83f063e195f99ef272c4aa8559a1b4b7",
+    "src/aircraft.ts": "1a9c18f93e5a48869882b2aa2946cdeb352dc4a8acd76b4fd9beade8ded621d5",
+    "src/ally-announcements.ts": "7b267a199a71fd993f0b92ace235eeeb175265544e2b204daad76de5c9aeb6d6",
+    "src/ammunition.ts": "a8cafceea6d20183f7257c2a4036d36a92feba830d5050d98fb9c9a6d5271370",
+    "src/atmosphere.ts": "e6b9c95f0685bb2732926e72730c96712251813a2c6c6faa150a21793c2c1f7a",
+    "src/audio.ts": "3396f7b46c42d331ccf2270c77bee5ad2037167064dca4c7710fc444bf0514e8",
+    "src/bomb-blast.ts": "76cadd55191c9d08aba199b97325a9c6f439081495d83578febafe7db45c3ee0",
+    "src/bomb-guide.ts": "9b069f4ccda5a478adf67c7c42aa982a59b13d2e7820179d88415ee1485c762b",
+    "src/control-obstacles.ts": "cacd1cff5a216dc45a1c9d5eba95b261d2d3343d517290d3b4c0fd85421dac67",
+    "src/control-settings.css": "7ee104c0d05bafc920ca7afd4c31502e984b1438fc7742864bd79d95d6fdf69d",
+    "src/control-settings.ts": "4d2154d4cb952ad68f7569a8d76ce394b124dcb249507cdf3d4acef213c705e6",
+    "src/dialog-focus.ts": "86d631a4d618558e1ca671004c12ccc1fbdfe75516e6c5d04f962acd2c5e1996",
+    "src/flight-assist.ts": "e51454fb4e209e2463addeabb6156db067edacf308f9e6a8962fd16d79aa0aa2",
+    "src/flight-target.ts": "d93d32e3afa7814005de2f8f5a102a624350db6cd9f5e1ebe46eb94350763961",
+    "src/flight-view.ts": "1f9b7e040c2270de5838f24bad93c7ac1c75c7827ba3c1b58591ef6271a20363",
+    "src/flight.ts": "638648fb173981cf233c0a16b1420a2ccd574ae654530cd1b79b624743524ca7",
+    "src/gun-sight.ts": "436c9e7c6a6864513489de6d8172d85d97bd1bf685b60678890f848a9acd2b71",
+    "src/input.ts": "a488158fc2f1983c7ffb53943df90d4bf57350d49c49fb07a514b9b69f099d00",
+    "src/keyboard-settings.ts": "53a0f6eb8f9c41b0aa5e272cfde7931f1e226ac0a0c30ede1b9517c0b5080a86",
+    "src/main.ts": "2227f16259771a165c8f93819145c119553889c3ef13cf05e3eeda1e828d2ad3",
+    "src/mission-hud.ts": "4ec28f467a9bfda8af1dec87eb3e6fe87a1f73d38ace7f7460866b043fb88df2",
+    "src/mission.ts": "8ea4aa79ee850d8849d4c2141b246654f5d970f445dd3593a2061e401e327922",
+    "src/naval-damage.ts": "af122931da2ccaf520894528d5e0663372f713bac4362fcf6ca5175e5c658084",
+    "src/naval.ts": "b02e758791bfddd6ebc06b643b25d0c209392fe3426cc900cfb02fd631396d83",
+    "src/ocean.ts": "0f2263700d5b9c5516e81d77fd4e2b6341c94a257b6edb2893f8d41ddbb574d0",
+    "src/ordnance-view.ts": "13301f6bddf0df587fbcdb4f1684e2089f45a3fcca1120559a1cc22bb099645b",
+    "src/ordnance.ts": "524410fc8a90978fde49f2f8341cb39617509b2fc7ff765792c1e37e43aa86c7",
+    "src/render-queue.ts": "8ec4611984beb7168ead1a7e758faf399b0cc0b73939502352be984ab35648f7",
+    "src/rules-guide.ts": "36d9c73dbff03b669bc0c9769d7321b595562f1a0c3896c10a2aa89d296dce8e",
+    "src/scene.ts": "8ad3f417686f7808e499e7a585be3a9c87a35500efaecadcec3808ffdc76367f",
+    "src/scoring.ts": "542a3860fcb6558a76d497559d08d925eb140626e5b2354f99a250e0d8d8fca3",
+    "src/sea-contact.ts": "887f47926e3a2305672a5e2b9901403d402a8fc352383f01a74bf03380bc2612",
+    "src/settings-storage.ts": "f27b88f010c770032ac836b58b0081cf3a1c1e40ac5335b8625ef71549bd1929",
+    "src/ship-motion.ts": "add5748015717beb0a4a08f6f388e5a7030f679837e455b5854346ea75108dc8",
+    "src/ship-wreck.ts": "ae76873890da33d69504ef240e1cf6441f46ae0420802e4c4d5e005c67630ee3",
+    "src/ships.ts": "78c25b5de6fd1ced806589f3378ba5a27a0741e58e28d7823d564a72ab9d95c1",
+    "src/simulation.ts": "37eabc79151741843eefe67d08081824d33a08223bbad1be52892bb524571490",
+    "src/style.css": "da27632e18e408787007f39129ad73c1891b571b8dad2994d7f31e20687058e1",
+    "src/throttle-control.ts": "99b45ef5b506ee7a051f80152bf3ce1dcf7a5f521a7c446f6021e76a67163466",
+    "src/throttle-lever.ts": "e83fe3c570581d16cb76e08ef9a039bbe9d4a50da6575366ac7e126bf3f30cf0",
+    "src/types.ts": "e784a711f6daf969ee7c16265795fc89be91c5fbad6f112a86e73751b4aa55ca",
+    "tests/ai.test.ts": "2cca424c9d4877ebcd4ba760dc9b3e37be601911297cde21b6c791e7f720fb4f",
+    "tests/aim-indicator.test.ts": "92da31455546890b24309df8200cbbc39ceb634552fe17abca35bae35d186077",
+    "tests/aircraft-batch.test.ts": "490c28f1449d48cc3bb68ef69826014a590211dd5d7ccbd6ce558b2199e3c4b7",
+    "tests/aircraft-damage.test.ts": "e9666973ed017060e702dd0dedbbc06ae188ac9ca1b1e768d84d4a7f5878e765",
+    "tests/aircraft-tracers.test.ts": "aafa3ce5fc01c8d61d1109bfb72802bac4d3e435e3f144155c77f206903fdfdb",
+    "tests/ally-announcements.test.ts": "548b46d02d1423f7a21f80f3987581b793befaf137cb6f0a0a833d7cf40a56dc",
+    "tests/audio.test.ts": "07a5b2d1c653734e13b26de21514ba7c2b773ad998a2ebacc310c704623fcdbe",
+    "tests/bomb-guide.test.ts": "2e38f26aa1c838a10d29a7cd0da2c5999fd7b4a52ec4be8e9745f27162b2f88c",
+    "tests/browser-cadence.test.ts": "28cdd940014c69ccd1f133d2d742e34e0e66a538c243f059a03781c2ce2d29a3",
+    "tests/browser-components.test.ts": "c3385ad20d02aa7fd494ad2056516a9ad86b5fa5bf191bc48003825d375133d4",
+    "tests/consumed-input-replay.test.ts": "5f87e37b4b5ea67836d8ef543cc7027291ef12d9ea3a8abfa860ea239a3be690",
+    "tests/control-settings.test.ts": "b1f78814c8c19f5daa81011c15c8112104af8178b68415d5e51d9ab91855c200",
+    "tests/dialog-focus.test.ts": "03a7694d8923a8cd66075a640a1b4fa34d99bae930e861f0652531250a1590c5",
+    "tests/easy-ship-tracking.test.ts": "9368360fa40ac5d65955f61df152121e3eb20eb5054acf56e5c7ff2281660a6e",
+    "tests/easy-shot-correction.test.ts": "1ebc680a33d682f5f42bb65750d941d8fa24a994b2f49dd5fead9578d6aed684",
+    "tests/feedback-rules.test.ts": "fd9c073c53c50bbe8beafacaec44d28a7b4cbb6da7f7bea4b3c8720db3b6a93c",
+    "tests/fixtures/browser-input-acceptance-ci21.json": "54a49b236fdf0740f514f2d8e2ef6cac61356d7bb2cdbc5d0022a44bb84347dd",
+    "tests/fixtures/browser-input-acceptance-ci26.json": "227cf37aa4fd17cbe363ebcfbf30a1ad812a19a3314dca9b6d77c2ad55494e85",
+    "tests/fixtures/browser-input-cadence-ci20.json": "eb746e3dc810476dd30ee77f1356ccdd9009b81ba29cb291ee57e7318c4e951c",
+    "tests/fixtures/browser-input-cadence.json": "b45bee35895e359cb53b8205ea2227be3010bd166035f42c44311865495bbc21",
+    "tests/fixtures/browser-input-components-ci28.json": "d4f41dd1d98ebc5f26f240d2dc5a1502c4e85f5db326d69af80a3b0dc89ddef6",
+    "tests/fixtures/consumed-inputs-ci28.json": "338f346d8460c471fa5a70a76545371445e619b85ecac4899e05d5cc15223742",
+    "tests/fixtures/normal-collision-ci38.json": "fa519da268334d51a1007249ae7792bf32ca05314b4e7a9cfd66757a761d34a6",
+    "tests/fixtures/throttle-lever-v1.json": "416c5ac01d4d14d1f45d94385e07233090740db04382e468db1f0c64689df8ca",
+    "tests/fleet-scale.test.ts": "b3ce7e8c29a1b2cc3f77bd0a38adebaba8f6523ecaa02bd826a15e84b2a470ae",
+    "tests/flight-target-regression.test.ts": "06e69767e81a55a446749229402a080fe0a6eec2145ef85f5d596fb03bda8d95",
+    "tests/flight.test.ts": "281f6c4d615935b41bd7e41cfce09067b775d4d0fa2b056f88e277fb6e645c94",
+    "tests/helpers/feedback-easy-pilot.ts": "25a3b87ab5926187fae60e44102c68503cacccaa6e78358e761e4633936eb1b8",
+    "tests/helpers/large-fleet-pilot.ts": "b5a6f54845d45d872e9e6990b9954a02bffa2417b3f8f6579725ddb64147fa47",
+    "tests/helpers/mission-browser-pilot.ts": "813b1dcf445bd8b41db730e32da8144a369293b125ef8ac868e0280b4a815d27",
+    "tests/helpers/normal-mission-pilot.ts": "2a2c5db744f4d58ac09a46713f36f7823b741b3abc019f2fd3fa3fd3f54068d5",
+    "tests/helpers/touch-reload-pilot.ts": "c4eede6d5a6b1c9c16b548d48f02ea70ce2216ccc425245d629d66bab6320e6f",
+    "tests/input-ownership-regression.test.ts": "37fac20e30b9257d0dcacd49e320ac58dc33402046996a2cdbd06cd4307e6ccf",
+    "tests/input-ownership.test.ts": "f2634613ae9982e9742210fa62cd9fc4e552fcadca9cabdaf386dc8f984e66ce",
+    "tests/input-recovery.test.ts": "955d9debdb015869134664d8729c22587f2b760646ce912343344b8c279ab1de",
+    "tests/iowa-model.test.ts": "8195b3f62bfccbdca8b6fa9990dadeb3401618e6d135a09dd14947c78bfbf4ae",
+    "tests/keyboard-settings.test.ts": "d41cb190fbaf037ddf073c6c610e5348efa070961293aad901a07b480cb6d248",
+    "tests/mission-dodge.test.ts": "9564ef82cdcaf7b16fee1b3173af2d2d4384d777262ff6ea8b7e6330221ebdf3",
+    "tests/mission-hud.test.ts": "4c9b106a0aee45c643537bac5ca7b24261cbc2110705147e1d17f15a7e8efa97",
+    "tests/mission-rules.test.ts": "57ab5f825b2e0ac5950fba787e0d0da5ecb0718286dea7cec17a7952d6378f62",
+    "tests/modes.test.ts": "fe914d6b64306137a22217063aa3b91fb2b182de1192a63db1bce2f138a2fce6",
+    "tests/naval-audio.test.ts": "f64faceca064d76d3d12e8b13de8957fdb3b1f5b3b5bcc119b623aaced233bdc",
+    "tests/naval-effects.test.ts": "b1d6361dc35a76c260871cd5f43d2ae9ad5f500478bc4b894f71bed97de871c8",
+    "tests/naval-presentation.test.ts": "cd07f861938b4262354a2cd2a0f35a643eb25da53cc2318224c6202ffdc227a5",
+    "tests/naval-weapon-roles.test.ts": "aadd5e48499c71956d025070374d01b5eafe331b9221f1faf96833ceb56c852b",
+    "tests/naval.test.ts": "4c43494265611d3b20812e5b2927b537b0c1710c19095311c523d8a99e923484",
+    "tests/normal-collision-regression.test.ts": "7ea357a0cad2c89a92e947d708f9f1c7cfe77d80094e7b4166dfe290f171c715",
+    "tests/normal-mission.test.ts": "8114a91130f771823bbf1ae704c34f535f509e19ac04e3978c3017b23a8611fb",
+    "tests/ordnance.test.ts": "799438558eb6b1975e2c49d376cfb5d8aaaed6071f82711660949a97ab46830a",
+    "tests/payload-input.test.ts": "7a567ecdf4681f883bce0def5ae9682c88252d0ba07afdb4606906e14e9c2787",
+    "tests/render-queue.test.ts": "77142c2a04ce7b4ebba6a4997f789f88520d40321436302027473153e13fbbe7",
+    "tests/review-event-bound.test.ts": "08d0d4755aae2962e7b500e82e809079bd44f934935f252bb45cf83eb6c45719",
+    "tests/review-input-ownership.test.ts": "9bb4631c126566bf39a6ced3433348ceb8619ac011b844021754c0ec8fd3bd91",
+    "tests/rules-guide.test.ts": "d9688dcefc05c4e6ad8293bb5cb7ef5d0c6f4f9db69917656191718e051794c1",
+    "tests/scene-lifecycle.test.ts": "8b7c74d6eeee531b9478e9ed3b25ffa8a917b4242a6a64205ec199f5616a0a9d",
+    "tests/scoring.test.ts": "e7f4fbcb90c7dd8e390c329941178329e4cc2d382c400894ffd3dfbb7fb2e703",
+    "tests/sea-contact.test.ts": "385bc457275de346cf6e558cdc8b73a8c067804f60a9fdba844c5d32c302ea8d",
+    "tests/ship-wreck.test.ts": "0ccd186884a363f000712763e5a163ff6a0c090358a5cff5f462de027b6ab9fa",
+    "tests/simulation.test.ts": "620f462439d6874f352807f30547b948822205ece2f5d740e6acf4601e94672b",
+    "tests/throttle-lever.test.ts": "15198c9a0b59eb5d0f11971ba8642baa21a10fbdee8d98f4c8072f12bc79cc22",
+    "tests/throttle-review.test.ts": "27f8735d36e1d03d55615e897607f8256bb7b2c4a2586a46f066291751a4e40c",
+    "tests/touch-reload.test.ts": "e677be6660a21708e4bd542c9761cd3d3d41bdcc11059f51db194cdcf3b0828a",
+    "scripts/air-sea-balance-report.ts": "80cf8291fc58ec508cb0a26a53810fa82c6de25ede63fa9a875228c374687f77",
+    "scripts/capture-throttle-comparison.mjs": "116e14386aa8e7fd90c220e6e916a74b0593c4c02c8d778f76025a89e340875e",
+    "scripts/easy-assist-report.ts": "0ab3acab81c5c792fd0c4d6e2e1685c95c7e34bd5e390b01944b7b8839bb4215",
+    "scripts/easy-idle-report.ts": "286ef6ba8e45b4dc8338d40af23bae5ecfa61c601227e6d81f654e5aab480323",
+    "scripts/fleet-fire-report.ts": "2bdea83295f904d61a4ce98b8e75031ca1dc33dc1b4765edc590bedcb5bff804",
+    "scripts/prepare-pages.mjs": "b898d94936548ceb225efbc9b9a91e54dc3b025e7c0657db4f5128c48cc9424b",
+    "scripts/replay-consumed-inputs.ts": "1cbc8b30ed5bf8280ebecf9986ed1dc6b3cc3fa5e74e6f61e5f9130e2c20019e",
+    "browser-tests/00-00-input-method.spec.ts": "67435db1a3d9e851df0e36e900185c8c474d43dc5a32712f7348c0709ee6c4a2",
+    "browser-tests/00-easy-victory.spec.ts": "a27a31756c3774653cd3ebb2357e2097560b215da02ecf3be9900c74684e7855",
+    "browser-tests/00-normal-victory.spec.ts": "9da5c1cd7aeb7743f33125b570bac246650d27022b7bdae552ca9eb8cada6441",
+    "browser-tests/bomb-guide.spec.ts": "d77374bdbbf793ff2a19d2d2536ae34e3faad3889bd3404450edfed1b483c02c",
+    "browser-tests/easy-ship-tracking.spec.ts": "229db87f72c1354041eb0277bd07a54699fb374daa43801a1e93f51abf1efebf",
+    "browser-tests/feedback-runtime.spec.ts": "4f37c7fb98176f1057efffa9d79222be0f73c8f603e25799fd65a3f67387aad3",
+    "browser-tests/feedback-settings.spec.ts": "946f3e813d4ca6492ec6bcbeb7f1b8872ede6b74216942aa64c7b3fc48380be3",
+    "browser-tests/game.spec.ts": "8526188a42fe5dd28f041b1b143e4afb945be43a6363c34b24702c8b74ac65e9",
+    "browser-tests/mobile-settings-ui.spec.ts": "9f7e5f309bdc6923611a28ce571dca8c5a37d93856c28487398010ce5bd2c1a3",
+    "browser-tests/modes.spec.ts": "100b6d39c357368e392ba796b66b1b7337583d773a947fc4348556dbba136662",
+    "browser-tests/naval-payload.spec.ts": "c0400f7830acf51c6fa868daf2748eca31315871ee0b5a84384ec8920d045020",
+    "browser-tests/reinforcement.spec.ts": "b7156d787440c4f80fe3c9732b8aaa1d79c7f2b77794f8078aa6f6575e545cda",
+    "browser-tests/reload.spec.ts": "f4aee40978bf4e05fd0fca8a07f1bc6c27a26432e8208dece2fed8b0610cf0ac",
+    "browser-tests/review-accessibility.spec.ts": "2c15c5193b57b28a9f7067bbbbc1eb584b52de1b22960776005a71c18d0d359d",
+    "browser-tests/score-result.ts": "289e18feaf3d132e1f5a8acc9bb90e85041482b9636fe5de51c24a99183cfe34",
+    "browser-tests/throttle-lever-ui.spec.ts": "0a9e688045e25c71be465ddcab9879c5ece74a1be82054ec2433bedb3b2ce308",
+    "browser-tests/touch-command.ts": "c16f80d161eef73c6002fc72f389cfb39a55abe0882a8b5d15a0a11bb0b2a63a",
+    "browser-tests/tracers.spec.ts": "b1eb536757a0486c0cab3edbe80b200e538ef249748bdcf4fe3edaf9e8da255f",
+    "docs/evidence/aim-camera/verify-normal-fire.mts": "ecbe1c8c68f68132be948014ff660bb0c4e5ad8e2214ee958cd793ac695debf2",
+    "tests/mission-browser-pilot-regression.test.ts": "023007ab305c0a3d41b77a620641cebd172089545becad8d361fc6990a16fb09",
+    "tests/fixtures/browser-input-acceptance-aim-ci.json": "66d8443db6a6b9ae95cc450c3766a650b43c95e265cdb41d9889810aebfeb8e5"
+  },
+  "checks": {
+    "unit": {
+      "command": "npm test",
+      "exit_code": 0,
+      "passed": 316,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "740245e123590e93dea40aa41d766abb6cc13e2544a52d9b19522f24e8acfe82",
+      "log_utc_mtime": "2026-10-11T18:49:25.531Z"
+    },
+    "build": {
+      "command": "npm run build",
+      "exit_code": 0,
+      "log_sha256": "9a0b06a7a0bda0aac8c7f5ec6490409cecf97d10fc815580d33d009deb152c3e",
+      "log_utc_mtime": "2026-10-11T18:49:05.423Z"
+    },
+    "related_browser": {
+      "command": "PLAYWRIGHT_BROWSERS_PATH=<browser-cache> npm run test:browser -- --project=chromium --grep \"changing from touch\"",
+      "result": "1 pass（入力方式変更の関連経路）。全browser suiteの合格ではない。",
+      "log_sha256": "e22643501481feae90c50c2d77a162b97eb77166ad077aac93cade84cec97ab6"
+    },
+    "normal_fire": {
+      "command": "node --import tsx docs/evidence/aim-camera/verify-normal-fire.mts",
+      "exit_code": 0,
+      "result_sha256": "e6f7e4b9725d56923becd837e44d5bd310ef5c649b43613a2095050689ca28f7",
+      "script_sha256": "ecbe1c8c68f68132be948014ff660bb0c4e5ad8e2214ee958cd793ac695debf2"
+    }
+  },
+  "product_browser": {
+    "browser": "153.0.8010.0",
+    "engine": "Chromium / SwiftShader",
+    "built_bundle": true,
+    "font": "Noto Sans JP / @fontsource/noto-sans-jp 5.3.1, installed only in verification environment",
+    "deterministic_seed": false,
+    "note": "native start/mode/resize/pause/settings, no fixture injection; protective RAF pause may cover a live last accepted frame",
+    "rows": [
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 320,
+        "height": 568,
+        "dpr": 1,
+        "file": "normal-320x568-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 114,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 162,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 98.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 162.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 229.59375,
+              "y": 338.875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 216,
+              "y": 429.109375,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 22.390625,
+              "y": 362,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 320,
+          "height": 568
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 393,
+        "height": 852,
+        "dpr": 1,
+        "file": "normal-393x852-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 226,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 274,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 127.265625,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 205.859375,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 290.1875,
+              "y": 526.3125,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 278.1875,
+              "y": 667.671875,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 34.796875,
+              "y": 575,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 393,
+          "height": 852
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 852,
+        "height": 393,
+        "dpr": 1,
+        "file": "normal-852x393-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 685,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 733,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 306.265625,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 476.671875,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 675.71875,
+              "y": 227.9375,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 675.71875,
+              "y": 298.671875,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 113.390625,
+              "y": 231.875,
+              "width": 62.875,
+              "height": 125.75
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 852,
+          "height": 393
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 568,
+        "height": 320,
+        "dpr": 1,
+        "file": "normal-568x320-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 401,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 449,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 195.921875,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 309.515625,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 445.84375,
+              "y": 185.59375,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 445.84375,
+              "y": 243.203125,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 70.953125,
+              "y": 188.8046875,
+              "width": 51.1875,
+              "height": 102.390625
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 568,
+          "height": 320
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1,
+        "file": "normal-1280x720-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 1113,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 1161,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 473.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 729.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 1026.390625,
+              "y": 439.1875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 1014.390625,
+              "y": 556.796875,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 185.59375,
+              "y": 476,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 320,
+        "height": 568,
+        "dpr": 1,
+        "file": "easy-320x568-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 114,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 162,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 98.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 162.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 229.59375,
+              "y": 338.875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 320,
+          "height": 568
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 393,
+        "height": 852,
+        "dpr": 1,
+        "file": "easy-393x852-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 226,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 274,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 127.265625,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 205.859375,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 290.1875,
+              "y": 526.3125,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 393,
+          "height": 852
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 852,
+        "height": 393,
+        "dpr": 1,
+        "file": "easy-852x393-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 685,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 733,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 306.265625,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 476.671875,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 675.71875,
+              "y": 227.9375,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 852,
+          "height": 393
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 568,
+        "height": 320,
+        "dpr": 1,
+        "file": "easy-568x320-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 401,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 449,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 195.921875,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 309.515625,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 445.84375,
+              "y": 185.59375,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 568,
+          "height": 320
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1,
+        "file": "easy-1280x720-dpr1.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 1113,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 1161,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 473.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 729.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 1026.390625,
+              "y": 439.1875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 320,
+        "height": 568,
+        "dpr": 2,
+        "file": "normal-320x568-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 114,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 162,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 98.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 162.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 229.59375,
+              "y": 338.875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 216,
+              "y": 429.109375,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 22.390625,
+              "y": 362,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 320,
+          "height": 568
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 393,
+        "height": 852,
+        "dpr": 2,
+        "file": "normal-393x852-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 226,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 274,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 127.265625,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 205.859375,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 290.1875,
+              "y": 526.3125,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 278.1875,
+              "y": 667.671875,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 34.796875,
+              "y": 575,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 393,
+          "height": 852
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 852,
+        "height": 393,
+        "dpr": 2,
+        "file": "normal-852x393-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 685,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 733,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 306.265625,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 476.671875,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 675.71875,
+              "y": 227.9375,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 675.71875,
+              "y": 298.671875,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 113.390625,
+              "y": 231.875,
+              "width": 62.875,
+              "height": 125.75
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 852,
+          "height": 393
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 568,
+        "height": 320,
+        "dpr": 2,
+        "file": "normal-568x320-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 401,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 449,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 195.921875,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 309.515625,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 445.84375,
+              "y": 185.59375,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 445.84375,
+              "y": 243.203125,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 70.953125,
+              "y": 188.8046875,
+              "width": 51.1875,
+              "height": 102.390625
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 568,
+          "height": 320
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "normal",
+        "width": 1280,
+        "height": 720,
+        "dpr": 2,
+        "file": "normal-1280x720-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 1113,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 1161,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 473.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・命中見込み（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 729.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 1026.390625,
+              "y": 439.1875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          },
+          {
+            "id": "fire",
+            "rect": {
+              "x": 1014.390625,
+              "y": 556.796875,
+              "width": 96,
+              "height": 96
+            },
+            "label": "射撃（長押し）"
+          },
+          {
+            "id": "throttle",
+            "rect": {
+              "x": 185.59375,
+              "y": 476,
+              "width": 64,
+              "height": 128
+            },
+            "label": "速度レバー"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 320,
+        "height": 568,
+        "dpr": 2,
+        "file": "easy-320x568-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 114,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 162,
+              "y": 59,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 98.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 162.796875,
+              "y": 507.90625,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 229.59375,
+              "y": 338.875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 320,
+          "height": 568
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 393,
+        "height": 852,
+        "dpr": 2,
+        "file": "easy-393x852-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 226,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 274,
+              "y": 26,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 127.265625,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 205.859375,
+              "y": 774.875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 290.1875,
+              "y": 526.3125,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 393,
+          "height": 852
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 852,
+        "height": 393,
+        "dpr": 2,
+        "file": "easy-852x393-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 685,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 733,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 306.265625,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 476.671875,
+              "y": 333,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 675.71875,
+              "y": 227.9375,
+              "width": 62.875,
+              "height": 62.875
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 852,
+          "height": 393
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 568,
+        "height": 320,
+        "dpr": 2,
+        "file": "easy-568x320-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 401,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 449,
+              "y": 22,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 195.921875,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "爆弾を投下・残り2発・命中見込み（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 309.515625,
+              "y": 260.796875,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 445.84375,
+              "y": 185.59375,
+              "width": 51.1875,
+              "height": 51.1875
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 568,
+          "height": 320
+        }
+      },
+      {
+        "repo": "kaisen",
+        "mode": "easy",
+        "width": 1280,
+        "height": 720,
+        "dpr": 2,
+        "file": "easy-1280x720-dpr2.png",
+        "pageErrors": [],
+        "screen": "playing",
+        "controls": [
+          {
+            "id": "game-sound",
+            "rect": {
+              "x": 1113,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "音をオンにする"
+          },
+          {
+            "id": "pause",
+            "rect": {
+              "x": 1161,
+              "y": 34,
+              "width": 44,
+              "height": 44
+            },
+            "label": "一時停止"
+          },
+          {
+            "id": "bomb",
+            "rect": {
+              "x": 473.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "爆弾を投下・残り2発・有効圏外（予測）"
+          },
+          {
+            "id": "torpedo",
+            "rect": {
+              "x": 729.1875,
+              "y": 650.796875,
+              "width": 52,
+              "height": 52
+            },
+            "label": "魚雷を投下・残り1発・魚雷：高度20〜80mを目安に"
+          },
+          {
+            "id": "loop",
+            "rect": {
+              "x": 1026.390625,
+              "y": 439.1875,
+              "width": 72,
+              "height": 72
+            },
+            "label": "↻宙返りすぐ使える"
+          }
+        ],
+        "sight": null,
+        "scroll": {
+          "width": 1280,
+          "height": 720
+        }
+      }
+    ],
+    "raw_image_sha256": {
+      "normal-320x568-dpr1.png": "5e5f92446497eff843b8811db80d5ed4a9e6f42ebd68bdd0f6882562b265ff3b",
+      "normal-393x852-dpr1.png": "8eb9c02115fd9a85c9a8fe397c30307f32c2f28e8b5dd709781b01058712258d",
+      "normal-852x393-dpr1.png": "cd921794bdabb78664c7f06363c97e4ed504ab37caa1366cc5cd1d18af4910b3",
+      "normal-568x320-dpr1.png": "dc2779532786e6de3283a8b0e4ba54cb2ad6fdf78d877f6292b5442da919c238",
+      "normal-1280x720-dpr1.png": "1d6253bf11be3a7ea86dbc0a7318b08da8346d63ac603a4873e57af6f7b3fd41",
+      "easy-320x568-dpr1.png": "fc97433cdc77d41deead0e4631b1b71e82515f5fd237674f168f00484f4a540c",
+      "easy-393x852-dpr1.png": "0a681aae6eaac4bf6642b7d51c646dbf47db6ec838c7e9f8eebf6388c908b1d5",
+      "easy-852x393-dpr1.png": "f9f99d575010a9d509ac761596c97a39b5da7c649ad22907c52c38f856ec9e74",
+      "easy-568x320-dpr1.png": "4293c9991c5027c2371d3860eb8039109d15db3bd29948062f2293769364ec4b",
+      "easy-1280x720-dpr1.png": "e3d27b476f750acb2c5567d139efdffde2998ed317670f56fd7b2d064d3849b9",
+      "normal-320x568-dpr2.png": "b6c85d2c803e6a1d1199f8f2b1d87296234caa7ff0365144723028ed3bc98b0c",
+      "normal-393x852-dpr2.png": "8e01688aab3fd3dc39630d0961cb5aeea5f0983984fa2647a562a6ec50e7abbc",
+      "normal-852x393-dpr2.png": "a59d8e75453ea18f07d7dce266d974463f6d5c39c4b0cf0645b16924065d52a9",
+      "normal-568x320-dpr2.png": "e840d1ae7f53487c742ec5caa2a88107df0b2425d051f87621e2d8e3e0a626a1",
+      "normal-1280x720-dpr2.png": "ba72d24a9cbf9002f33642fee624ddc12a2ce5e677b227af2e6893ebb2860d87",
+      "easy-320x568-dpr2.png": "83b098514165b1c97563864c7f8c0487f1d325e6366235602c663d271e0e9939",
+      "easy-393x852-dpr2.png": "ad5ec18d48b78ebed4e622393fc20f290af027c1b31d7089b3eee54b357a164a",
+      "easy-852x393-dpr2.png": "8b4e3679f1593d8b1478ba364c4f91493ab946afff87ba5e4f6349e7f7c1a137",
+      "easy-568x320-dpr2.png": "6bf8bf865e952b0885d95499720b7f4421e9347619b73366dc77d545ea877e4c",
+      "easy-1280x720-dpr2.png": "50c91bdf0e9e7c42e3e66808a99bd630d0c0b1db1b3f06d694d8254d40ec4069"
+    }
+  },
+  "committed_images": {
+    "pause-settings.jpg": "5c1eee70078974e96295b0cf579fa4d4cfeb912a93b07fa34bfb7ba26ebcac8e",
+    "portrait-comparison.jpg": "3a18e25965a063fcebd27f53bc4077289c4ce7e37cf37d9670a8c65afc793b2b",
+    "viewport-contact.jpg": "5f0eb37cc9377c980d7cfdfb212c0465ed7efb9dae2ef47971749c62ace9078a",
+    "viewport-dpr2.jpg": "333b9e514e86d0e39adfcf837d4843ecfbe49d085f674d5a081c91d4d73ec704"
+  },
+  "unconfirmed": [
+    "physical iPhone Safari symptom/acceptance",
+    "WebKit automation (browser download unavailable)",
+    "actual render 30/60/120Hz comparison",
+    "product bundle 200% text/safe-area overrides (UI-only checks separate)"
+  ],
+  "ci_followup": {
+    "previous_head": "2e7d37927a26a5c20cc627461b3c06d9b9ef4af2",
+    "independent_review": {
+      "mode": "read-only code and evidence review",
+      "required_fixes": 0,
+      "real_device_acceptance": false
+    },
+    "limits": [
+      "fallback Chromium 153.0.8010.0 / SwiftShader differs from Playwright 1.61.1 expected Chromium",
+      "physical iPhone Safari and local WebKit unavailable; no acceptance claim",
+      "required new-head CI must be read independently of local checks"
+    ],
+    "prior_ci": {
+      "run_id": 38157400062,
+      "job_id": 114523106730,
+      "conclusion": "failure",
+      "browser": {
+        "passed": 56,
+        "failed": 1
+      },
+      "failure": "real touch mission defeated; numeric pilots omitted physical held-stick ownership and browser pilot countered a removed nose-down assist"
+    },
+    "scope": {
+      "product_changed": false,
+      "pilot": "remove obsolete upward compensation; physical stick owns turn and pitch",
+      "numeric_drivers": "set steeringActive=true for physically held stick",
+      "victory_assertions_changed": false,
+      "timeout_changed": false,
+      "input_path_changed": false
+    },
+    "cadence": {
+      "fixture": "tests/fixtures/browser-input-acceptance-aim-ci.json",
+      "source_sha256": "f185bb8a1dc920bc15f79a92a7880bc4cc48174f6a91c51acb2f2dd4d4e8d41b",
+      "observed_rows": 268,
+      "note": "periodic extrapolation of observed request/acceptance cadence, not exact consumed-input replay; start and pause history are not replayed",
+      "seed": 1262569811,
+      "simulation_hz": 60,
+      "outcome": "victory",
+      "endReason": "all-clear",
+      "elapsed": 116.23333333333333,
+      "health": 55.456000000000365,
+      "ships": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "playerAircraftKills": 4,
+      "playerShipKills": 4,
+      "log_sha256": "58f031cc602860917ee91c3bd6093c3e65c463a2ad50f89c81699efaf09ebd0c",
+      "log_utc_mtime": "2026-10-11T18:46:35.006Z"
+    },
+    "local_browser_first": {
+      "sourceStateSha256": "6e285db6809d9b637a3d235e1bb27d1cf8acaae7554269136d136377e3593a26",
+      "status": "failed",
+      "errors": [],
+      "phase": "paused",
+      "tick": 7368,
+      "elapsed": 122.8,
+      "playerHealth": 71.35200000000009,
+      "result": null,
+      "graphicsReady": true,
+      "pauseReasons": [
+        "render"
+      ],
+      "lastInterruption": {
+        "reason": "stalled",
+        "gap": 0.6494000000059604,
+        "render": {
+          "queue": {
+            "status": "stalled",
+            "failure": null,
+            "pendingMs": 1402.3999999910593,
+            "lastCompletedPendingMs": 564,
+            "completedFrameIntervalMs": 568.5,
+            "submittedCount": 1453,
+            "completedCount": 1452,
+            "skippedCount": 12200
+          },
+          "calls": 163,
+          "triangles": 220008,
+          "geometries": 50,
+          "textures": 4,
+          "particles": 36,
+          "navalFlashes": 0,
+          "planes": 10,
+          "ships": 4,
+          "width": 393,
+          "height": 852,
+          "pixelRatio": 1,
+          "aircraftTracers": {
+            "segments": 40,
+            "capacity": 2048,
+            "corePx": 1.5,
+            "outlinePx": 2.5,
+            "tailSeconds": 0.045,
+            "depthTest": true,
+            "resolution": [
+              393,
+              852
+            ]
+          }
+        }
+      },
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 300.40000000596046,
+        "lastCompletedPendingMs": 1628.6000000089407,
+        "completedFrameIntervalMs": 1634.9000000059605,
+        "submittedCount": 1455,
+        "completedCount": 1454,
+        "skippedCount": 12424
+      },
+      "ships": [
+        {
+          "id": 100,
+          "health": 0
+        },
+        {
+          "id": 101,
+          "health": 0
+        },
+        {
+          "id": 102,
+          "health": 0
+        },
+        {
+          "id": 103,
+          "health": 0
+        }
+      ],
+      "stats": {
+        "playerAircraftKills": 3,
+        "playerShipKills": 4,
+        "allyAircraftKills": 6,
+        "allyShipKills": 0,
+        "shots": 190,
+        "hits": 38,
+        "loops": 0,
+        "damageTaken": 49.29600000000001,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 6350
+      },
+      "log_sha256": "875b6da9525ff005baf517d6a82f8da1d1ad8eb92a6ebfda3ba6e7ff02120faf",
+      "log_utc_mtime": "2026-10-11T18:49:03.307Z",
+      "accepted_as_pass": false
+    },
+    "local_browser_serial": {
+      "command": "PLAYWRIGHT_BROWSERS_PATH=<browser-cache> npm run test:browser -- --project=chromium browser-tests/00-easy-victory.spec.ts",
+      "log_sha256": "a33e4a362e0c75a5f82229b11f430b9b53d04e679480fa2e7135cfd6c5c08fdd",
+      "log_utc_mtime": "2026-10-11T19:01:32.897Z",
+      "passed": true,
+      "final_summary_available": true,
+      "state_sha256": "978d4f2c52d8a38de402650a2b55b0ca2f90bff8a4df6ed754179f4e675879f2",
+      "final_snapshot_note": "afterEach snapshot is the reset home state after the victory assertions and result capture",
+      "exit_code": 0,
+      "victory_capture_sha256": "19054effac5178e4b34af7311d229f98d89264fcdc5d0c5303e2ca853d85db02",
+      "victory": {
+        "phase": "ended",
+        "elapsed": 191.21666666666667,
+        "result": {
+          "outcome": "victory",
+          "time": 191.21666666666667,
+          "mode": "easy",
+          "rulesVersion": "kaisen-air-sea-11",
+          "scoreRulesVersion": "kaisen-contribution-1",
+          "scoreBreakdown": {
+            "aircraft": 0,
+            "ships": 6800,
+            "clear": 12000,
+            "speed": 8175.666666666666,
+            "damageAvoidance": 0,
+            "friendlyDamagePenalty": 0,
+            "friendlyKillPenalty": 0,
+            "totalBeforeRounding": 26975.666666666664
+          },
+          "playerAircraftKills": 8,
+          "playerShipKills": 4,
+          "allyAircraftKills": 11,
+          "allyShipKills": 0,
+          "alliesSurvived": 4,
+          "score": 26976,
+          "friendlyDamage": 0,
+          "friendlyKills": 0
+        },
+        "health": 80,
+        "stats": {
+          "playerAircraftKills": 8,
+          "playerShipKills": 4,
+          "allyAircraftKills": 11,
+          "allyShipKills": 0,
+          "shots": 828,
+          "hits": 254,
+          "loops": 0,
+          "damageTaken": 91.39199999999971,
+          "friendlyDamage": 0,
+          "friendlyKills": 0,
+          "score": 26976
+        },
+        "ships": [
+          {
+            "id": 100,
+            "health": 0
+          },
+          {
+            "id": 101,
+            "health": 0
+          },
+          {
+            "id": 102,
+            "health": 0
+          },
+          {
+            "id": 103,
+            "health": 0
+          }
+        ],
+        "live_enemies": 0
+      }
+    }
+  }
+}

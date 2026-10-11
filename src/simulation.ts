@@ -1,9 +1,10 @@
+import { clearFlightAssistance, smoothFlightAssistance } from './flight-target';
 import { advanceShipMotion } from './ship-motion';
 import { createScoreLedger, recordTargetDamage, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from './scoring';
 import { RULES_VERSION } from './mission';
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
-import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection } from './flight-assist';
+import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection, targetAimPoint } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
 import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
@@ -84,6 +85,7 @@ export function startGame(state: GameState): void { if (state.phase === 'ready')
 export function pauseGame(state: GameState): void {
   if (state.phase !== 'playing') return;
   state.phase = 'paused';
+  clearFlightAssistance(metaFor(state).flight);
   const meta = metaFor(state); meta.accumulator = 0; meta.pendingLoop = false; meta.flight.loopHeld = false;
   meta.pendingBomb = false; meta.pendingTorpedo = false; meta.bombHeld = false; meta.torpedoHeld = false;
 }
@@ -166,10 +168,10 @@ export function segmentBoxEntry(start: Vector3, end: Vector3, min: Vector3, max:
   return enter;
 }
 const shipSolids = new WeakMap<Ship, { min: Vector3; max: Vector3 }[]>();
-export function sweptShipHitTime(bullet: Pick<Bullet, 'previous' | 'position'>, ship: Ship, padding = 0, stepFraction = 1): number | null {
+export function sweptShipHitTime(bullet: Pick<Bullet, 'previous' | 'position'>, ship: Ship, padding = 0, stepFraction = 1, currentPose = false): number | null {
   const inverse = ship.quaternion.clone().invert();
-  const start = bullet.previous.clone().sub(ship.previous).applyQuaternion(inverse);
-  const endCenter = ship.previous.clone().lerp(ship.position, stepFraction);
+  const start = bullet.previous.clone().sub(currentPose ? ship.position : ship.previous).applyQuaternion(inverse);
+  const endCenter = currentPose ? ship.position : ship.previous.clone().lerp(ship.position, stepFraction);
   const end = bullet.position.clone().sub(endCenter).applyQuaternion(inverse);
   // Reject distant segments before allocating/testing detailed ship solids.
   const broadScale = new Vector3(ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length);
@@ -184,6 +186,13 @@ export function sweptShipHitTime(bullet: Pick<Bullet, 'previous' | 'position'>, 
   }
   return first;
 }
+/** Ships, including their existing wreck lifetime, obstruct other targets at the current tick pose. */
+export function flightTargetLineOfSight(state: Pick<GameState, 'player' | 'ships' | 'elapsed'>, target: CombatTarget): boolean {
+  const ray = { previous: state.player.position, position: targetAimPoint(target) };
+  return !state.ships.some(ship => ship.id !== target.id && isShipObstacle(ship, state.elapsed)
+    && sweptShipHitTime(ray, ship, 0, 1, true) !== null);
+}
+export function selectedFlightTargetKey(state: GameState): string | null { return metaFor(state).flight.targetLock.key; }
 export function aircraftContactTime(a: Aircraft, b: Aircraft): number | null {
   if (segmentSphereEntry(a.previous.clone().sub(b.previous), a.position.clone().sub(b.position), 16) === null) return null;
   let first: number | null = null;
@@ -507,16 +516,10 @@ function fixedStep(state: GameState, input: FlightInput): void {
   if (bombPressed) firePayload(state, player, 'bomb');
   player.previous.copy(player.position); player.age += FIXED_DT;
   const targets: CombatTarget[] = [...state.enemies, ...state.ships].filter(item => item.health > 0);
-  const assist = getFlightAssist(player, targets, input, state.mode);
-  const slew = (current: number, target: number, rate: number) => current + clamp(target - current, -rate * FIXED_DT, rate * FIXED_DT);
-  const manual = Math.max(Math.abs(input.turn), Math.abs(input.climb)) >= 0.35;
+  const unobstructed = (target: CombatTarget) => flightTargetLineOfSight(state, target);
+  const assist = getFlightAssist(player, targets, input, state.mode, meta.flight.targetLock, unobstructed);
   const flight = meta.flight;
-  flight.assistTurn = manual ? 0 : slew(flight.assistTurn, assist.turn - input.turn, 2.5);
-  flight.assistClimb = manual ? 0 : slew(flight.assistClimb, assist.climb - input.climb, 1.5);
-  if (flight.assistTurn * input.turn < 0) flight.assistTurn = 0;
-  if (flight.assistClimb * input.climb < 0) flight.assistClimb = 0;
-  flight.responseMultiplier = slew(flight.responseMultiplier, assist.responseMultiplier, 2.5);
-  const adjusted = { ...input, turn: input.turn + flight.assistTurn, climb: input.climb + flight.assistClimb };
+  const adjusted = { ...input, ...smoothFlightAssistance(flight, input, assist, FIXED_DT) };
   const loopPressed = input.loop && !flight.loopHeld; flight.loopHeld = input.loop;
   const completed = updatePlayerLoop(player, flight, adjusted, input, loopPressed, FIXED_DT, advanceThrottle(flight, input, state.mode, FIXED_DT), MAX_SPEED, flight.responseMultiplier);
   if (completed) { state.stats.loops += 1; emit(state, 'loop', player.position, player.id); }
@@ -532,7 +535,7 @@ function fixedStep(state: GameState, input: FlightInput): void {
   meta.torpedoHeld = Boolean(input.torpedo);
   if (torpedoPressed) firePayload(state, player, 'torpedo');
   for (const plane of state.allies) if (plane.aiBomb) firePayload(state, plane, 'bomb');
-  const autoTarget = autoFireTarget(player, targets, state.mode, input.viewAspect);
+  const autoTarget = autoFireTarget(player, targets, state.mode, input.viewAspect, meta.flight.targetLock, unobstructed);
   fireAircraft(state, player, state.mode === 'easy' ? autoTarget !== null : input.fire, autoTarget);
   for (const plane of [...state.allies, ...state.enemies]) fireAircraft(state, plane, plane.aiFire, targetFor(state, plane.targetId));
   for (const ship of state.ships) fireShip(state, ship);

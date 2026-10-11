@@ -7,7 +7,7 @@ test('real circular-stick mapping reaches and completes reload with six/seven ti
   for (const pattern of [[6], [6, 7]]) {
     const state = createGame(), pilot = createTouchReloadPilot(); startGame(state);
     let next = 0, sample = 0;
-    let held = { turn: 0, climb: 0, fire: false, loop: false, viewAspect: 393 / 852 };
+    let held = { turn: 0, climb: 0, fire: false, loop: false, steeringActive: true, viewAspect: 393 / 852 };
     const reloads: number[] = [];
     for (let i = 0; i < 60 * 150 && reloads.length < 2 && state.phase === 'playing'; i++) {
       if (state.tick >= next) {
@@ -34,7 +34,7 @@ test('browser reload practice engages aircraft and completes real magazines desp
   for(const pattern of [[6,7],[6,10,15]]) {
     const state=createGame(),pilot=createBrowserMissionPilot(true);startGame(state);
     let next=0,sample=0,pending:{tick:number;turn:number;climb:number}|null=null;
-    let held={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+    let held={turn:0,climb:0,fire:false,loop:false,steeringActive:true,viewAspect:393/852};
     const reloads:number[]=[];
     for(let tick=0;tick<60*145&&reloads.length<2&&state.phase==='playing';tick++) {
       if(pending&&tick>=pending.tick){held={...held,turn:pending.turn,climb:pending.climb};pending=null;}

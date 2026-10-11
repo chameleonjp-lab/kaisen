@@ -61,14 +61,14 @@ test('deterministic bounded fleet simulations include actual AI and real project
 /** A reproducible pilot that only sends real FlightInput, never edits live state. */
 function flyFeedbackMission(pattern = [6]) {
   const state = createGame(), pilot = createFeedbackEasyPilot(); startGame(state);
-  let next = 0, sample = 0, held = { ...neutral, viewAspect: 393 / 852 };
+  let next = 0, sample = 0, held = { ...neutral, steeringActive: true, viewAspect: 393 / 852 };
   for (let tick = 0; tick < 60 * 600 && state.phase === 'playing'; tick++) {
     if (state.tick >= next) {
       next = state.tick + pattern[sample++ % pattern.length];
       const request = pilot(state), { dx, dy } = pointerOffsetForControls(request.turn, request.climb);
       const distance = Math.hypot(dx, dy), response = distance / 36 <= .08 ? 0 : (distance / 36 - .08) / .92;
       assert.ok(distance <= 36 + 1e-9);
-      held = { ...neutral, ...request, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, viewAspect: 393 / 852 };
+      held = { ...neutral, ...request, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, steeringActive: true, viewAspect: 393 / 852 };
     }
     stepGame(state, held);
   }
@@ -87,7 +87,11 @@ test('approved four-ship mission reaches all-clear through real inputs while idl
   assert.ok(active.stats.playerAircraftKills > 0 && active.stats.playerShipKills > 0);
   const idle = createGame(); startGame(idle);
   for(let tick=0; tick<60*240 && idle.phase==='playing'; tick++)stepGame(idle,neutral);
-  assert.equal(idle.result?.outcome,'defeat');
+  assert.notEqual(idle.result?.outcome,'victory');
+  assert.notEqual(idle.endReason,'all-clear');
+  const liveObjectives = idle.ships.filter(ship=>ship.health>0).length;
+  assert.ok(liveObjectives > 0,'idle must leave an uncleared mission objective during this acceptance window');
+  context.diagnostic(`idle after 240 seconds: phase=${idle.phase}, health=${idle.player.health}, liveObjectives=${liveObjectives}`);
 });
 
 test('surface marker, steering and auto-fire share the above-water point at the circle edge', () => {

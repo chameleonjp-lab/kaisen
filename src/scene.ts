@@ -1,3 +1,4 @@
+import { flightTargetLineOfSight, selectedFlightTargetKey } from './simulation';
 import {
   BackSide,
   BufferAttribute,
@@ -501,7 +502,7 @@ export class KaisenScene {
     if (!show) return;
     const sight = state.mode === "normal" ? this.gunSight(state) : { x: w / 2, y: h / 2 };
     const radius = aimRadius(state.mode, w, h);
-    const indicator = aimIndicator(state, [...state.allies, ...state.enemies, ...state.ships], sight, w, h);
+    const indicator = aimIndicator(state, [...state.allies, ...state.enemies, ...state.ships], sight, w, h, target => flightTargetLineOfSight(state, target), selectedFlightTargetKey(state));
     const aimColor = AIM_COLORS[indicator];
     c.strokeStyle = aimColor;
     c.lineWidth = 1;

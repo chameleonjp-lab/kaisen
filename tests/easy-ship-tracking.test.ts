@@ -47,10 +47,10 @@ test('manual commands keep authority over ship pull and Normal stays fully manua
  assert.equal(left.turn,-.2,'small opposite turn is not scaled or resisted');
 });
 
-test('mixed target selection still follows the closest visible target regardless of its assist strength',()=>{
+test('mixed target selection respects circle priority while retaining each target tracking strength',()=>{
  const s=createGame(73,'easy'),ship=s.ships[0],air=s.enemies[0];
  ship.position.set(80,0,-400);air.position.set(-80,300,-900);
- assert.deepEqual(getFlightAssist(s.player,[air,ship],neutral,'easy'),getFlightAssist(s.player,[ship],neutral,'easy'));
+ assert.deepEqual(getFlightAssist(s.player,[air,ship],neutral,'easy'),getFlightAssist(s.player,[air],neutral,'easy'));
  ship.position.z=-1000;air.position.set(-80,300,-350);
  assert.deepEqual(getFlightAssist(s.player,[air,ship],neutral,'easy'),getFlightAssist(s.player,[air],neutral,'easy'));
  air.health=0;
@@ -88,7 +88,7 @@ test('air-to-ship switching keeps the existing smooth response and manual climb 
  ship.position.set(10000,0,-10000);ship.previous.copy(ship.position);
  const prior=s.player.pitch,withoutResidue=prior+(0-prior)*(1-Math.exp(-4.2/60));
  stepGame(s,neutral);assert.ok(Number.isFinite(s.player.pitch));assert.ok(Math.abs(s.player.pitch-prior)<.05);
- assert.ok(s.player.pitch<withoutResidue-1e-6,'loss slews the existing pull down instead of abruptly resetting it');
+ assert.ok(Math.abs(s.player.pitch-withoutResidue)<1e-10,'loss clears stale pull and resumes the unchanged neutral pitch equation');
  air.health=80;air.position.copy(point(-.65,.45));air.previous.copy(air.position);
  const beforeAircraft=s.player.pitch;stepGame(s,neutral);
  assert.ok(Math.abs(s.player.pitch-beforeAircraft)<.05,'reacquiring an aircraft also preserves smooth response');

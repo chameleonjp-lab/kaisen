@@ -1,3 +1,4 @@
+import { createFlightTargetLock, type FlightTargetLock } from './flight-target';
 // Flight equations and loop recovery extracted from the source commit in docs/PLAN.md.
 import { Euler, Quaternion, Vector3 } from 'three';
 import { resolveThrottleAxis } from './throttle-lever';
@@ -19,13 +20,14 @@ const EPSILON = 1e-8;
 const WORLD_FORWARD = new Vector3(0, 0, -1);
 
 export interface FlightController {
+  targetLock: FlightTargetLock;
   playerTargetSpeed: number; loopHeld: boolean; playerLoopActive: boolean;
   loopStartYaw: number; loopStartPitch: number; loopStartSteeringRevision: number | undefined;
   loopStartTurn: number; loopStartClimb: number;
   assistTurn: number; assistClimb: number; responseMultiplier: number;
 }
 export function createFlightController(player: Aircraft): FlightController {
-  return { playerTargetSpeed: CRUISE_SPEED, loopHeld: false, playerLoopActive: false,
+  return { targetLock: createFlightTargetLock(), playerTargetSpeed: CRUISE_SPEED, loopHeld: false, playerLoopActive: false,
     loopStartYaw: player.yaw, loopStartPitch: player.pitch, loopStartSteeringRevision: undefined,
     loopStartTurn: 0, loopStartClimb: 0, assistTurn: 0, assistClimb: 0, responseMultiplier: 1 };
 }

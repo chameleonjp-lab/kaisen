@@ -69,7 +69,7 @@ test('bombing pilot extends after an overhead pass with payloads still available
   }
 });
 
-test('Easy bombing pilot counters retained downward steering with ordinary upward input', async()=>{
+test('Easy bombing pilot holds a level physical stick without compensating neutral-only downward assistance', async()=>{
   const {updateQuaternion}=await import('../src/flight');
   const {getFlightAssist}=await import('../src/flight-assist');
   const s=createGame(undefined,'easy'),pilot=createNormalMissionPilot(),ship=s.ships[0];
@@ -83,8 +83,9 @@ test('Easy bombing pilot counters retained downward steering with ordinary upwar
   s.tick=600;s.elapsed=10;const before=JSON.stringify(s),command=pilot(s);
   const neutral={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
   assert.ok(getFlightAssist(s.player,[ship,enemy],neutral,'easy').climb<-.1,'a visible lower aircraft pulls a neutral bombing approach downward');
-  assert.ok(command.climb>.05);
-  assert.equal(getFlightAssist(s.player,[ship,enemy],{...command,viewAspect:393/852},'easy').climb,command.climb);
+  assert.ok(Math.abs(command.climb)<1e-12,'the held stick must not climb to counter an absent automatic pull');
+  const physical={...command,steeringActive:true,viewAspect:393/852};
+  assert.equal(getFlightAssist(s.player,[ship,enemy],physical,'easy').climb,command.climb);
   assert.equal(JSON.stringify(s),before);
 });
 
