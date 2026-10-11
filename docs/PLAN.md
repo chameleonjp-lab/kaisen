@@ -240,3 +240,7 @@ U07の寸法は大和ミュージアムの https://yamato-museum.com/yamato-data
 
 ## 2026-10-04 爆弾の投下目安を実判定へ合わせる
 現行main658e5a51から、落下予測とボタンの色／短文、爆弾威力の調整を一つの変更として提出する。直撃は後続の利用者指定により1,800を採用し、20mの弱い至近弾は最大500の調整値を維持する。新しい物理・見込み表示・検査の境界はBOMB_GUIDE.md、依頼対応はREQUESTS.mdのB01/B02、実行記録はVERIFICATION.mdを正本とする。
+
+## 2026-10-11依頼：操作・標的・照準の共通追補
+
+今回の採用契約は [ZERO_SERIES_AIM_CONTRACT.md](ZERO_SERIES_AIM_CONTRACT.md)、実行結果と未確認項目は [ZERO_SERIES_AIM_VERIFICATION.md](ZERO_SERIES_AIM_VERIFICATION.md)。R1–R8の対象・意図的な作品差・基点を明示する。過去の「未実施」「文書のみ」は当時の工程の記録で、この追補の結果やSafari実機受入とは別。main宛てDraft PRまでとし、公開/mergeは今回実施しない。

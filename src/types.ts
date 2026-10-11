@@ -44,7 +44,7 @@ export interface GameEvent {
   targetTeam?: Team; ownerAllySlot?: number; targetAllySlot?: number;
   weapon?: 'mg' | 'cannon' | 'aa' | 'bomb' | 'torpedo'; detail?: string; mountId?: string; armor?: boolean;
 }
-export interface FlightInput {
+export interface FlightInput { steeringActive?: boolean;
   turn: number; climb: number; fire: boolean; loop: boolean;
   bomb?: boolean; torpedo?: boolean;
   throttle?: number; accelerate?: boolean; brake?: boolean; viewAspect?: number; steeringRevision?: number;
