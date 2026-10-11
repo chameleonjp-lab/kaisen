@@ -61,14 +61,14 @@ test('deterministic bounded fleet simulations include actual AI and real project
 /** A reproducible pilot that only sends real FlightInput, never edits live state. */
 function flyFeedbackMission(pattern = [6]) {
   const state = createGame(), pilot = createFeedbackEasyPilot(); startGame(state);
-  let next = 0, sample = 0, held = { ...neutral, viewAspect: 393 / 852 };
+  let next = 0, sample = 0, held = { ...neutral, steeringActive: true, viewAspect: 393 / 852 };
   for (let tick = 0; tick < 60 * 600 && state.phase === 'playing'; tick++) {
     if (state.tick >= next) {
       next = state.tick + pattern[sample++ % pattern.length];
       const request = pilot(state), { dx, dy } = pointerOffsetForControls(request.turn, request.climb);
       const distance = Math.hypot(dx, dy), response = distance / 36 <= .08 ? 0 : (distance / 36 - .08) / .92;
       assert.ok(distance <= 36 + 1e-9);
-      held = { ...neutral, ...request, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, viewAspect: 393 / 852 };
+      held = { ...neutral, ...request, turn: distance ? dx / distance * response : 0, climb: distance ? -dy / distance * response : 0, steeringActive: true, viewAspect: 393 / 852 };
     }
     stepGame(state, held);
   }

@@ -236,12 +236,9 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     const headingGain = snapshot.mode === 'easy' && !slowInput ? Math.max(3.5,Math.min(8*.82/.7,.75/sampleDt)) : 3.5;
     let turn = clamp(-(yawRate + error * headingGain) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI));
     let climb = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
-    if (snapshot.mode === 'easy' && target.kind === 'ship' && climb > -.35 && climb < .06) {
-      // A small deliberate upward stick opposes the retained Easy nose-down
-      // pull. Above the staging height, a deliberate .35 descent suppresses
-      // that pull while correcting altitude. These are ordinary pilot inputs.
-      climb = player.position.y > 1000 && climb < 0 ? -.35 : .06;
-    }
+    // A held physical stick now owns turn/pitch, including small corrections.
+    // Do not bias naval approaches upward to oppose the old Easy nose-down
+    // assist: that assist is absent while this real-input pilot holds its stick.
     const norm = Math.hypot(turn, climb);
     if (norm > 1) { turn /= norm; climb /= norm; }
     const alignment = forwardOf(player).angleTo(aim.clone().sub(player.position));

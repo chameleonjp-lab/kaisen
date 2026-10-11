@@ -3,7 +3,7 @@
   "repository": "chameleonjp-lab/kaisen",
   "base_main": "519fd0d50dfb2ce9a1145c0b58a1301b5c74d032",
   "branch": "codex/zero-series-aim-camera-20261012",
-  "recorded_at": "2026-10-11T16:44:32.778055+00:00",
+  "recorded_at": "2026-10-11T19:06:21.478Z",
   "source_sha256": {
     "src/ai.ts": "8d6050f92f08b55b053430c706c46ca37683a65901e20a86dcf9fc2242da59c2",
     "src/aim-indicator.ts": "7fe63983b420549e0ecf582a8c883e56804c5555c16e1d82312c9e7c33a72c94",
@@ -50,7 +50,7 @@
     "src/throttle-control.ts": "99b45ef5b506ee7a051f80152bf3ce1dcf7a5f521a7c446f6021e76a67163466",
     "src/throttle-lever.ts": "e83fe3c570581d16cb76e08ef9a039bbe9d4a50da6575366ac7e126bf3f30cf0",
     "src/types.ts": "e784a711f6daf969ee7c16265795fc89be91c5fbad6f112a86e73751b4aa55ca",
-    "tests/ai.test.ts": "88107705be517306b44636d69581bee0f82db458cb9310c942091897a100dfe2",
+    "tests/ai.test.ts": "2cca424c9d4877ebcd4ba760dc9b3e37be601911297cde21b6c791e7f720fb4f",
     "tests/aim-indicator.test.ts": "92da31455546890b24309df8200cbbc39ceb634552fe17abca35bae35d186077",
     "tests/aircraft-batch.test.ts": "490c28f1449d48cc3bb68ef69826014a590211dd5d7ccbd6ce558b2199e3c4b7",
     "tests/aircraft-damage.test.ts": "e9666973ed017060e702dd0dedbbc06ae188ac9ca1b1e768d84d4a7f5878e765",
@@ -58,8 +58,8 @@
     "tests/ally-announcements.test.ts": "548b46d02d1423f7a21f80f3987581b793befaf137cb6f0a0a833d7cf40a56dc",
     "tests/audio.test.ts": "07a5b2d1c653734e13b26de21514ba7c2b773ad998a2ebacc310c704623fcdbe",
     "tests/bomb-guide.test.ts": "2e38f26aa1c838a10d29a7cd0da2c5999fd7b4a52ec4be8e9745f27162b2f88c",
-    "tests/browser-cadence.test.ts": "a12c27c3221e9357b6643d61283b69428bde319b8f374688187475c10fa7be32",
-    "tests/browser-components.test.ts": "55d57fe7a531a4be8a0c3f4c92f4c5c693ad95686da00e5bb7e65233c338f279",
+    "tests/browser-cadence.test.ts": "28cdd940014c69ccd1f133d2d742e34e0e66a538c243f059a03781c2ce2d29a3",
+    "tests/browser-components.test.ts": "c3385ad20d02aa7fd494ad2056516a9ad86b5fa5bf191bc48003825d375133d4",
     "tests/consumed-input-replay.test.ts": "5f87e37b4b5ea67836d8ef543cc7027291ef12d9ea3a8abfa860ea239a3be690",
     "tests/control-settings.test.ts": "b1f78814c8c19f5daa81011c15c8112104af8178b68415d5e51d9ab91855c200",
     "tests/dialog-focus.test.ts": "03a7694d8923a8cd66075a640a1b4fa34d99bae930e861f0652531250a1590c5",
@@ -79,7 +79,7 @@
     "tests/flight.test.ts": "281f6c4d615935b41bd7e41cfce09067b775d4d0fa2b056f88e277fb6e645c94",
     "tests/helpers/feedback-easy-pilot.ts": "25a3b87ab5926187fae60e44102c68503cacccaa6e78358e761e4633936eb1b8",
     "tests/helpers/large-fleet-pilot.ts": "b5a6f54845d45d872e9e6990b9954a02bffa2417b3f8f6579725ddb64147fa47",
-    "tests/helpers/mission-browser-pilot.ts": "d3fd1dc4d787abe4c6e53b1fddfbad729452f96744b5b14c35444d729a27a057",
+    "tests/helpers/mission-browser-pilot.ts": "813b1dcf445bd8b41db730e32da8144a369293b125ef8ac868e0280b4a815d27",
     "tests/helpers/normal-mission-pilot.ts": "2a2c5db744f4d58ac09a46713f36f7823b741b3abc019f2fd3fa3fd3f54068d5",
     "tests/helpers/touch-reload-pilot.ts": "c4eede6d5a6b1c9c16b548d48f02ea70ce2216ccc425245d629d66bab6320e6f",
     "tests/input-ownership-regression.test.ts": "37fac20e30b9257d0dcacd49e320ac58dc33402046996a2cdbd06cd4307e6ccf",
@@ -97,7 +97,7 @@
     "tests/naval-weapon-roles.test.ts": "aadd5e48499c71956d025070374d01b5eafe331b9221f1faf96833ceb56c852b",
     "tests/naval.test.ts": "4c43494265611d3b20812e5b2927b537b0c1710c19095311c523d8a99e923484",
     "tests/normal-collision-regression.test.ts": "7ea357a0cad2c89a92e947d708f9f1c7cfe77d80094e7b4166dfe290f171c715",
-    "tests/normal-mission.test.ts": "8ee062d7f4ecfe88f1a6f051c0067e109d01b6d1bf7a5951651b6fe2a4c32c64",
+    "tests/normal-mission.test.ts": "8114a91130f771823bbf1ae704c34f535f509e19ac04e3978c3017b23a8611fb",
     "tests/ordnance.test.ts": "799438558eb6b1975e2c49d376cfb5d8aaaed6071f82711660949a97ab46830a",
     "tests/payload-input.test.ts": "7a567ecdf4681f883bce0def5ae9682c88252d0ba07afdb4606906e14e9c2787",
     "tests/render-queue.test.ts": "77142c2a04ce7b4ebba6a4997f789f88520d40321436302027473153e13fbbe7",
@@ -111,7 +111,7 @@
     "tests/simulation.test.ts": "620f462439d6874f352807f30547b948822205ece2f5d740e6acf4601e94672b",
     "tests/throttle-lever.test.ts": "15198c9a0b59eb5d0f11971ba8642baa21a10fbdee8d98f4c8072f12bc79cc22",
     "tests/throttle-review.test.ts": "27f8735d36e1d03d55615e897607f8256bb7b2c4a2586a46f066291751a4e40c",
-    "tests/touch-reload.test.ts": "a7f8dd2617b5472a421c23da9b98e70a3ddbac14baaf66bbd6719bd806be3428",
+    "tests/touch-reload.test.ts": "e677be6660a21708e4bd542c9761cd3d3d41bdcc11059f51db194cdcf3b0828a",
     "scripts/air-sea-balance-report.ts": "80cf8291fc58ec508cb0a26a53810fa82c6de25ede63fa9a875228c374687f77",
     "scripts/capture-throttle-comparison.mjs": "116e14386aa8e7fd90c220e6e916a74b0593c4c02c8d778f76025a89e340875e",
     "scripts/easy-assist-report.ts": "0ab3acab81c5c792fd0c4d6e2e1685c95c7e34bd5e390b01944b7b8839bb4215",
@@ -137,21 +137,25 @@
     "browser-tests/throttle-lever-ui.spec.ts": "0a9e688045e25c71be465ddcab9879c5ece74a1be82054ec2433bedb3b2ce308",
     "browser-tests/touch-command.ts": "c16f80d161eef73c6002fc72f389cfb39a55abe0882a8b5d15a0a11bb0b2a63a",
     "browser-tests/tracers.spec.ts": "b1eb536757a0486c0cab3edbe80b200e538ef249748bdcf4fe3edaf9e8da255f",
-    "docs/evidence/aim-camera/verify-normal-fire.mts": "ecbe1c8c68f68132be948014ff660bb0c4e5ad8e2214ee958cd793ac695debf2"
+    "docs/evidence/aim-camera/verify-normal-fire.mts": "ecbe1c8c68f68132be948014ff660bb0c4e5ad8e2214ee958cd793ac695debf2",
+    "tests/mission-browser-pilot-regression.test.ts": "023007ab305c0a3d41b77a620641cebd172089545becad8d361fc6990a16fb09",
+    "tests/fixtures/browser-input-acceptance-aim-ci.json": "66d8443db6a6b9ae95cc450c3766a650b43c95e265cdb41d9889810aebfeb8e5"
   },
   "checks": {
     "unit": {
       "command": "npm test",
       "exit_code": 0,
-      "passed": 314,
+      "passed": 316,
+      "failed": 0,
       "skipped": 0,
-      "log_sha256": "5f9a4793f2f9e2dcad7129afd5ea1ee41a5070bbf404bc842a70355ebfdb039c",
-      "log_utc_mtime": "2026-10-11T16:10:07.278811+00:00"
+      "log_sha256": "740245e123590e93dea40aa41d766abb6cc13e2544a52d9b19522f24e8acfe82",
+      "log_utc_mtime": "2026-10-11T18:49:25.531Z"
     },
     "build": {
       "command": "npm run build",
       "exit_code": 0,
-      "log_sha256": "a95abcd88620fff9aa518021479a49e12c73ee7b2993db88c5dcdc610d8dd35f"
+      "log_sha256": "9a0b06a7a0bda0aac8c7f5ec6490409cecf97d10fc815580d33d009deb152c3e",
+      "log_utc_mtime": "2026-10-11T18:49:05.423Z"
     },
     "related_browser": {
       "command": "PLAYWRIGHT_BROWSERS_PATH=<browser-cache> npm run test:browser -- --project=chromium --grep \"changing from touch\"",
@@ -1748,5 +1752,228 @@
     "WebKit automation (browser download unavailable)",
     "actual render 30/60/120Hz comparison",
     "product bundle 200% text/safe-area overrides (UI-only checks separate)"
-  ]
+  ],
+  "ci_followup": {
+    "previous_head": "2e7d37927a26a5c20cc627461b3c06d9b9ef4af2",
+    "independent_review": {
+      "mode": "read-only code and evidence review",
+      "required_fixes": 0,
+      "real_device_acceptance": false
+    },
+    "limits": [
+      "fallback Chromium 153.0.8010.0 / SwiftShader differs from Playwright 1.61.1 expected Chromium",
+      "physical iPhone Safari and local WebKit unavailable; no acceptance claim",
+      "required new-head CI must be read independently of local checks"
+    ],
+    "prior_ci": {
+      "run_id": 38157400062,
+      "job_id": 114523106730,
+      "conclusion": "failure",
+      "browser": {
+        "passed": 56,
+        "failed": 1
+      },
+      "failure": "real touch mission defeated; numeric pilots omitted physical held-stick ownership and browser pilot countered a removed nose-down assist"
+    },
+    "scope": {
+      "product_changed": false,
+      "pilot": "remove obsolete upward compensation; physical stick owns turn and pitch",
+      "numeric_drivers": "set steeringActive=true for physically held stick",
+      "victory_assertions_changed": false,
+      "timeout_changed": false,
+      "input_path_changed": false
+    },
+    "cadence": {
+      "fixture": "tests/fixtures/browser-input-acceptance-aim-ci.json",
+      "source_sha256": "f185bb8a1dc920bc15f79a92a7880bc4cc48174f6a91c51acb2f2dd4d4e8d41b",
+      "observed_rows": 268,
+      "note": "periodic extrapolation of observed request/acceptance cadence, not exact consumed-input replay; start and pause history are not replayed",
+      "seed": 1262569811,
+      "simulation_hz": 60,
+      "outcome": "victory",
+      "endReason": "all-clear",
+      "elapsed": 116.23333333333333,
+      "health": 55.456000000000365,
+      "ships": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "playerAircraftKills": 4,
+      "playerShipKills": 4,
+      "log_sha256": "58f031cc602860917ee91c3bd6093c3e65c463a2ad50f89c81699efaf09ebd0c",
+      "log_utc_mtime": "2026-10-11T18:46:35.006Z"
+    },
+    "local_browser_first": {
+      "sourceStateSha256": "6e285db6809d9b637a3d235e1bb27d1cf8acaae7554269136d136377e3593a26",
+      "status": "failed",
+      "errors": [],
+      "phase": "paused",
+      "tick": 7368,
+      "elapsed": 122.8,
+      "playerHealth": 71.35200000000009,
+      "result": null,
+      "graphicsReady": true,
+      "pauseReasons": [
+        "render"
+      ],
+      "lastInterruption": {
+        "reason": "stalled",
+        "gap": 0.6494000000059604,
+        "render": {
+          "queue": {
+            "status": "stalled",
+            "failure": null,
+            "pendingMs": 1402.3999999910593,
+            "lastCompletedPendingMs": 564,
+            "completedFrameIntervalMs": 568.5,
+            "submittedCount": 1453,
+            "completedCount": 1452,
+            "skippedCount": 12200
+          },
+          "calls": 163,
+          "triangles": 220008,
+          "geometries": 50,
+          "textures": 4,
+          "particles": 36,
+          "navalFlashes": 0,
+          "planes": 10,
+          "ships": 4,
+          "width": 393,
+          "height": 852,
+          "pixelRatio": 1,
+          "aircraftTracers": {
+            "segments": 40,
+            "capacity": 2048,
+            "corePx": 1.5,
+            "outlinePx": 2.5,
+            "tailSeconds": 0.045,
+            "depthTest": true,
+            "resolution": [
+              393,
+              852
+            ]
+          }
+        }
+      },
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 300.40000000596046,
+        "lastCompletedPendingMs": 1628.6000000089407,
+        "completedFrameIntervalMs": 1634.9000000059605,
+        "submittedCount": 1455,
+        "completedCount": 1454,
+        "skippedCount": 12424
+      },
+      "ships": [
+        {
+          "id": 100,
+          "health": 0
+        },
+        {
+          "id": 101,
+          "health": 0
+        },
+        {
+          "id": 102,
+          "health": 0
+        },
+        {
+          "id": 103,
+          "health": 0
+        }
+      ],
+      "stats": {
+        "playerAircraftKills": 3,
+        "playerShipKills": 4,
+        "allyAircraftKills": 6,
+        "allyShipKills": 0,
+        "shots": 190,
+        "hits": 38,
+        "loops": 0,
+        "damageTaken": 49.29600000000001,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 6350
+      },
+      "log_sha256": "875b6da9525ff005baf517d6a82f8da1d1ad8eb92a6ebfda3ba6e7ff02120faf",
+      "log_utc_mtime": "2026-10-11T18:49:03.307Z",
+      "accepted_as_pass": false
+    },
+    "local_browser_serial": {
+      "command": "PLAYWRIGHT_BROWSERS_PATH=<browser-cache> npm run test:browser -- --project=chromium browser-tests/00-easy-victory.spec.ts",
+      "log_sha256": "a33e4a362e0c75a5f82229b11f430b9b53d04e679480fa2e7135cfd6c5c08fdd",
+      "log_utc_mtime": "2026-10-11T19:01:32.897Z",
+      "passed": true,
+      "final_summary_available": true,
+      "state_sha256": "978d4f2c52d8a38de402650a2b55b0ca2f90bff8a4df6ed754179f4e675879f2",
+      "final_snapshot_note": "afterEach snapshot is the reset home state after the victory assertions and result capture",
+      "exit_code": 0,
+      "victory_capture_sha256": "19054effac5178e4b34af7311d229f98d89264fcdc5d0c5303e2ca853d85db02",
+      "victory": {
+        "phase": "ended",
+        "elapsed": 191.21666666666667,
+        "result": {
+          "outcome": "victory",
+          "time": 191.21666666666667,
+          "mode": "easy",
+          "rulesVersion": "kaisen-air-sea-11",
+          "scoreRulesVersion": "kaisen-contribution-1",
+          "scoreBreakdown": {
+            "aircraft": 0,
+            "ships": 6800,
+            "clear": 12000,
+            "speed": 8175.666666666666,
+            "damageAvoidance": 0,
+            "friendlyDamagePenalty": 0,
+            "friendlyKillPenalty": 0,
+            "totalBeforeRounding": 26975.666666666664
+          },
+          "playerAircraftKills": 8,
+          "playerShipKills": 4,
+          "allyAircraftKills": 11,
+          "allyShipKills": 0,
+          "alliesSurvived": 4,
+          "score": 26976,
+          "friendlyDamage": 0,
+          "friendlyKills": 0
+        },
+        "health": 80,
+        "stats": {
+          "playerAircraftKills": 8,
+          "playerShipKills": 4,
+          "allyAircraftKills": 11,
+          "allyShipKills": 0,
+          "shots": 828,
+          "hits": 254,
+          "loops": 0,
+          "damageTaken": 91.39199999999971,
+          "friendlyDamage": 0,
+          "friendlyKills": 0,
+          "score": 26976
+        },
+        "ships": [
+          {
+            "id": 100,
+            "health": 0
+          },
+          {
+            "id": 101,
+            "health": 0
+          },
+          {
+            "id": 102,
+            "health": 0
+          },
+          {
+            "id": 103,
+            "health": 0
+          }
+        ],
+        "live_enemies": 0
+      }
+    }
+  }
 }

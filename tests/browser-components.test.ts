@@ -10,7 +10,7 @@ const fixture=JSON.parse(readFileSync(new URL('./fixtures/browser-input-componen
 for(const scenario of fixture.cases) test(`${scenario.mode} clears with ${scenario.source??"CI28"} component delivery timing from a fresh mission`,context=>{
   const state=createGame(scenario.seed,scenario.config),pilot=createBrowserMissionPilot();startGame(state);
   let index=0,next=scenario.startTick;
-  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
+  let held:FlightInput={turn:0,climb:0,fire:false,loop:false,steeringActive:true,viewAspect:393/852};
   const pending:{tick:number;fields:Partial<FlightInput>}[]=[];
   while(state.phase==='playing'&&state.tick<60*600) {
     if(state.tick>=next) {
