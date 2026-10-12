@@ -45,8 +45,9 @@ async function capture(page: Page, name: string, inspectPausedScene = false) {
 }
 const errors: string[] = [];
 const samples: unknown[] = [];
+const payloadAttempts: unknown[] = [];
 test.beforeEach(async ({ page }) => {
-  errors.length = 0; samples.length = 0;
+  errors.length = 0; samples.length = 0; payloadAttempts.length = 0;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
@@ -66,7 +67,7 @@ test.afterEach(async ({ page }, info) => {
   }
   await writeFile(
     "test-results/evidence/touch-victory-state.json",
-    JSON.stringify({ status: info.status, errors, snapshot, samples,
+    JSON.stringify({ status: info.status, errors, snapshot, samples, payloadAttempts,
       consumedInputs:await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null) }, null, 2),
   );
   if (info.status !== "passed")
@@ -92,16 +93,16 @@ test("physical circular-stick inputs reach the victory screen", async ({
   let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
   const pilot = createBrowserMissionPilot();
   while (true) {
+    if (lastSample >= 0) await page.waitForFunction(next => {
+      const clock = (window as any).__kaisenReadState('clock');
+      return clock.phase !== 'playing' || clock.tick >= next;
+    }, lastSample + 6, { polling: 'raf' });
     const s = await pilotState(page);
     if (s.phase === "ended") break;
     expect(s.phase, "Unexpected pause during real touch flight").toBe(
       "playing",
     );
     expect(s.elapsed, "Bounded mission reachability window").toBeLessThan(600);
-    if (s.tick - lastSample < 6) {
-      await page.waitForTimeout(35);
-      continue;
-    }
     lastSample = s.tick;
     if(!bombCueCaptured && s.bombButton.ready==='true') {
       expect(s.bombGuide.affected.length).toBeGreaterThan(0);expect(['direct','blast']).toContain(s.bombGuide.kind);
@@ -149,11 +150,34 @@ test("physical circular-stick inputs reach the victory screen", async ({
     }
     const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
+    let payloadAttempt: any = null;
+    if(request.bomb) {
+      const payloadBefore=await pilotState(page);
+      if(payloadBefore.phase==='ended')break;
+      if(payloadBefore.phase==='paused')continue;
+      expect(payloadBefore.phase).toBe('playing');
+      let released=false;
+      let payloadAfter: any = payloadBefore;
+      try {
+        released=await releasePayloadAndObserve(page,cdp,origin,payloadBefore.controlsInput.turn,payloadBefore.controlsInput.climb,'bomb');
+      } finally {
+        payloadAfter=await pilotState(page);
+        if(payloadAfter.player.bombs<payloadBefore.player.bombs)payloadPresses++;
+        payloadAttempt={attempted:true,order:'payload-before-steering',released,
+          beforeTick:payloadBefore.tick,afterTick:payloadAfter.tick,
+          bombsBefore:payloadBefore.player.bombs,bombsAfter:payloadAfter.player.bombs,
+          phaseBefore:payloadBefore.phase,phaseAfter:payloadAfter.phase};
+        payloadAttempts.push(payloadAttempt);
+      }
+      if(payloadAfter.phase==='ended')break;
+      if(payloadAfter.phase==='paused')continue;
+      expect(payloadAfter.phase).toBe('playing');
+      expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
+    }
     const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
     lastSample=accepted.tick;
-    samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
+    samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,payloadAttempt,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
     if(accepted.phase!=='playing')break;
-    if(request.bomb) { await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb');payloadPresses++; }
 
   }
   await cdp.send("Input.dispatchTouchEvent", {

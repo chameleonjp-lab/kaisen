@@ -1,0 +1,403 @@
+{
+  "scope": "Read-only investigator; no repository, product, browser tests or full npm suite edits/executions. Scratch current real-engine replay and synthetic legal input tails only.",
+  "measuredSource": {
+    "path": "/workspace/scratch/cd965ebd4c33/ci53/artifact/test-results/evidence/normal-victory-route-state.json",
+    "sha256": "7af9e3a836bf725905c8f3786f5c53e52f6c9c09f5721096c292383aa08f66c2",
+    "inputRows": 228,
+    "samples": 205,
+    "observedDecisionTickGaps": {
+      "min": 9,
+      "p50": 18,
+      "p95": 27,
+      "max": 56
+    },
+    "acceptedTickUpperBoundDelays": {
+      "min": 2,
+      "p50": 11,
+      "p95": 17,
+      "max": 42
+    }
+  },
+  "reconstruction": {
+    "tick": 4014,
+    "elapsed": 66.9,
+    "phase": "ended",
+    "outcome": "defeat",
+    "deathCause": "aircraft-collision",
+    "position": [
+      1423.663888271593,
+      892.019785794249,
+      -493.00077000149525
+    ],
+    "measuredPosition": {
+      "x": 1423.663888271593,
+      "y": 892.019785794249,
+      "z": -493.00077000149525
+    },
+    "maxSamplePositionError": 1.1374233532693354e-13,
+    "maxSampleAngleError": 0,
+    "maxSampleSpeedError": 0,
+    "matchedSamples": 205,
+    "auditRowsConsumed": 228,
+    "expectedTick": 4014
+  },
+  "reconstructedThreatAt3941": {
+    "id": 10,
+    "distance": 259.056518351846,
+    "deltaY": 10.173273130797611,
+    "timeSeconds": 1.2520585807326596,
+    "closestLinear": 14.619009136410025,
+    "relative": [
+      -238.85152653203568,
+      10.173273130797611,
+      -99.7834279211873
+    ],
+    "velocity": [
+      194.5415689445685,
+      -4.262512407052146,
+      69.34364137993076
+    ],
+    "lateral": 23.169667969571663,
+    "enemyPitch": -0.040414808073149115,
+    "enemyYaw": -1.9440480691852833,
+    "enemySpeed": 111.81664047583422,
+    "baselineTriggers": false
+  },
+  "reconstructedThreatAt3970": {
+    "id": 10,
+    "distance": 159.180586156529,
+    "deltaY": 7.887368196524562,
+    "timeSeconds": 0.7688051420893269,
+    "closestLinear": 4.946250363022923,
+    "relative": [
+      -146.22525801027973,
+      7.887368196524562,
+      -62.40530708117478
+    ],
+    "velocity": [
+      191.842839363693,
+      -5.2858568499783445,
+      77.4365263303855
+    ],
+    "lateral": 3.607041772210003,
+    "enemyPitch": -0.048749221323438355,
+    "enemyYaw": -1.9569629406437767,
+    "enemySpeed": 111.8830787442814,
+    "baselineTriggers": true
+  },
+  "sourceFixRecommendation": "Remove only external pilot relative.length()<240 guard. Keep 0<TTC<1.5, closestLinear<40 and earliest threat selection. The time/closest criteria already bound distance through |r|^2=|r_min|^2+|v|^2*t^2. No product collision or clock changes.",
+  "finalCounterfactuals": [
+    {
+      "kind": "exact measured consumed-input negative replay",
+      "decisionTick": 3941,
+      "delay": null,
+      "deliveredAt": null,
+      "keyboardAt": null,
+      "endTick": 4061,
+      "model": "entire previously consumed input retained until independent candidate steering/keyboard arrival; no post-decision measured actions mixed into synthetic tail",
+      "tick": 4014,
+      "phase": "ended",
+      "outcome": "defeat",
+      "deathCause": "aircraft-collision",
+      "health": 0,
+      "minSeparation": 12.19541705346623,
+      "minAltitude": 892.019785794249,
+      "position": [
+        1423.663888271593,
+        892.019785794249,
+        -493.00077000149525
+      ],
+      "decision": {
+        "tick": 3941,
+        "position": [
+          1530.3405773304585,
+          901.5976870643183,
+          -453.33140758487076
+        ],
+        "oldRequestedMeasured": {
+          "turn": -0.22653763910526967,
+          "climb": 0.0037967623102225945,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": false,
+          "brake": true
+        },
+        "oldFreshReference": {
+          "turn": -0.9999988032230368,
+          "climb": 0.0015471110154199313,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "candidate": {
+          "turn": 0,
+          "climb": -1,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "previousInput": {
+          "turn": 0.5384981775877055,
+          "climb": 0.000675908265290384,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false,
+          "throttle": 1,
+          "steeringRevision": 201,
+          "steeringActive": true,
+          "viewAspect": 0.4612676056338028
+        }
+      }
+    },
+    {
+      "kind": "synthetic external-input counterfactual",
+      "decisionTick": 3941,
+      "delay": 17,
+      "deliveredAt": 3958,
+      "keyboardAt": 3959,
+      "endTick": 4061,
+      "model": "entire previously consumed input retained until independent candidate steering/keyboard arrival; no post-decision measured actions mixed into synthetic tail",
+      "tick": 4061,
+      "phase": "playing",
+      "outcome": null,
+      "deathCause": null,
+      "health": 61.90400000000027,
+      "minSeparation": 29.733108659964802,
+      "minAltitude": 794.9316283644821,
+      "position": [
+        1387.4021685708544,
+        794.9316283644821,
+        -518.385673785757
+      ],
+      "decision": {
+        "tick": 3941,
+        "position": [
+          1530.3405773304585,
+          901.5976870643183,
+          -453.33140758487076
+        ],
+        "oldRequestedMeasured": {
+          "turn": -0.22653763910526967,
+          "climb": 0.0037967623102225945,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": false,
+          "brake": true
+        },
+        "oldFreshReference": {
+          "turn": -0.9999988032230368,
+          "climb": 0.0015471110154199313,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "candidate": {
+          "turn": 0,
+          "climb": -1,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "previousInput": {
+          "turn": 0.5384981775877055,
+          "climb": 0.000675908265290384,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false,
+          "throttle": 1,
+          "steeringRevision": 201,
+          "steeringActive": true,
+          "viewAspect": 0.4612676056338028
+        }
+      }
+    },
+    {
+      "kind": "synthetic external-input counterfactual",
+      "decisionTick": 3941,
+      "delay": 34,
+      "deliveredAt": 3975,
+      "keyboardAt": 3976,
+      "endTick": 4061,
+      "model": "entire previously consumed input retained until independent candidate steering/keyboard arrival; no post-decision measured actions mixed into synthetic tail",
+      "tick": 4061,
+      "phase": "playing",
+      "outcome": null,
+      "deathCause": null,
+      "health": 61.26400000000027,
+      "minSeparation": 18.085065411616956,
+      "minAltitude": 818.677102706208,
+      "position": [
+        1385.5395723255833,
+        818.677102706208,
+        -539.2259808977379
+      ],
+      "decision": {
+        "tick": 3941,
+        "position": [
+          1530.3405773304585,
+          901.5976870643183,
+          -453.33140758487076
+        ],
+        "oldRequestedMeasured": {
+          "turn": -0.22653763910526967,
+          "climb": 0.0037967623102225945,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": false,
+          "brake": true
+        },
+        "oldFreshReference": {
+          "turn": -0.9999988032230368,
+          "climb": 0.0015471110154199313,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "candidate": {
+          "turn": 0,
+          "climb": -1,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "previousInput": {
+          "turn": 0.5384981775877055,
+          "climb": 0.000675908265290384,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false,
+          "throttle": 1,
+          "steeringRevision": 201,
+          "steeringActive": true,
+          "viewAspect": 0.4612676056338028
+        }
+      }
+    },
+    {
+      "kind": "synthetic external-input counterfactual",
+      "decisionTick": 3941,
+      "delay": 42,
+      "deliveredAt": 3983,
+      "keyboardAt": 3984,
+      "endTick": 4061,
+      "model": "entire previously consumed input retained until independent candidate steering/keyboard arrival; no post-decision measured actions mixed into synthetic tail",
+      "tick": 4061,
+      "phase": "playing",
+      "outcome": null,
+      "deathCause": null,
+      "health": 61.26400000000027,
+      "minSeparation": 18.820449888121658,
+      "minAltitude": 830.0676750685295,
+      "position": [
+        1385.0800528772131,
+        830.0676750685295,
+        -548.5482202550538
+      ],
+      "decision": {
+        "tick": 3941,
+        "position": [
+          1530.3405773304585,
+          901.5976870643183,
+          -453.33140758487076
+        ],
+        "oldRequestedMeasured": {
+          "turn": -0.22653763910526967,
+          "climb": 0.0037967623102225945,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": false,
+          "brake": true
+        },
+        "oldFreshReference": {
+          "turn": -0.9999988032230368,
+          "climb": 0.0015471110154199313,
+          "bomb": false,
+          "torpedo": false,
+          "fire": false,
+          "loop": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "candidate": {
+          "turn": 0,
+          "climb": -1,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false
+        },
+        "previousInput": {
+          "turn": 0.5384981775877055,
+          "climb": 0.000675908265290384,
+          "fire": false,
+          "loop": false,
+          "bomb": false,
+          "torpedo": false,
+          "accelerate": true,
+          "brake": false,
+          "throttle": 1,
+          "steeringRevision": 201,
+          "steeringActive": true,
+          "viewAspect": 0.4612676056338028
+        }
+      }
+    }
+  ],
+  "counterfactualLimits": "The exact measured input negative reproduces CI53 collision. Alternative results are synthetic from that exact world prefix, held previous full input until steering arrival, keyboard one fixed tick later, then holding candidate until decision+120 ticks. This tests the immediate collision only, not browser delivery or whole-mission victory.",
+  "notAdoptedArtifacts": {
+    "collision-tail-alternatives.json": "Initial direction scan; late34/42 replacement started after original measured descent had already arrived and is not a valid delayed initial-request model. Do not cite these as latency robustness.",
+    "early-range-results.json": "Intermediate model retained future measured keyboard actions before alternative arrival; superseded by early-range-held-input-results.json."
+  },
+  "artifacts": {
+    "collision-replay.json": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/collision-replay.json",
+    "early-range-held-input-results.json": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/early-range-held-input-results.json",
+    "analyze.mts": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/analyze.mts",
+    "early-range-held-input.mts": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/early-range-held-input.mts",
+    "pilot-original.ts": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/pilot-original.ts",
+    "pilot-without-range.mts": "/workspace/scratch/cd965ebd4c33/ci53-control-analysis/pilot-without-range.mts"
+  },
+  "originalHelperSha256": "d6cc9b0047ef6fdfb645e3de79fda2a9d9b55140f114ee039166ab1bf7fea227",
+  "unchangedEngineSourceSha256": {
+    "src/simulation.ts": "d9a9071bc9d73614793febae6eba70d6423b3cea3a5f09ecd0fd4326f09cf861",
+    "src/flight.ts": "034947c8e327c8c3b7856465b26f3e2f448a07eda4f3cbd648d4c2ce1e3fa412",
+    "src/flight-assist.ts": "e51454fb4e209e2463addeabb6156db067edacf308f9e6a8962fd16d79aa0aa2",
+    "src/mission.ts": "8ea4aa79ee850d8849d4c2141b246654f5d970f445dd3593a2061e401e327922"
+  }
+}

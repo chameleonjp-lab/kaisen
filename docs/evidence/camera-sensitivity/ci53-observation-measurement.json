@@ -1,0 +1,24 @@
+{
+  "source": "Local existing browser spec on frozen candidate; actual CI mode is verified separately",
+  "test": "browser-tests/observation-clock.spec.ts",
+  "sourceSha256": "e6cce5fe3df8f3fac5df47622949aaa0a8e4f4607b1cf58d81fe154e96d23af6",
+  "expected": {
+    "phase": "paused",
+    "tick": 12,
+    "elapsed": 0.2
+  },
+  "measurements": {
+    "iterations": 100,
+    "fullMs": 16.700000002980232,
+    "clockMs": 0.10000000149011612,
+    "inputMs": 0.7999999970197678,
+    "fullBytes": 31365,
+    "clockBytes": 42,
+    "inputBytes": 253,
+    "note": "Same paused world, sequential synchronous reads. Timing is evidence, not a portable performance threshold."
+  },
+  "clockAgreement": true,
+  "inputAgreement": true,
+  "worldUnchanged": true,
+  "note": "Timing is a same-paused-world local measurement, not a CI-wide speed or hardware guarantee."
+}

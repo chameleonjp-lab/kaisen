@@ -1,3 +1,19 @@
+# 2026-10-12 UTC CI53の実入力修正と検査観測の軽量化
+
+head `14190408feb4b09d71d914c986653520d9eeecc4` / tree `9901ae860fabf6e55c507484de4a59549b8ebceb` の[CI53](https://github.com/chameleonjp-lab/kaisen/actions/runs/38273855546)は331単体・型/build・manifest・固定旧版比較成功、browser53/58成功・5失敗。Easyは299.6667秒の艦対空砲、Normalは66.9秒の機体衝突で敗北し、両方のbomb要求は0だった。両ルートでrender停止/GL failureは観測0だが、Chromium方式変更の一般的な性能改善や根因確定とは扱わない。artifact11759132178、18,322,928 bytes、SHA256 `4d7981e40a84add388e5454241705575425428def1476fce1f730c4197608920` を照合した。
+
+- 実green cueはEasy tick1460・Normal tick1636で生存艦にblastを予測していたが、試験pilotの狭い中心判定が拒否した。DOMの投下可能表示と実blast/direct予測を併せて読む。browser feedbackがある場合はready=falseも拒否し、feedbackなしの数値試験だけ中心予測を使う。合法な残弾・reload/cooldown・上限・HPを保つ。
+- 実ボタンは新操舵の待機より先に、現在受理されている操舵を保って押す。成功数は実bomb残数の低下でのみ増やす。phase変化は旧結果/停止分岐へ戻し、飛行中の操縦指所有消失は失敗とする。投下前後tick・phase・残弾・操作順を別記録し、旧fixtureの操舵受付後投下という解釈を新記録へ流用しない。
+- Normalの228消費行は205観測点と衝突tick4014を再現した。tick3941の259.06m/TTC1.252秒/最短14.62mが距離240mだけで除外されていた。観測間隔0.15秒超を既に検出したpilotだけTTC/最接近距離を直接使い、従来の高速6tick経路は維持する。17/34/42tick遅延の合法入力による2秒の数値比較は生存したが、全勝利や実ブラウザの代用ではない。
+- 404はtraceで既定の `/favicon.ico` と確認し、既存KマークのインラインSVGを指定した。console error検査は維持する。
+- DEV限定のclock/input読取を追加し、RAFの待機やtouch受理確認で全機・全艦・爆弾予測・描画診断を毎回複製しない。Easyも旧35ms固定待機から同じ6tick条件のRAF待機へ変える。全状態・消費監査・実画像は必要箇所で保存する。同paused worldの100回読取はfull16.7ms/31,365 bytes、clock0.1ms/42 bytes、input0.8ms/253 bytes。局所実測であり、全CIの所要時間や実端末性能の保証ではない。
+
+現在の全334単体・型/buildは成功。新clock/inputの実phase遷移・不変と魚雷/装填の関連browser3件は成功。途中の全距離回避候補は高速Easyの全滅試験を退行させたため不採用とし、原failログを保存した。最終の遅い観測だけへの変更で全334件を再実行し成功。独立レビューの必須指摘は解消した。
+
+製品の監視1秒・画質・ゲーム時計・HP・勝利/全滅条件・回復1回・600秒・workers1/retries0・依存・正式workflow・WebKitを維持する。既存58browserにread-only観測の回帰1件を追加し、59件/18filesを列挙した。ローカルの勝利2経路は両方成功（Easy 572.9000秒/HP80・実投下16回、Normal 334.1333秒/HP77.248・実投下20回・描画回復0回）。新headの正式全CIはこれから実行し、終了後の結果をPRへ記録する。ローカルはSparticuz shell153であり、正式CIの通常Chromium149と同一ではない。利用可能なfull153の起動はUnix socket制約で実行前に失敗し、受入証明には使わない。マージ・Ready化・公開はしない。
+
+失敗原本と観測統計は [CI53](evidence/camera-sensitivity/ci53-failure.json)、正確な衝突再生と限定比較は [回避調査](evidence/camera-sensitivity/ci53-collision-analysis.json)、現source識別と検査集合は [候補記録](evidence/camera-sensitivity/ci53-code-candidate.json)。ローカルの日本語glyph不足は正式CIの画像で別途確認する。
+
 # 2026-10-12 UTC CI52のChromium実行方式対応候補
 
 CI52 head `d59f1dd854bde50ca910e8790d4700c33f1a3725` / tree `aa361578998f04089c429feca7bc98e5421e58f6` は331単体・型/build・manifest・固定旧版比較成功、browser57/58成功。Normalはpaused提出10の完了・150ms安定後に再開できたが、新playing提出11の1298.3ms待機で2回目の停止。受付修正が動いたことと、待機原因が未特定であることを分ける。

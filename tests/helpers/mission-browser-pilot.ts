@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from 'three';
 import { forwardOf, updateQuaternion } from '../../src/flight';
 import { EASY_AUTO_FIRE_RANGE, getFlightAssist } from '../../src/flight-assist';
 import { projectFlightTarget } from '../../src/flight-view';
+import { MAX_ORDNANCE } from '../../src/mission';
 import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
 import { absolutePitchTargetToRateCommand } from './pitch-rate-conversion';
@@ -14,6 +15,11 @@ function plane(aircraft: Aircraft): Aircraft {
     ? new Quaternion().fromArray(q)
     : new Quaternion(q.x ?? q._x, q.y ?? q._y, q.z ?? q._z, q.w ?? q._w) };
 }
+
+type BrowserPilotSnapshot = GameState & {
+  bombGuide?: { kind: string; affected: { shipId: number; damage: number }[] } | null;
+  bombButton?: { ready?: string } | null;
+};
 
 /** Browser-test pilot: legal circular-stick, manual fire and throttle commands.
  * Uses the normal mission's actual targets, hull axis, speed, ammo and clock.
@@ -32,15 +38,15 @@ export function createBrowserMissionPilot(preferAircraft = false) {
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
   let slowInput = false;
   let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1, dodgeTurn = 0;
-  return (snapshot: GameState): FlightInput => {
+  return (snapshot: BrowserPilotSnapshot): FlightInput => {
     const sampleDt = Math.max(1/60, snapshot.elapsed - lastTime); lastTime = snapshot.elapsed;
     // Once delayed delivery is observed, retain the damped response. Alternating
     // fast/slow gains at each jittered sample creates another source of oscillation.
     if (sampleDt > .15) slowInput = true;
     estimatedTrim = Math.max(65,Math.min(141,estimatedTrim + trimDirection * 18 * sampleDt));
     const player = plane(snapshot.player);
-    // The browser applies steering before it taps the payload button. Keep the
-    // predicted approach through that release, then exit only after a later
+    // The browser driver releases the payload before changing steering. Keep the
+    // predicted approach through that release, then exit after a later
     // observation confirms the game consumed the bomb.
     if (snapshot.mode === 'easy' && pendingBombCount !== null && player.bombs < pendingBombCount) {
       pendingBombCount = null;
@@ -62,7 +68,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       const velocity = forwardOf(enemy).multiplyScalar(enemy.speed).sub(forwardOf(player).multiplyScalar(player.speed));
       const time = -relative.dot(velocity) / Math.max(1, velocity.lengthSq());
       const closestSeparation = relative.clone().addScaledVector(velocity, time).length();
-      if (relative.length() < 240 && time > 0 && time < 1.5 && closestSeparation < 40
+      // Fast regular sampling retains the prior range envelope. Delayed samples
+      // use TTC and clearance directly because a fixed range cutoff can miss the
+      // last actionable observation before a collision.
+      if ((relative.length() < 240 || slowInput) && time > 0 && time < 1.5 && closestSeparation < 40
         && (!imminentThreat || time < imminentThreat.time)) {
         imminentThreat = { separation: relative, time };
       }
@@ -93,6 +102,13 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       return {turn:dodgeTurn,climb:dodgeClimb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
     }
     const ships = snapshot.ships.map(ship => ({ ...ship, position: vector(ship.position), velocity: vector(ship.velocity) }));
+    const guide = snapshot.bombGuide;
+    const guidedBombReady = snapshot.phase === 'playing' && player.health > 0 && player.bombs > 0
+      && player.bombReloadTicks === 0 && player.payloadCooldown <= 0
+      && snapshot.ordnance.length < MAX_ORDNANCE
+      && snapshot.bombButton?.ready === 'true'
+      && (guide?.kind === 'direct' || guide?.kind === 'blast')
+      && guide.affected.some(hit => hit.damage > 0 && ships.some(ship => ship.id === hit.shipId && ship.health > 0));
     const targets = [...enemies, ...ships].filter(target => target.health > 0);
     const nearest = targets.slice().sort((a, b) => player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
     const pick = nearest?.kind === 'aircraft' ? nearest : targets.filter(target => target.kind === 'ship').sort((a, b) => a.health - b.health || player.position.distanceTo(a.position) - player.position.distanceTo(b.position))[0];
@@ -227,6 +243,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       aim = player.position.clone().addScaledVector(forwardOf(player),800);
       aim.y = Math.max(400,player.position.y+200); evasive = true;
     }
+    // With browser telemetry, the live button and its blast-radius cue are
+    // authoritative in both directions. Only unit states without that feedback
+    // use the narrower local center-impact estimate above.
+    if (snapshot.bombButton !== undefined) bomb = guidedBombReady;
     const weave = evasive ? .3 : 0;
     const relative = aim.clone().sub(player.position);
     let targetVelocity = !evasive ? target.kind === 'aircraft' ? forwardOf(target).multiplyScalar(target.speed) : target.velocity.clone() : new Vector3();

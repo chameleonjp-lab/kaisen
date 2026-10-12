@@ -712,9 +712,13 @@ try {
 // Development-only, deeply copied observation. No mutation or result injection API.
 if (import.meta.env.DEV) {
   Object.defineProperty(window, "__kaisenReadState", {
-    value: (includePerformanceHistory: boolean | 'audit' = true) =>
+    value: (includePerformanceHistory: boolean | 'audit' | 'clock' | 'input' = true) =>
       JSON.parse(
-        JSON.stringify(includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
+        // RAF polling only needs these primitives. Avoid cloning entities,
+        // forecasting ordnance or reading renderer diagnostics on every poll.
+        JSON.stringify(includePerformanceHistory === 'clock' ? {phase:state.phase,tick:state.tick,elapsed:state.elapsed} :
+          includePerformanceHistory === 'input' ? {phase:state.phase,tick:state.tick,controlsInput:controls.peek(),player:{bombs:state.player.bombs,torpedoes:state.player.torpedoes}} :
+          includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
           phase: state.phase,
           mode: state.mode,
           selectedMode,

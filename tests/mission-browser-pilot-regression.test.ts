@@ -1,12 +1,121 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { Quaternion, Vector3 } from 'three';
 import { createGame, pauseGame, resumeGame, startGame, stepGame } from '../src/simulation';
 import { updateQuaternion } from '../src/flight';
+import { predictBombImpact } from '../src/ordnance';
 import { createBrowserMissionPilot } from './helpers/mission-browser-pilot';
 import { absolutePitchTargetToRateCommand } from './helpers/pitch-rate-conversion';
 import { pointerOffsetForControls } from './helpers/touch-reload-pilot';
 import type { FlightInput } from '../src/types';
+
+test('CI53 ready blast cues produce a real payload request when direct-center geometry misses', () => {
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/browser-bomb-cues-ci53.json', import.meta.url), 'utf8'));
+  for (const mode of ['easy', 'normal'] as const) {
+    const route = fixture.routes[mode];
+    const snapshot = route.snapshot;
+    const hit = snapshot.bombGuide.affected.find((entry: any) => entry.damage > 0);
+    const ship = snapshot.ships.find((candidate: any) => candidate.id === hit?.shipId);
+    assert.ok(hit && ship?.health > 0);
+    assert.equal(snapshot.phase, 'playing');
+    assert.equal(snapshot.bombButton.ready, 'true');
+    assert.equal(route.oldRequest.bomb, false, 'the archived helper ignored this live ready cue');
+
+    const aircraft = { ...snapshot.player,
+      position: new Vector3(snapshot.player.position.x, snapshot.player.position.y, snapshot.player.position.z),
+      quaternion: new Quaternion().fromArray(snapshot.player.quaternion) };
+    const impact = predictBombImpact(aircraft, ship.position.y + 9);
+    assert.ok(impact, 'the strict center check has a valid ballistic prediction');
+    const futureShip = new Vector3(ship.position.x, ship.position.y, ship.position.z)
+      .addScaledVector(new Vector3(ship.velocity.x, ship.velocity.y, ship.velocity.z), impact.time);
+    const localOffset = impact.position.clone().sub(futureShip)
+      .applyQuaternion(new Quaternion().fromArray(ship.quaternion).invert());
+    assert.ok(Math.abs(localOffset.x) >= ship.width * .36 || Math.abs(localOffset.z) >= ship.length * .35,
+      'the original narrow direct-center gate would reject the recorded blast cue');
+
+    const before = JSON.stringify(snapshot);
+    const request = createBrowserMissionPilot()(snapshot);
+    assert.equal(request.bomb, true, `${mode} follows the user-visible affected-ship cue`);
+    assert.equal(JSON.stringify(snapshot), before, 'reading the cue does not mutate the observed world');
+    assert.ok(Math.hypot(...Object.values(pointerOffsetForControls(request.turn, request.climb)) as number[]) <= 36 + 1e-9);
+
+    const blocked = structuredClone(snapshot);
+    blocked.bombButton.ready = 'false';
+    assert.equal(createBrowserMissionPilot()(blocked).bomb, false,
+      'an affected forecast alone is not enough when the actual payload button is not ready');
+  }
+});
+
+test('explicit browser payload readiness blocks an otherwise-valid local center estimate', () => {
+  const state = createGame(undefined, 'easy');
+  startGame(state);
+  state.enemies = [];
+  state.ships = [state.ships[0]];
+  const ship = state.ships[0];
+  ship.position.set(0, 0, -1800);
+  ship.previous.copy(ship.position);
+  ship.velocity.set(0, 0, -1e-6);
+  ship.quaternion.identity();
+  ship.previousQuaternion.identity();
+  ship.yaw = 0;
+  state.player.position.set(0, 1000, 0);
+  state.player.speed = 125;
+  state.player.pitch = state.player.yaw = 0;
+  updateQuaternion(state.player);
+
+  const impact = predictBombImpact(state.player, ship.position.y + 9);
+  assert.ok(impact);
+  assert.ok(Math.abs(impact.position.z - ship.position.z) < ship.length * .35,
+    'the strict local center estimate would request a release');
+  const withoutBrowserFeedback = createBrowserMissionPilot()(JSON.parse(JSON.stringify(state)));
+  assert.equal(withoutBrowserFeedback.bomb, true, 'unit-only states retain the local estimate fallback');
+
+  const browserSnapshot = JSON.parse(JSON.stringify(state));
+  browserSnapshot.bombButton = { ready: 'false' };
+  assert.equal(createBrowserMissionPilot()(browserSnapshot).bomb, false,
+    'present browser readiness is authoritative even when local geometry is centered');
+});
+
+test('collision avoidance uses TTC beyond 240 m after a delayed observation', () => {
+  const state = createGame(undefined, 'normal');
+  startGame(state);
+  state.enemies = state.enemies.slice(0, 1);
+  const enemy = state.enemies[0];
+  state.player.position.set(0, 900, 0);
+  state.player.speed = 110;
+  state.player.yaw = state.player.pitch = 0;
+  updateQuaternion(state.player);
+  enemy.position.set(14.62, 900, -259);
+  enemy.speed = 100;
+  enemy.yaw = Math.PI;
+  enemy.pitch = 0;
+  enemy.health = 100;
+  updateQuaternion(enemy);
+
+  const relative = enemy.position.clone().sub(state.player.position);
+  // Player flies toward -Z at 110 m/s; the hostile flies toward +Z at 100 m/s.
+  const relativeVelocity = new Vector3(0, 0, enemy.speed + state.player.speed);
+  const closingTime = -relative.dot(relativeVelocity) / relativeVelocity.lengthSq();
+  const closestSeparation = relative.addScaledVector(relativeVelocity, closingTime).length();
+  assert.ok(enemy.position.distanceTo(state.player.position) > 240);
+  assert.ok(closingTime > 0 && closingTime < 1.5);
+  assert.ok(closestSeparation < 40);
+
+  const pilot = createBrowserMissionPilot();
+  pilot(JSON.parse(JSON.stringify(state)));
+  state.tick += 6;
+  state.elapsed += 6 / 60;
+  const fastCadenceRequest = pilot(JSON.parse(JSON.stringify(state)));
+  assert.ok(fastCadenceRequest.turn !== 0 || fastCadenceRequest.climb !== -1,
+    'regular six-tick sampling retains the earlier 240 m envelope');
+  state.tick += 12;
+  state.elapsed += 12 / 60;
+  const delayedRequest = pilot(JSON.parse(JSON.stringify(state)));
+  assert.equal(delayedRequest.turn, 0);
+  assert.equal(delayedRequest.climb, -1, 'the observed delay enables the existing TTC and clearance bounds');
+  assert.equal(delayedRequest.fire, false);
+});
 
 test('held-stick ship pilot descends toward its staging altitude instead of opposing an absent Easy pull', () => {
   const state = createGame(undefined, 'easy');
