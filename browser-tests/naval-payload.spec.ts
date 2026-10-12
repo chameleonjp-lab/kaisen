@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
 import { absolutePitchTargetToRateCommand } from '../tests/helpers/pitch-rate-conversion';
+import { waitForPausedView } from './paused-view';
 const read=(page:any)=>page.evaluate(()=>(window as any).__kaisenReadState());
 
 test.afterEach(async({page},info)=>{
@@ -39,6 +40,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect(page.locator('#torpedo-hint')).toHaveText('停止中');
   await page.waitForTimeout(600);expect((await read(page)).player.bombReloadTicks).toBe(paused.player.bombReloadTicks);
   expect((await read(page)).ordnance).toEqual(paused.ordnance);
+  await waitForPausedView(page,{tick:paused.tick});
   await page.locator('#resume').tap();
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   let last=-6, lastCommandElapsed:number|null=null;
@@ -75,6 +77,8 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   expect(water.player.health).toBeGreaterThan(0);expect(water.player.bombs).toBe(2);
   expect(water.controlsInput.steerPointer).not.toBeNull();
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.locator('#pause').tap();
+  const pausedWater=await read(page);
+  await waitForPausedView(page,{tick:pausedWater.tick});
   await mkdir('test-results/evidence',{recursive:true});
   await page.screenshot({path:'test-results/evidence/torpedo-water-flight.png',style:'#pause-screen {visibility:hidden!important}'});
   await writeFile('test-results/evidence/naval-payload-route.json',JSON.stringify({note:'Actual touch controls and real simulation clock. Screenshot is explicitly paused with only pause menu hidden. No game-state injection.',paused,water},null,2));

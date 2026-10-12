@@ -4,6 +4,7 @@ import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { expectScoreResult, inspectScoreResultLayout } from './score-result';
+import { waitForPausedView } from './paused-view';
 // This long real-input route avoids video readback. Final screenshots and state
 // are saved separately; no product state or result is injected.
 test.use({ trace: "off" });
@@ -31,9 +32,8 @@ async function started(page: Page) {
 async function capture(page: Page, name: string, inspectPausedScene = false) {
   await mkdir("test-results/evidence", { recursive: true });
   if (inspectPausedScene) {
-    const submitted = (await state(page)).render.queue.submittedCount;
-    await expect.poll(async () => (await state(page)).render.queue.completedCount)
-      .toBeGreaterThanOrEqual(submitted + 1);
+    const snapshot = await state(page), viewport = page.viewportSize();
+    await waitForPausedView(page,{tick:snapshot.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   }
   await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({
     note: inspectPausedScene ? "Real-input gameplay, explicitly paused. Only pause menu hidden for this screenshot; camera/world unchanged." : "Unmodified gameplay screen",

@@ -1,0 +1,324 @@
+{
+  "recordedAt": "2026-10-12T15:14:19.954747+00:00",
+  "repository": "chameleonjp-lab/kaisen",
+  "pr": 17,
+  "sourceHead": "19a4db4bc51360f4a2ec31fed7d07fbb7208c10b",
+  "sourceTree": "b6a841c364d206a238915eefcf90ee75cda5a540",
+  "baseMain": "6d5fa6b57c0e7bd1fed04f60c883ba82a8152751",
+  "failedRun": {
+    "id": 38258798280,
+    "runNumber": 51,
+    "unitPass": 329,
+    "browserPass": 56,
+    "browserFail": 1
+  },
+  "diagnosis": "CI51 paused tick283 submitted view11 while view10 completed. Resume was accepted with view11 pending. Second playing stall tick322 was still view11. The first one-second fence delay remains unexplained.",
+  "fix": "Submit the frozen paused pose once, require its completed fence before button/key Resume, keep the completed view until invalidated by mission/phase/HUD/size/context change. Retain the one-second watchdog and Normal single-recovery limit.",
+  "environment": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "playwright": "1.61.1",
+    "three": "0.186.1",
+    "browser": "Chromium 153.0.8010.0 / SwiftShader",
+    "viewport": {
+      "width": 393,
+      "height": 852,
+      "deviceScaleFactor": 1
+    },
+    "localOverrides": [
+      "local executablePath",
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
+    ],
+    "workers": 1,
+    "retries": 0,
+    "port": 4176,
+    "officialWorkflowChanged": false
+  },
+  "runtimeComparison": {
+    "comparedBlobs": 61,
+    "unchangedBlobs": 59,
+    "changedPaths": [
+      "src/main.ts",
+      "src/scene.ts"
+    ]
+  },
+  "executionFilesSha256": {
+    ".github/workflows/checks.yml": "aeadc567588ca44251a8b78d3178e6969e7418049ccdf8722d5b3a550a1b655b",
+    ".github/workflows/deploy-pages.yml": "955492971fc0b57d0aaf289dceb38bd0fffbd940a841d2f9d25bf01d5ff47170",
+    "browser-tests/00-00-input-method.spec.ts": "69b4b656cdb7c8e49e74fc101535dc0428152f23670b7786ec793a6da37391ef",
+    "browser-tests/00-easy-victory.spec.ts": "adb4ff68a231c88b082f272fc0e24292fd3887ac36377b1939c55f083944078a",
+    "browser-tests/00-normal-victory.spec.ts": "706bc346ae20bac57c8c86071be49c07108c1156ec801c4736b60aad090bec91",
+    "browser-tests/bomb-guide.spec.ts": "d423ef9c2d7ba81a07e919682335ee2bb5819ed6d14e533ac7de089750344efd",
+    "browser-tests/easy-ship-tracking.spec.ts": "d9af5dfc77b9cf100db34074c844cc0fed41d098a0934109f6cc25f47813226e",
+    "browser-tests/feedback-runtime.spec.ts": "b9ea5e4ccf08f5d34f564a03df92bc486d07a5f157d8d89f048f738dccc1b840",
+    "browser-tests/feedback-settings.spec.ts": "980391fb139512e0891b05a76406f1245ce20f4f4a976500e5d9e7a29c578f0a",
+    "browser-tests/game.spec.ts": "8358c21a5cee0565bf7b2983982d3d3652fdb74f3ff812a9129b559fc8ea6359",
+    "browser-tests/mobile-settings-ui.spec.ts": "9f7e5f309bdc6923611a28ce571dca8c5a37d93856c28487398010ce5bd2c1a3",
+    "browser-tests/modes.spec.ts": "fcd67a326931de1d05fcfd4baa8cc22ea35e2f5f1bfe134f5d10e46e0db9cd24",
+    "browser-tests/naval-payload.spec.ts": "82e2b94e4b2dd581b8726c5ea12b3cfb15ccb6bc48c9b08b3e6422398f52e752",
+    "browser-tests/paused-render-gate.spec.ts": "6ae4ea3ca4b513c35578580b95d1a5348a567f7f2a4b89ea6456d7a7012559f9",
+    "browser-tests/paused-view.ts": "64c798df9477599d592a61e8657fb04217ff810aa8e017f3d6a03782de3a7dcb",
+    "browser-tests/reinforcement.spec.ts": "65ebc2f45bbc89a6a470330b4874b3d7dc0091c756e09e61d0077afcf77425ae",
+    "browser-tests/reload.spec.ts": "378b2f35a424e22af8757e822f51964a31d053a8248e17604a6fb6a21ecaa7b6",
+    "browser-tests/review-accessibility.spec.ts": "12ae2d590bea29f2a0740298cb5d32ece40fc3c5e2708b970199de4b2c222711",
+    "browser-tests/score-result.ts": "289e18feaf3d132e1f5a8acc9bb90e85041482b9636fe5de51c24a99183cfe34",
+    "browser-tests/throttle-lever-ui.spec.ts": "0a9e688045e25c71be465ddcab9879c5ece74a1be82054ec2433bedb3b2ce308",
+    "browser-tests/touch-command.ts": "c16f80d161eef73c6002fc72f389cfb39a55abe0882a8b5d15a0a11bb0b2a63a",
+    "browser-tests/tracers.spec.ts": "13de1993f4190f07233753a694975e48611b17130a7b438593d2ac8f99a5dad7",
+    "index.html": "90687c69d80e60cca5e1d7a7a6867c6f351f32718fd914e951db73a8f665e1c1",
+    "package-lock.json": "5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78",
+    "package.json": "519ce0e8332c9800e5ede2a1311a9a0890e078daff4bc557b69be18e312d0277",
+    "playwright.config.ts": "86d5158526b50873eb38b5eb42b925c329b3e9190c4e28743ce107b267791922",
+    "public/third-party-notices.txt": "97de7ac302052bcea7f20e5ae89635c10e049614f56409288d554d63fceb614f",
+    "scripts/air-sea-balance-report.ts": "80cf8291fc58ec508cb0a26a53810fa82c6de25ede63fa9a875228c374687f77",
+    "scripts/capture-throttle-comparison.mjs": "116e14386aa8e7fd90c220e6e916a74b0593c4c02c8d778f76025a89e340875e",
+    "scripts/easy-assist-report.ts": "0ab3acab81c5c792fd0c4d6e2e1685c95c7e34bd5e390b01944b7b8839bb4215",
+    "scripts/easy-idle-report.ts": "286ef6ba8e45b4dc8338d40af23bae5ecfa61c601227e6d81f654e5aab480323",
+    "scripts/fleet-fire-report.ts": "2bdea83295f904d61a4ce98b8e75031ca1dc33dc1b4765edc590bedcb5bff804",
+    "scripts/prepare-pages.mjs": "b898d94936548ceb225efbc9b9a91e54dc3b025e7c0657db4f5128c48cc9424b",
+    "scripts/replay-consumed-inputs.ts": "1cbc8b30ed5bf8280ebecf9986ed1dc6b3cc3fa5e74e6f61e5f9130e2c20019e",
+    "src/ai.ts": "8d6050f92f08b55b053430c706c46ca37683a65901e20a86dcf9fc2242da59c2",
+    "src/aim-indicator.ts": "7fe63983b420549e0ecf582a8c883e56804c5555c16e1d82312c9e7c33a72c94",
+    "src/aircraft-batch.ts": "cd69fdcd03507faffca251b311f253f4ccd10aa0bb11fbfc767626a4960c5428",
+    "src/aircraft-damage.ts": "b0a71f4b39aa1adab948ea3f08d99f0ed60e30deb5087992c8f748c9a5fade83",
+    "src/aircraft-tracers.ts": "fb6cd860fcabe4f541b75ae167a6fb4b83f063e195f99ef272c4aa8559a1b4b7",
+    "src/aircraft.ts": "1a9c18f93e5a48869882b2aa2946cdeb352dc4a8acd76b4fd9beade8ded621d5",
+    "src/ally-announcements.ts": "7b267a199a71fd993f0b92ace235eeeb175265544e2b204daad76de5c9aeb6d6",
+    "src/ammunition.ts": "a8cafceea6d20183f7257c2a4036d36a92feba830d5050d98fb9c9a6d5271370",
+    "src/atmosphere.ts": "e6b9c95f0685bb2732926e72730c96712251813a2c6c6faa150a21793c2c1f7a",
+    "src/audio.ts": "3396f7b46c42d331ccf2270c77bee5ad2037167064dca4c7710fc444bf0514e8",
+    "src/bomb-blast.ts": "76cadd55191c9d08aba199b97325a9c6f439081495d83578febafe7db45c3ee0",
+    "src/bomb-guide.ts": "9b069f4ccda5a478adf67c7c42aa982a59b13d2e7820179d88415ee1485c762b",
+    "src/control-obstacles.ts": "cacd1cff5a216dc45a1c9d5eba95b261d2d3343d517290d3b4c0fd85421dac67",
+    "src/control-settings.css": "7ee104c0d05bafc920ca7afd4c31502e984b1438fc7742864bd79d95d6fdf69d",
+    "src/control-settings.ts": "4d2154d4cb952ad68f7569a8d76ce394b124dcb249507cdf3d4acef213c705e6",
+    "src/dialog-focus.ts": "86d631a4d618558e1ca671004c12ccc1fbdfe75516e6c5d04f962acd2c5e1996",
+    "src/flight-assist.ts": "e51454fb4e209e2463addeabb6156db067edacf308f9e6a8962fd16d79aa0aa2",
+    "src/flight-target.ts": "d93d32e3afa7814005de2f8f5a102a624350db6cd9f5e1ebe46eb94350763961",
+    "src/flight-view.ts": "a9e2b1ab798f6f3db13f4d33061601e0d505a83c5dd978234e529de530b7e332",
+    "src/flight.ts": "034947c8e327c8c3b7856465b26f3e2f448a07eda4f3cbd648d4c2ce1e3fa412",
+    "src/gun-sight.ts": "436c9e7c6a6864513489de6d8172d85d97bd1bf685b60678890f848a9acd2b71",
+    "src/input.ts": "a488158fc2f1983c7ffb53943df90d4bf57350d49c49fb07a514b9b69f099d00",
+    "src/keyboard-settings.ts": "53a0f6eb8f9c41b0aa5e272cfde7931f1e226ac0a0c30ede1b9517c0b5080a86",
+    "src/main.ts": "44c44148a765c62b62fb14f0879c0be723dd5af6cd04ef42018674404db5669a",
+    "src/mission-hud.ts": "4ec28f467a9bfda8af1dec87eb3e6fe87a1f73d38ace7f7460866b043fb88df2",
+    "src/mission.ts": "8ea4aa79ee850d8849d4c2141b246654f5d970f445dd3593a2061e401e327922",
+    "src/naval-damage.ts": "af122931da2ccaf520894528d5e0663372f713bac4362fcf6ca5175e5c658084",
+    "src/naval.ts": "b02e758791bfddd6ebc06b643b25d0c209392fe3426cc900cfb02fd631396d83",
+    "src/ocean.ts": "0f2263700d5b9c5516e81d77fd4e2b6341c94a257b6edb2893f8d41ddbb574d0",
+    "src/ordnance-view.ts": "13301f6bddf0df587fbcdb4f1684e2089f45a3fcca1120559a1cc22bb099645b",
+    "src/ordnance.ts": "524410fc8a90978fde49f2f8341cb39617509b2fc7ff765792c1e37e43aa86c7",
+    "src/render-queue.ts": "8ec4611984beb7168ead1a7e758faf399b0cc0b73939502352be984ab35648f7",
+    "src/rules-guide.ts": "36d9c73dbff03b669bc0c9769d7321b595562f1a0c3896c10a2aa89d296dce8e",
+    "src/scene.ts": "b2f9ccd050fc3618430a01da4d7472581ec6ec1ffbd8cbddd88dce3cb3509fe7",
+    "src/scoring.ts": "542a3860fcb6558a76d497559d08d925eb140626e5b2354f99a250e0d8d8fca3",
+    "src/sea-contact.ts": "887f47926e3a2305672a5e2b9901403d402a8fc352383f01a74bf03380bc2612",
+    "src/settings-storage.ts": "f27b88f010c770032ac836b58b0081cf3a1c1e40ac5335b8625ef71549bd1929",
+    "src/ship-motion.ts": "add5748015717beb0a4a08f6f388e5a7030f679837e455b5854346ea75108dc8",
+    "src/ship-wreck.ts": "ae76873890da33d69504ef240e1cf6441f46ae0420802e4c4d5e005c67630ee3",
+    "src/ships.ts": "78c25b5de6fd1ced806589f3378ba5a27a0741e58e28d7823d564a72ab9d95c1",
+    "src/simulation.ts": "d9a9071bc9d73614793febae6eba70d6423b3cea3a5f09ecd0fd4326f09cf861",
+    "src/style.css": "da27632e18e408787007f39129ad73c1891b571b8dad2994d7f31e20687058e1",
+    "src/throttle-control.ts": "99b45ef5b506ee7a051f80152bf3ce1dcf7a5f521a7c446f6021e76a67163466",
+    "src/throttle-lever.ts": "e83fe3c570581d16cb76e08ef9a039bbe9d4a50da6575366ac7e126bf3f30cf0",
+    "src/types.ts": "e784a711f6daf969ee7c16265795fc89be91c5fbad6f112a86e73751b4aa55ca",
+    "tests/ai.test.ts": "2cca424c9d4877ebcd4ba760dc9b3e37be601911297cde21b6c791e7f720fb4f",
+    "tests/aim-indicator.test.ts": "92da31455546890b24309df8200cbbc39ceb634552fe17abca35bae35d186077",
+    "tests/aircraft-batch.test.ts": "490c28f1449d48cc3bb68ef69826014a590211dd5d7ccbd6ce558b2199e3c4b7",
+    "tests/aircraft-damage.test.ts": "e9666973ed017060e702dd0dedbbc06ae188ac9ca1b1e768d84d4a7f5878e765",
+    "tests/aircraft-tracers.test.ts": "aafa3ce5fc01c8d61d1109bfb72802bac4d3e435e3f144155c77f206903fdfdb",
+    "tests/ally-announcements.test.ts": "548b46d02d1423f7a21f80f3987581b793befaf137cb6f0a0a833d7cf40a56dc",
+    "tests/audio.test.ts": "07a5b2d1c653734e13b26de21514ba7c2b773ad998a2ebacc310c704623fcdbe",
+    "tests/bomb-guide.test.ts": "2e38f26aa1c838a10d29a7cd0da2c5999fd7b4a52ec4be8e9745f27162b2f88c",
+    "tests/browser-cadence.test.ts": "28cdd940014c69ccd1f133d2d742e34e0e66a538c243f059a03781c2ce2d29a3",
+    "tests/browser-components.test.ts": "c3385ad20d02aa7fd494ad2056516a9ad86b5fa5bf191bc48003825d375133d4",
+    "tests/consumed-input-replay.test.ts": "5f87e37b4b5ea67836d8ef543cc7027291ef12d9ea3a8abfa860ea239a3be690",
+    "tests/control-settings.test.ts": "b1f78814c8c19f5daa81011c15c8112104af8178b68415d5e51d9ab91855c200",
+    "tests/dialog-focus.test.ts": "03a7694d8923a8cd66075a640a1b4fa34d99bae930e861f0652531250a1590c5",
+    "tests/easy-ship-tracking.test.ts": "d0d9458477844aa9fbe62983b537d6448586d35fc251fb537a202dee9c484880",
+    "tests/easy-shot-correction.test.ts": "1ebc680a33d682f5f42bb65750d941d8fa24a994b2f49dd5fead9578d6aed684",
+    "tests/feedback-rules.test.ts": "fd9c073c53c50bbe8beafacaec44d28a7b4cbb6da7f7bea4b3c8720db3b6a93c",
+    "tests/fixtures/browser-input-acceptance-aim-ci.json": "66d8443db6a6b9ae95cc450c3766a650b43c95e265cdb41d9889810aebfeb8e5",
+    "tests/fixtures/browser-input-acceptance-ci21.json": "54a49b236fdf0740f514f2d8e2ef6cac61356d7bb2cdbc5d0022a44bb84347dd",
+    "tests/fixtures/browser-input-acceptance-ci26.json": "227cf37aa4fd17cbe363ebcfbf30a1ad812a19a3314dca9b6d77c2ad55494e85",
+    "tests/fixtures/browser-input-acceptance-easy-ci50.json": "4313f8ab03bcc89ae76b3ef00da058484ed7dff9df20579404f8e80b840b8a29",
+    "tests/fixtures/browser-input-cadence-ci20.json": "eb746e3dc810476dd30ee77f1356ccdd9009b81ba29cb291ee57e7318c4e951c",
+    "tests/fixtures/browser-input-cadence.json": "b45bee35895e359cb53b8205ea2227be3010bd166035f42c44311865495bbc21",
+    "tests/fixtures/browser-input-components-ci28.json": "d4f41dd1d98ebc5f26f240d2dc5a1502c4e85f5db326d69af80a3b0dc89ddef6",
+    "tests/fixtures/consumed-inputs-ci28.json": "338f346d8460c471fa5a70a76545371445e619b85ecac4899e05d5cc15223742",
+    "tests/fixtures/normal-collision-ci38-decision.json": "32ea74c6172725891208cd9bc731c93d8db558c6b0ebf05186d0909487c2f59a",
+    "tests/fixtures/normal-collision-ci38.json": "fa519da268334d51a1007249ae7792bf32ca05314b4e7a9cfd66757a761d34a6",
+    "tests/fixtures/throttle-lever-v1.json": "416c5ac01d4d14d1f45d94385e07233090740db04382e468db1f0c64689df8ca",
+    "tests/fleet-scale.test.ts": "b3ce7e8c29a1b2cc3f77bd0a38adebaba8f6523ecaa02bd826a15e84b2a470ae",
+    "tests/flight-target-regression.test.ts": "06e69767e81a55a446749229402a080fe0a6eec2145ef85f5d596fb03bda8d95",
+    "tests/flight.test.ts": "37e2fb653c1afe7f1258455239b816dd0eae450e3d3e4abe7a075c92f7ca69b6",
+    "tests/helpers/feedback-easy-pilot.ts": "25a3b87ab5926187fae60e44102c68503cacccaa6e78358e761e4633936eb1b8",
+    "tests/helpers/large-fleet-pilot.ts": "b5a6f54845d45d872e9e6990b9954a02bffa2417b3f8f6579725ddb64147fa47",
+    "tests/helpers/mission-browser-pilot.ts": "d6cc9b0047ef6fdfb645e3de79fda2a9d9b55140f114ee039166ab1bf7fea227",
+    "tests/helpers/normal-mission-pilot.ts": "2b6b2ccc9c0866edd7e37d10826c19dedf6e5f7df16f5baf1b1a518cd0409db5",
+    "tests/helpers/pitch-rate-conversion.ts": "d9850d2bf3f2e00571a51eb1e4ef60118dcd22c71b35dbb7ae18609f03156f33",
+    "tests/helpers/touch-reload-pilot.ts": "c4eede6d5a6b1c9c16b548d48f02ea70ce2216ccc425245d629d66bab6320e6f",
+    "tests/input-ownership-regression.test.ts": "37fac20e30b9257d0dcacd49e320ac58dc33402046996a2cdbd06cd4307e6ccf",
+    "tests/input-ownership.test.ts": "f2634613ae9982e9742210fa62cd9fc4e552fcadca9cabdaf386dc8f984e66ce",
+    "tests/input-recovery.test.ts": "955d9debdb015869134664d8729c22587f2b760646ce912343344b8c279ab1de",
+    "tests/iowa-model.test.ts": "8195b3f62bfccbdca8b6fa9990dadeb3401618e6d135a09dd14947c78bfbf4ae",
+    "tests/keyboard-settings.test.ts": "d41cb190fbaf037ddf073c6c610e5348efa070961293aad901a07b480cb6d248",
+    "tests/mission-browser-pilot-regression.test.ts": "04905b90d86879e36229d9f41f669ef1e558a1e720449e9b9ce0f27d436ed2fe",
+    "tests/mission-dodge.test.ts": "9564ef82cdcaf7b16fee1b3173af2d2d4384d777262ff6ea8b7e6330221ebdf3",
+    "tests/mission-hud.test.ts": "4c9b106a0aee45c643537bac5ca7b24261cbc2110705147e1d17f15a7e8efa97",
+    "tests/mission-rules.test.ts": "57ab5f825b2e0ac5950fba787e0d0da5ecb0718286dea7cec17a7952d6378f62",
+    "tests/modes.test.ts": "6f31dc09253dde47295322fa0b34ab3a139f4408ca3e6ec1bdb564b58917424f",
+    "tests/naval-audio.test.ts": "f64faceca064d76d3d12e8b13de8957fdb3b1f5b3b5bcc119b623aaced233bdc",
+    "tests/naval-effects.test.ts": "b1d6361dc35a76c260871cd5f43d2ae9ad5f500478bc4b894f71bed97de871c8",
+    "tests/naval-presentation.test.ts": "cd07f861938b4262354a2cd2a0f35a643eb25da53cc2318224c6202ffdc227a5",
+    "tests/naval-weapon-roles.test.ts": "aadd5e48499c71956d025070374d01b5eafe331b9221f1faf96833ceb56c852b",
+    "tests/naval.test.ts": "4c43494265611d3b20812e5b2927b537b0c1710c19095311c523d8a99e923484",
+    "tests/normal-collision-regression.test.ts": "10872bb1cf17405681650c04421ab674267837e6cd6276836b8e4db2ca046a92",
+    "tests/normal-mission.test.ts": "8e263c7db6f1184f0e44fb335d1f265523af266a091f82826f287162474992ac",
+    "tests/ordnance.test.ts": "799438558eb6b1975e2c49d376cfb5d8aaaed6071f82711660949a97ab46830a",
+    "tests/payload-input.test.ts": "7a567ecdf4681f883bce0def5ae9682c88252d0ba07afdb4606906e14e9c2787",
+    "tests/pitch-rate-conversion.test.ts": "8060acafd9beef1ab98c74535884aeec258a1f9ef8750b31a424bbab5cbe9620",
+    "tests/render-queue.test.ts": "77142c2a04ce7b4ebba6a4997f789f88520d40321436302027473153e13fbbe7",
+    "tests/review-event-bound.test.ts": "08d0d4755aae2962e7b500e82e809079bd44f934935f252bb45cf83eb6c45719",
+    "tests/review-input-ownership.test.ts": "9bb4631c126566bf39a6ced3433348ceb8619ac011b844021754c0ec8fd3bd91",
+    "tests/rules-guide.test.ts": "d9688dcefc05c4e6ad8293bb5cb7ef5d0c6f4f9db69917656191718e051794c1",
+    "tests/scene-lifecycle.test.ts": "726d5767b500eb690044e0c1148600735cdac9e52443fd14dbc4e54c0aaf0375",
+    "tests/scoring.test.ts": "e7f4fbcb90c7dd8e390c329941178329e4cc2d382c400894ffd3dfbb7fb2e703",
+    "tests/sea-contact.test.ts": "385bc457275de346cf6e558cdc8b73a8c067804f60a9fdba844c5d32c302ea8d",
+    "tests/ship-wreck.test.ts": "0ccd186884a363f000712763e5a163ff6a0c090358a5cff5f462de027b6ab9fa",
+    "tests/simulation.test.ts": "620f462439d6874f352807f30547b948822205ece2f5d740e6acf4601e94672b",
+    "tests/throttle-lever.test.ts": "15198c9a0b59eb5d0f11971ba8642baa21a10fbdee8d98f4c8072f12bc79cc22",
+    "tests/throttle-review.test.ts": "27f8735d36e1d03d55615e897607f8256bb7b2c4a2586a46f066291751a4e40c",
+    "tests/touch-reload.test.ts": "e677be6660a21708e4bd542c9761cd3d3d41bdcc11059f51db194cdcf3b0828a",
+    "tsconfig.json": "f57e51a36f5117844a944b784bf81573bd92714599d8511a2b6e95ac86ef2cfa",
+    "vite.config.ts": "13c3c6f6f0f70aea9ed954d50dfba335d1425569c4b722cd18c7ac295c9e9c45"
+  },
+  "checks": {
+    "unit": {
+      "command": "npm test",
+      "pass": 331,
+      "fail": 0,
+      "skip": 0,
+      "exit": 0,
+      "durationMs": 46357.438253
+    },
+    "build": {
+      "command": "npm run build",
+      "exit": 0,
+      "existingChunkWarning": true
+    },
+    "initialFullLocalChromium": {
+      "command": "playwright test --config <local-chromium-config>",
+      "stats": {
+        "startTime": "2026-10-12T14:52:25.258Z",
+        "duration": 1055261.33,
+        "expected": 47,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "exit": 1,
+      "failedTest": "custom desktop input rules close -> immediate KeyP before completed paused view",
+      "originalCustomTest": {
+        "path": "browser-tests/00-00-input-method.spec.ts",
+        "sha256": "26992fa7050363b7c712b44b54b64a8b6c364963a07b0f845c6615997cc36b80",
+        "initialLocalFailure": "rules close -> KeyP requested before frozen-view completion; new Resume guard correctly keeps phase paused"
+      },
+      "note": "Only the custom-key driver was amended after its failed case completed during this run. Runtime, shared helper and all other browser specs were fixed. This 47/48 result is not a final full-suite pass."
+    },
+    "customKeyRecheck": {
+      "command": "playwright test --config <local-chromium-config> browser-tests/00-00-input-method.spec.ts",
+      "stats": {
+        "startTime": "2026-10-12T15:12:07.160Z",
+        "duration": 15787.092999999999,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "exit": 0,
+      "note": "Added completed-view wait after rules close and before the ordinary custom KeyP resume. Both cases pass; the guard is preserved."
+    },
+    "pausedPositive": {
+      "command": "playwright test --config <local-chromium-config> browser-tests/paused-render-gate.spec.ts",
+      "pass": 1,
+      "fail": 0,
+      "exit": 0
+    },
+    "pausedNegative": {
+      "sourceHead": "19a4db4bc51360f4a2ec31fed7d07fbb7208c10b",
+      "sourceRuntimeSha256": {
+        "src/main.ts": "2227f16259771a165c8f93819145c119553889c3ef13cf05e3eeda1e828d2ad3",
+        "src/scene.ts": "8ad3f417686f7808e499e7a585be3a9c87a35500efaecadcec3808ffdc76367f"
+      },
+      "exit": 1,
+      "expectedFailure": true,
+      "assertion": "Resume stays disabled on the intercepted pending fence",
+      "expected": true,
+      "received": false,
+      "note": "The identical new spec/helper runs against the isolated parent source. It fails on the ordinary DOM assertion before new diagnostics. Initial attempt with candidate webServer cwd was discarded; accepted run points to isolated parent cwd. Candidate source was never swapped."
+    },
+    "pagesManifestAtRecordCreation": "not_run: checked after an actual remote candidate commit exists, before branch update, and again by official CI",
+    "finalFullLocalAtRecordCreation": "not_run after custom-key driver correction; final full 58-case gate runs on the published candidate in official CI",
+    "githubCIAtRecordCreation": "not_run"
+  },
+  "liveRouteResults": {
+    "easy": {
+      "outcome": "victory",
+      "elapsed": 393.31666666666666,
+      "health": 80,
+      "allEnemiesDead": true,
+      "allShipsDead": true
+    },
+    "normal": {
+      "outcome": "victory",
+      "elapsed": 158.76666666666665,
+      "health": 80,
+      "renderRecoveries": 0,
+      "allEnemiesDead": true,
+      "allShipsDead": true
+    },
+    "torpedo": {
+      "elapsed": 10,
+      "health": 38.40000000000009,
+      "waterPhaseObserved": true
+    }
+  },
+  "independentReview": {
+    "requiredCodeIssues": 0,
+    "positiveAndNegativeVerified": true,
+    "scope": "Latest source/shared helper/new GL spec, paused wait replacements; full official CI is a separate final gate."
+  },
+  "logs": {
+    "unit": {
+      "path": "docs/evidence/camera-sensitivity/ci51-unit-final.log",
+      "sha256": "e48ca0a34a5fbb6c424b5bb9bfb7144830f59eb41a9fa971ddc0ddac110362c3"
+    },
+    "build": {
+      "path": "docs/evidence/camera-sensitivity/ci51-build-final.log",
+      "sha256": "edd0a3e09e8925adacb8a950676769dc5c2e59af95659f1b4a4dd51d7a8e4e5d"
+    },
+    "browserInitial": {
+      "path": "docs/evidence/camera-sensitivity/ci51-local-browser-initial.log",
+      "sha256": "32f356a273682e5f50b4dbb7137f40b21749a208720ab4e728d0abc9e47a4c1e"
+    },
+    "pausedPositive": {
+      "path": "docs/evidence/camera-sensitivity/ci51-paused-gate-positive.log",
+      "sha256": "7b814f482a084ec3c94a4fd9ddcd973e0bbe8b44e7026eb4843aed2d247f471d"
+    },
+    "pausedNegative": {
+      "path": "docs/evidence/camera-sensitivity/ci51-paused-gate-negative.log",
+      "sha256": "f93fd71d87b52fa6813d48560079aba464f85540dc38ad6a0fb57172c5dc9753"
+    },
+    "customKeys": {
+      "path": "docs/evidence/camera-sensitivity/ci51-custom-key-final.log",
+      "sha256": "9c9b017a78f6b67ef4857650c236348e9f4b9c25967220df009675df7b7520fe"
+    }
+  },
+  "limitations": [
+    "First one-second fence delay cause remains unknown",
+    "No physical iPhone/Safari or human playability acceptance",
+    "Local screenshots lack Japanese fonts; visual acceptance uses official CI evidence separately"
+  ]
+}

@@ -237,9 +237,11 @@ function home() {
 }
 function pause(reason: string) {
   if (state.phase !== "playing" && state.phase !== "paused") return;
+  const wasPaused = state.phase === "paused";
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   pauseReasons.add(reason);
   pauseGame(state);
+  if (!wasPaused) scene?.invalidatePausedView();
   el("pause-ally-news").textContent = lastAllyNotice;
   el("pause-ally-report").hidden = !lastAllyNotice;
   updateBombCue();
@@ -255,12 +257,22 @@ function pause(reason: string) {
     : reason === "frame"
       ? "画面の更新が中断されたため停止しました"
       : "タイムの計測も止まっています";
-  el<HTMLButtonElement>("resume").disabled = contextLost || renderStatus === "stalled" || renderStatus === "failed";
+  // A paused canvas must show and finish the exact frozen pose before Resume
+  // can be used. The frame loop enables it after submitting that view.
+  if (!wasPaused || contextLost) el<HTMLButtonElement>("resume").disabled = true;
   el("pause-reload").hidden = renderStatus !== "failed";
   syncAudio();
 }
 function resume() {
-  if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
+  if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || screen !== "paused" || state.phase !== "paused") return;
+  const now = performance.now();
+  renderStatus = scene?.pollRender(now) ?? "failed";
+  if (renderStatus !== "ready" || !scene?.pausedViewReady(state, true, now)) {
+    el<HTMLButtonElement>("resume").disabled = true;
+    el("pause-reload").hidden = renderStatus !== "failed";
+    return;
+  }
+  scene.invalidatePausedView();
   pauseReasons.clear();
   resumeGame(state);
   updateBombCue();
@@ -569,15 +581,23 @@ function frame() {
   if (state.phase !== "playing" && scene && !contextLost) {
     renderStatus = scene.pollRender(now);
     if (screen === "paused") {
-      el<HTMLButtonElement>("resume").disabled = renderStatus === "stalled" || renderStatus === "failed";
+      if (renderStatus !== "ready" || !scene.pausedViewReady(state, true, now))
+        el<HTMLButtonElement>("resume").disabled = true;
       el("pause-reload").hidden = renderStatus !== "failed";
-      if (pauseReasons.has("render") && renderStatus === "ready")
-        el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
     }
   }
   if (scene && !contextLost) {
     scene.render(state, screen === "playing" || screen === "paused", dt);
-    if (screen === "paused") { positionReloadStatus(); positionHudNotices(); }
+    if (screen === "paused") {
+      positionReloadStatus(); positionHudNotices();
+      const pausedViewReady = renderStatus !== "failed" && scene.pausedViewReady(state, true, now);
+      const resumeButton = el<HTMLButtonElement>("resume");
+      resumeButton.disabled = !pausedViewReady;
+      if (pausedViewReady && document.activeElement === document.body)
+        resumeButton.focus({ preventScroll: true });
+      if ((pauseReasons.has("render") || pauseReasons.has("context")) && pausedViewReady)
+        el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
+    }
     if (scene.diagnostics().queue.status === "failed") {
       renderStatus = "failed";
       if (screen === "home") preparationFailed(new Error("GPU frame completion unavailable"));
@@ -627,11 +647,15 @@ canvas.addEventListener("webglcontextrestored", () => {
   contextLost = false;
   scene?.resetRenderQueue();
   renderStatus = "ready";
-  el<HTMLButtonElement>("resume").disabled = false;
-  el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
+  el<HTMLButtonElement>("resume").disabled = true;
+  el("pause-reason").textContent = "描画が復帰しました。画面の準備を待っています";
 });
-window.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
-window.visualViewport?.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
+function handleResize() {
+  scene?.resize(); noticeLayoutDirty = true;
+  if (screen === "paused") el<HTMLButtonElement>("resume").disabled = true;
+}
+window.addEventListener("resize", handleResize);
+window.visualViewport?.addEventListener("resize", handleResize);
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) pause("restored");
 });

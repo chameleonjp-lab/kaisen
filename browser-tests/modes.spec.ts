@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { expectScoreResult, inspectScoreResultLayout } from './score-result';
+import { waitForPausedView } from './paused-view';
 
 const read = (page: Page) => page.evaluate(() => (window as any).__kaisenReadState());
 async function openNormal(page: Page) {
@@ -20,6 +21,10 @@ async function center(page: Page, selector: string, id: number) {
 }
 async function evidence(page: Page, name: string, pausedFlight = false) {
   await mkdir('test-results/evidence', { recursive: true });
+  if (pausedFlight) {
+    const snapshot = await read(page), viewport = page.viewportSize();
+    await waitForPausedView(page,{tick:snapshot.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+  }
   await page.screenshot({ path: `test-results/evidence/${name}.png`,
     ...(pausedFlight ? { style: '#pause-screen { visibility: hidden !important; }' } : {}),
   });
@@ -49,8 +54,7 @@ for (const viewport of [{ width: 393, height: 852 }, { width: 852, height: 393 }
     }));
     await page.locator('#pause').tap();
     await expect.poll(async () => (await read(page)).phase).toBe('paused');
-    const submittedBefore = (await read(page)).render.queue.submittedCount;
-    await expect.poll(async () => (await read(page)).render.queue.completedCount).toBeGreaterThanOrEqual(submittedBefore + 1);
+    await waitForPausedView(page,{tick:(await read(page)).tick,cssWidth:viewport.width,cssHeight:viewport.height});
     for (const box of boxes) {
       expect(box.width).toBeGreaterThanOrEqual(44); expect(box.height).toBeGreaterThanOrEqual(44);
       if (box.id === 'throttle') expect(box.height).toBeCloseTo(box.width * 2, 1);
@@ -111,6 +115,8 @@ test('Normal real simultaneous touch steering, fire and throttle release on paus
   await page.waitForTimeout(200);
   expect((await read(page)).tick).toBe(frozen.tick);
   expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
+  const viewport = page.viewportSize();
+  await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   await page.locator('#resume').tap();
   await expect.poll(async () => (await read(page)).tick).toBeGreaterThan(frozen.tick + 15);
   expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
@@ -200,6 +206,7 @@ for (const viewport of [{width:393,height:648},{width:320,height:568},{width:568
         if(fontScale===1)await expect(page.locator('#ally-announcements')).toHaveAttribute('data-layout','clear');
         // ResizeObserver runs after frame callbacks; the next two paints include its relayout.
         await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+        await waitForPausedView(page,{tick:(await read(page)).tick,cssWidth:viewport.width,cssHeight:viewport.height});
         const geometry=await page.evaluate(()=>{
           const state=(window as any).__kaisenReadState(false),f=document.getElementById('flight')!.getBoundingClientRect();
           const rect=(e:Element)=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,x:r.x,y:r.y,width:r.width,height:r.height};};

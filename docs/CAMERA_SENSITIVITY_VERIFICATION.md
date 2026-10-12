@@ -1,5 +1,21 @@
 # カメラ感度の変更と検査
 
+## CI51の描画復帰受付を修正（2026-10-12）
+
+対象はPR17の `19a4db4bc51360f4a2ec31fed7d07fbb7208c10b` / tree `b6a841c364d206a238915eefcf90ee75cda5a540`。[CI51](https://github.com/chameleonjp-lab/kaisen/actions/runs/38258798280) は329単体・型/build・成果物・固定旧版比較が成功、browserは56/57成功だった。前回のEasy勝利と魚雷投下は成功し、Normalの反復描画停止だけが残った。artifact11752526178は17,337,548 bytes、ZIP SHA256 `6eee9f9ce267bcf0d4622e7fd1d3434bc6bef1a779e36f0b340798c4a5459a05`。
+
+CI51の初回停止はtick283で提出10/完了9。復帰中に確定したpaused poseを提出11へ描いた後も、完了10のままResumeを受け付けていた。150ms待った記録でも提出11がpending225.9msで残り、再開後tick322で同じ提出11の1秒超を2回目の停止として扱った。初回の遅延と同じframeを二重検出したのではなく、停止中の未完了frameを残したまま再開する受付不整合である。
+
+停止時の確定poseは一度描き、GPU完了後にのみ再開を許可する。完了した同一paused viewは再提出せず、resize・mission変更・context復帰等で無効化する。再開ボタンは描画提出後の状態で更新し、キーボードからの再開も同じ完了条件を確認する。paused以外の描画と結果演出時計、画質、1秒監視、Normalの回復許容1回・600秒・全敵全艦撃破条件は維持する。
+
+同条件のローカルprofileでは、整数pow展開と海/空の描画順変更に一貫した改善がなく、採用しなかった。GPU timer62.23ms・CPU送信8.0msに対しfence観測1139.8msという標本があり、初回1秒待機そのものの原因は未特定。測定条件・標本数・指標の区別・CI51 counterの原本照合は `evidence/camera-sensitivity/ci51-render-investigation.json` に保存した。GPU演算値をfence待ち時間や実iPhone性能へ読み替えない。
+
+修正候補の全331単体・型/buildは成功。新GL回帰は候補で1成功し、同じspec/helperを隔離した旧headへ実行すると、新診断へ進む前の実DOM検査「未完了fence中はResume disabled」で期待どおり失敗した。明示した描画待機だけを与え、ゲーム状態や時計を注入していない。独立担当が最新コード、正負例、旧sourceとのbyte一致を確認し、修正必須の残件はない。
+
+初回の全ローカルChromium48件は47成功・1失敗（17.6分）。旧カスタムキー手順がrulesを閉じた直後に描画完了を待たずKeyPを送ったため、新しい再開guardが正しく拒否した。その1件の終了後に試験手順へ完了待ちを加え、同specの2件を再実行して両方成功。初回結果を最終全件成功へ読み替えない。Easyは393.3167秒/HP80、Normalは158.7667秒/HP80・描画停止0回で全敵全艦撃破、魚雷・補充・再装填・画面回転・設定・再出撃・資源上限も初回集合で成功した。
+
+最終カスタムキー訂正後の全ローカル集合は再実行していない。現在候補の全体判定は、新headをcheckoutする既存GitHub CIの331単体・型/build・成果物・固定旧版比較・58browserで別に確定する。59/61の製品・素材・依存・設定・workflow blobはCI51 headと一致し、製品差分はmain/sceneだけ。149実行関連ファイルのSHA、初回失敗手順と訂正後の結果、正負例と6ログは `evidence/camera-sensitivity/ci51-followup-evidence.json` に保存した。配布manifestは実在する候補commit作成後に検査し、結果を同PRへ記録する。物理iPhone・体感・ローカル日本語画像の受入は未確認。
+
 ## CI50の3失敗への追補（2026-10-12）
 
 対象は既存Draft PR17の `11b83a050deb721abe2e824bc5bd26c2ada9238f` / tree `b89fa4faf88bcda8e439b9768a1809e4d6702c0a`。全199 blobとmodeが一致する独立コピーで再開した。[CI50](https://github.com/chameleonjp-lab/kaisen/actions/runs/38244735823) は327単体・型/build・成果物・旧版比較が成功、browserは54/57成功・3失敗だった。artifact11746226117は20,980,909 bytes、ZIP SHA256 `7238480bc56ba3a17a44fe442068d9f78129f1cb2e53b4bc5efeefff3f6593b2`。展開した3件の状態記録とZIP内のbytesも一致する。

@@ -1,3 +1,17 @@
+# 2026-10-12 CI51の描画復帰受付修正
+
+対象PR17 head `19a4db4bc51360f4a2ec31fed7d07fbb7208c10b` / tree `b6a841c364d206a238915eefcf90ee75cda5a540`。[CI51](https://github.com/chameleonjp-lab/kaisen/actions/runs/38258798280) は329単体・型/build・配布成果物・旧版比較成功、browser56/57成功。Easy勝利と魚雷投下の前回修正はCIでも通り、Normalの反復描画停止だけが残った。
+
+CI原本では、初回停止の提出10が完了した後、停止時の最終poseを提出11へ描いた。提出11がpendingのままResumeが有効で、再開後の2回目の停止も同じ提出11だった。最終paused viewを1回描いて完了まで再開を無効にし、完了後の重複描画を省く。resize・mission変更・context復帰で無効化し、endedの演出描画は続ける。ボタン更新は描画提出後、再開関数も最新完了状態を確認する。
+
+停止画面の検査は、任意の次frameではなく、現在のmission/tick/phase/寸法の実提出viewとそのGPU完了を確認する。明示したGL wait遅延だけを与える回帰では、ゲーム状態・時計を注入せず、待機中のボタン/キーボードからの再開拒否、完了後の再開、停止viewの安定とresize再描画を検査する。1秒監視・回復許容1回・勝利条件・画質は維持する。
+
+ローカルprofileのpow展開と海/空の描画順変更は改善未確認のため不採用。GPU timer62.23msに対しfence待機1139.8msの標本があり、初回遅延そのものの原因は未特定。条件/指標/標本/原本照合は [CI51調査記録](evidence/camera-sensitivity/ci51-render-investigation.json)。
+
+今回の全331単体・型/buildは成功。新しい実GL回帰は候補で成功し、旧sourceは新診断より前のpending中Resume disabled検査で期待どおり失敗した。最新source・正負例・既存wait置換を独立確認し、コードの修正必須残件なし。初回全ローカルChromiumは47/48成功・1失敗（17.6分）で、失敗はrules閉後に完了前のKeyPを送る旧試験手順。その終了後に当該手順へready待ちを入れ、同spec2件の再実行は両方成功した。初回の47成功を訂正後の全件成功へ付け替えない。
+
+Easy393.3167秒/HP80、Normal158.7667秒/HP80・描画停止0回で全滅勝利。魚雷・補充・装填・画面回転・設定・再出撃等も初回集合で成功。製品差分はmain/sceneのみで、59/61の製品/素材/依存/設定/workflow blobは旧headと一致する。実行関連149ファイルの識別と6ログは [CI51追補](evidence/camera-sensitivity/ci51-followup-evidence.json)。カスタムキー訂正後の全local再実行はnot_runで、最終全体は新headの既存CI（331単体・型/build・配布manifest・旧版比較・58browser）で確認する。manifestは実在候補commit作成後に確認し、結果を同PRへ記録する。
+
 # 2026-10-12 CI50の3失敗への追補
 
 PR17 head `11b83a050deb721abe2e824bc5bd26c2ada9238f` のCI50は327単体/build/成果物/比較が成功、browserは54/57成功・3失敗。Easyの実投下後離脱と魚雷試験の旧絶対pitch入力を修正した。Normalの2回の描画保護停止は原因未特定で、同じコードのローカル単独実行では179.7833秒・HP77.44の勝利・停止0回。描画の製品コード・停止閾値・通常回復許容は不変更。

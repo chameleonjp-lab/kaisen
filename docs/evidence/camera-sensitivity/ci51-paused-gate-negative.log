@@ -1,0 +1,48 @@
+[WebServer] (node:18) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:68) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:50:25 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✘  1 [chromium] › browser-tests/paused-render-gate.spec.ts:4:1 › Resume waits for the completed frozen pose and resize renders only once (6.6s)
+
+
+  1) [chromium] › browser-tests/paused-render-gate.spec.ts:4:1 › Resume waits for the completed frozen pose and resize renders only once 
+
+    Error: Resume stays disabled on the intercepted pending fence
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      55 |   // is pending, before reading any new paused-view diagnostics.
+      56 |   expect(await page.locator("#resume").isDisabled(),
+    > 57 |     "Resume stays disabled on the intercepted pending fence").toBe(true);
+         |                                                               ^
+      58 |   const paused = await readPausedState(page);
+      59 |   expect(paused.phase).toBe("paused");
+      60 |   expect(paused.render.queue.status).toBe("pending");
+        at /workspace/scratch/cd965ebd4c33/kaisen-render-parent/browser-tests/paused-render-gate.spec.ts:57:63
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/pause-negative/paused-render-gate-Resume--d1670-nd-resize-renders-only-once-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/pause-negative/paused-render-gate-Resume--d1670-nd-resize-renders-only-once-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/pause-negative/paused-render-gate-Resume--d1670-nd-resize-renders-only-once-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/pause-negative/paused-render-gate-Resume--d1670-nd-resize-renders-only-once-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › browser-tests/paused-render-gate.spec.ts:4:1 › Resume waits for the completed frozen pose and resize renders only once 

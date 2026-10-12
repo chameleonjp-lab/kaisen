@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 
 for (const mode of ['easy','normal']) test(`${mode} bomb cue keeps ammo/reload and pause state legible through actual buttons`,async({page})=>{
   await page.setViewportSize({width:393,height:648});
@@ -17,6 +18,7 @@ for (const mode of ['easy','normal']) test(`${mode} bomb cue keeps ammo/reload a
   await expect(page.locator('#bomb')).toHaveAttribute('data-ready','false');
   const paused=await read();await page.waitForTimeout(300);const settled=await read();
   expect(settled.tick).toBe(paused.tick);expect(settled.player.bombReloadTicks).toBe(paused.player.bombReloadTicks);expect(settled.ordnance).toEqual(paused.ordnance);
+  await waitForPausedView(page,{tick:paused.tick,cssWidth:393,cssHeight:648});
   await mkdir('test-results/evidence',{recursive:true});
   await page.screenshot({path:`test-results/evidence/bomb-reload-${mode}.png`,style:'#pause-screen {visibility:hidden!important}'});
   await writeFile(`test-results/evidence/bomb-reload-${mode}.json`,JSON.stringify({note:'Actual UI drops and pause. Only pause menu hidden for screenshot; no game-state changes.',reach,paused,settled},null,2));

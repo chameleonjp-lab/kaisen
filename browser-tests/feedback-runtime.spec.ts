@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 const read = (page:any) => page.evaluate(() => (window as any).__kaisenReadState(false));
 
 test('both modes show zero-based tallies, clear payloads and paused rules without resuming', async ({ page }) => {
@@ -27,6 +28,7 @@ test('both modes show zero-based tallies, clear payloads and paused rules withou
     await page.locator('#pause-rules').tap(); await page.locator('#rules-close').tap();
     expect((await read(page)).tick).toBe(frozen.tick);
     await mkdir('test-results/evidence',{recursive:true});
+    await waitForPausedView(page,{tick:frozen.tick,cssWidth:393,cssHeight:648});
     await page.screenshot({path:`test-results/evidence/feedback-${mode}-393x648.png`,style:'#pause-screen {visibility:hidden!important}'});
     await page.locator('#pause-home').tap();
   }

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 const read=(page:any)=>page.evaluate(()=>(window as any).__kaisenReadState());
 
 async function reachSeaResult(page:any, viewport:{width:number;height:number}) {
@@ -20,6 +21,7 @@ async function reachSeaResult(page:any, viewport:{width:number;height:number}) {
         await expect(page.locator('#pause-reason')).toHaveText('描画が復帰しました。操作して再開できます');
         await expect(page.locator('#resume')).toBeEnabled();
         const frozen=(await read(page)).tick;
+        await waitForPausedView(page,{tick:frozen,cssWidth:viewport.width,cssHeight:viewport.height});
         await page.waitForTimeout(100);expect((await read(page)).tick).toBe(frozen);
         recoveries.push({tick:frozen,snapshot:await read(page)});
         await page.locator('#resume').tap();
@@ -57,9 +59,9 @@ for(const viewport of [{width:393,height:852},{width:568,height:320}]) {
   expect((await read(page)).tick).toBe(paused.tick);await expect(page.locator('#pause-screen')).toBeVisible();
   await page.locator('#pause-controls').tap();await expect(page.locator('#control-x')).toHaveValue(wanted);
   await mkdir('test-results/evidence',{recursive:true});
-  const submitted=(await read(page)).render.queue.submittedCount;
-  await expect.poll(async()=>(await read(page)).render.queue.completedCount).toBeGreaterThanOrEqual(submitted+1);
+  await waitForPausedView(page,{tick:paused.tick,cssWidth:viewport.width,cssHeight:viewport.height});
   await page.screenshot({path:`test-results/evidence/settings-${viewport.width}x${viewport.height}.png`});
+  await waitForPausedView(page,{tick:paused.tick,cssWidth:viewport.width,cssHeight:viewport.height});
   await page.locator('#control-close').tap();await page.locator('#resume').tap();
   await reachSeaResult(page,viewport);
   await expect(page.locator('#result-reason')).toContainText('海面');await page.locator('#result-controls').tap();
@@ -86,7 +88,9 @@ test('capture failure and release over another control recover without restartin
  const frozen=await read(page);await expect(page.locator('#control-close')).toBeFocused();
  await page.keyboard.press('Space');expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
  // Space activates the focused native Close button; it must not fire the aircraft.
- await expect(page.locator('#control-settings')).not.toBeVisible();await page.locator('#resume').tap();
+ await expect(page.locator('#control-settings')).not.toBeVisible();
+ const viewport=page.viewportSize();await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+ await page.locator('#resume').tap();
  expect((await read(page)).controlsInput.steerPointer).toBe(null);
  await mkdir('test-results/evidence',{recursive:true});await writeFile('test-results/evidence/input-recovery.json',JSON.stringify({note:'Actual mouse path with simulated capture API failure; no world mutation; Safari cause remains unconfirmed',state:await read(page)},null,2));
 });

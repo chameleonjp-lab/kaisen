@@ -3,6 +3,7 @@ import { steerAndObserve } from './touch-command';
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { waitForPausedView } from './paused-view';
 
 test.use({ trace: 'off' });
 test('real touch flight shows a filling reload ring, freezes it, then refills or clears all targets', async ({page, context}) => {
@@ -64,11 +65,8 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         await touchEnd(); await page.locator('#pause').tap();
         const frozen = await read();
         capturedRemaining = frozen.player.reloadTicksRemaining;
-        // Require a completed rendering of this paused state, not a previous
-        // GPU frame whose canvas may predate the reload event.
-        const submittedBefore = frozen.render.queue.submittedCount;
-        await expect.poll(async () => (await read()).render.queue.completedCount)
-          .toBeGreaterThanOrEqual(submittedBefore + 1);
+        const viewport = page.viewportSize();
+        await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
         await expect(page.locator('#reload-status')).toContainText('再装填中 あと');
         const progress = Number(await page.locator('#reload-status').getAttribute('data-progress'));
         expect(progress).toBeGreaterThanOrEqual(0); expect(progress).toBeLessThan(1);
@@ -79,7 +77,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         expect(still.player.reloadTicksRemaining).toBe(frozen.player.reloadTicksRemaining);
         expect(still.player.mg).toBe(0); expect(still.player.cannon).toBe(0);
         expect(Number(await page.locator('#reload-status').getAttribute('data-progress'))).toBe(progress);
-        captured = true; await page.locator('#resume').tap(); await touchStart(); lastSample=-6; continue;
+        captured = true;
+        await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+        await page.locator('#resume').tap(); await touchStart(); lastSample=-6; continue;
       }
       if (captured && s.player.reloadTicksRemaining === 0) {
         expect(s.player.mg+s.player.cannon).toBeGreaterThan(0);

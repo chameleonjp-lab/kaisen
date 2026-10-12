@@ -1,0 +1,158 @@
+[WebServer] (node:18) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 48 tests using 1 worker
+
+(node:68) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:52:28 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   1 [chromium] › browser-tests/00-00-input-method.spec.ts:6:1 › changing from touch to mouse or back cannot move a pressed home control (6.7s)
+[WebServer] 11:52:35 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✘   2 [chromium] › browser-tests/00-00-input-method.spec.ts:32:3 › custom desktop input › committed custom keys fire and pause, old keys stop firing, rules own their keys (20.0s)
+(node:165) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:52:55 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   3 [chromium] › browser-tests/bomb-guide.spec.ts:5:39 › easy bomb cue keeps ammo/reload and pause state legible through actual buttons (6.9s)
+[WebServer] 11:53:02 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   4 [chromium] › browser-tests/bomb-guide.spec.ts:5:39 › normal bomb cue keeps ammo/reload and pause state legible through actual buttons (5.8s)
+[WebServer] 11:53:08 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   5 [chromium] › browser-tests/easy-ship-tracking.spec.ts:6:1 › Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude (14.1s)
+[WebServer] 11:53:22 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   6 [chromium] › browser-tests/feedback-runtime.spec.ts:6:1 › both modes show zero-based tallies, clear payloads and paused rules without resuming (6.8s)
+[WebServer] 11:53:29 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:53:37 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   7 [chromium] › browser-tests/feedback-settings.spec.ts:42:2 › control layout settings save cancel and restore across screens 393x852 (12.4s)
+[WebServer] 11:53:41 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:53:50 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   8 [chromium] › browser-tests/feedback-settings.spec.ts:42:2 › control layout settings save cancel and restore across screens 568x320 (12.3s)
+[WebServer] 11:53:54 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓   9 [chromium] › browser-tests/feedback-settings.spec.ts:75:1 › capture failure and release over another control recover without restarting flight (5.6s)
+[WebServer] 11:53:59 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  10 [chromium] › browser-tests/game.spec.ts:125:3 › home and flight 393x852 (4.7s)
+[WebServer] 11:54:04 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  11 [chromium] › browser-tests/game.spec.ts:125:3 › home and flight 320x568 (5.2s)
+[WebServer] 11:54:09 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  12 [chromium] › browser-tests/game.spec.ts:125:3 › home and flight 852x393 (5.4s)
+[WebServer] 11:54:15 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  13 [chromium] › browser-tests/game.spec.ts:163:1 › touch steering, two-finger release, loop and explicit resume (5.7s)
+[WebServer] 11:54:20 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  14 [chromium] › browser-tests/game.spec.ts:229:1 › real flight to sea failure, result, replay, and home (13.4s)
+[WebServer] 11:54:34 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  15 [chromium] › browser-tests/game.spec.ts:264:1 › ten replays keep renderer resources bounded (12.0s)
+[WebServer] 11:54:46 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  16 [chromium] › browser-tests/game.spec.ts:289:1 › 200 percent text remains reachable on a short screen (4.5s)
+  ✓  17 [chromium] › browser-tests/game.spec.ts:312:1 › production build omits the observation hook and includes no remote destination (176ms)
+[WebServer] 11:54:50 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  18 [chromium] › browser-tests/game.spec.ts:328:1 › long interruption pauses explicitly and audio mute releases sources (6.5s)
+[WebServer] 11:54:57 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  19 [chromium] › browser-tests/mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 393x648 (4.8s)
+[WebServer] 11:55:02 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  20 [chromium] › browser-tests/mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 568x320 (4.8s)
+[WebServer] 11:55:07 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:55:11 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  21 [chromium] › browser-tests/mobile-settings-ui.spec.ts:63:3 › desktop keyboard editor › keys can be changed, conflicts cancelled, restored after reload and described without phone instructions (8.2s)
+[WebServer] 11:55:15 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  22 [chromium] › browser-tests/modes.spec.ts:46:3 › Normal visible controls and bore sight 393x852 (5.1s)
+[WebServer] 11:55:20 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  23 [chromium] › browser-tests/modes.spec.ts:46:3 › Normal visible controls and bore sight 852x393 (6.8s)
+[WebServer] 11:55:27 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  24 [chromium] › browser-tests/modes.spec.ts:46:3 › Normal visible controls and bore sight 320x568 (6.1s)
+[WebServer] 11:55:33 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  25 [chromium] › browser-tests/modes.spec.ts:46:3 › Normal visible controls and bore sight 568x320 (6.1s)
+[WebServer] 11:55:39 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  26 [chromium] › browser-tests/modes.spec.ts:85:1 › Normal real simultaneous touch steering, fire and throttle release on pause and cancel (9.5s)
+[WebServer] 11:55:49 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  27 [chromium] › browser-tests/modes.spec.ts:138:1 › Normal real sea failure labels the result and preserves mode across retry and home (12.2s)
+[WebServer] 11:56:01 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:56:05 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  28 [chromium] › browser-tests/modes.spec.ts:164:2 › custom legacy lever never covers pause or sound 320x568 (9.0s)
+[WebServer] 11:56:10 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:56:14 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  29 [chromium] › browser-tests/modes.spec.ts:164:2 › custom legacy lever never covers pause or sound 568x320 (8.7s)
+[WebServer] 11:56:19 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  30 [chromium] › browser-tests/modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 393x648 (6.5s)
+[WebServer] 11:56:25 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  31 [chromium] › browser-tests/modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 320x568 (7.3s)
+[WebServer] 11:56:32 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  32 [chromium] › browser-tests/modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 568x320 (6.9s)
+[WebServer] 11:56:39 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  33 [chromium] › browser-tests/modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 852x393 (7.0s)
+[WebServer] 11:56:46 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  34 [chromium] › browser-tests/naval-payload.spec.ts:14:1 › payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock (16.0s)
+[WebServer] 11:57:02 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  35 [chromium] › browser-tests/paused-render-gate.spec.ts:4:1 › Resume waits for the completed frozen pose and resize renders only once (6.6s)
+[WebServer] 11:57:09 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  36 [chromium] › browser-tests/review-accessibility.spec.ts:4:1 › pause layout settings are reachable by keyboard and modal backward focus stays usable (4.4s)
+[WebServer] 11:57:13 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:57:16 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  37 [chromium] › browser-tests/throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 320x568 (6.7s)
+[WebServer] 11:57:20 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:57:23 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  38 [chromium] › browser-tests/throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 393x852 (7.8s)
+[WebServer] 11:57:28 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:57:31 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  39 [chromium] › browser-tests/throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 568x320 (7.1s)
+[WebServer] 11:57:35 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+[WebServer] 11:57:38 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  40 [chromium] › browser-tests/throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 852x393 (7.2s)
+[WebServer] 11:57:42 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  41 [chromium] › browser-tests/throttle-lever-ui.spec.ts:28:1 › native lever pointer capture, focused short keys and independent releases use shared DOM adapter (3.4s)
+[WebServer] 11:57:45 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  42 [chromium] › browser-tests/throttle-lever-ui.spec.ts:49:1 › pending rollback is visible after reload and unchanged Save restores it without touching legacy (3.7s)
+[WebServer] 11:57:49 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  43 [chromium] › browser-tests/throttle-lever-ui.spec.ts:59:1 › settings footer and close remain reachable at 200 percent CSS zoom (4.7s)
+[WebServer] 11:57:54 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  44 [chromium] › browser-tests/tracers.spec.ts:5:1 › aircraft tracers keep CSS width at high DPR and orientation changes in actual flight (8.1s)
+(node:958) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:58:03 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  45 [chromium] › browser-tests/00-easy-victory.spec.ts:78:1 › physical circular-stick inputs reach the victory screen (6.8m)
+[WebServer] 12:04:50 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  46 [chromium] › browser-tests/00-normal-victory.spec.ts:13:1 › Normal mixed real touch and keyboard inputs reach the victory screen (2.8m)
+[WebServer] 12:07:39 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  47 [chromium] › browser-tests/reinforcement.spec.ts:6:1 › repeated 40-second replenishment stays bounded and pause freezes its clock (1.4m)
+[WebServer] 12:09:05 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  48 [chromium] › browser-tests/reload.spec.ts:9:1 › real touch flight shows a filling reload ring, freezes it, then refills or clears all targets (55.4s)
+
+
+  1) [chromium] › browser-tests/00-00-input-method.spec.ts:32:3 › custom desktop input › committed custom keys fire and pause, old keys stop firing, rules own their keys 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "playing"
+    Received: "paused"
+
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+
+      43 |     expect((await read(page)).tick).toBe(frozen.tick); expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
+      44 |     await page.keyboard.press('Escape'); await page.keyboard.press('KeyP');
+    > 45 |     await expect.poll(async()=>(await read(page)).phase).toBe('playing');
+         |                                                          ^
+      46 |     const recoveries:unknown[]=[];
+      47 |     await page.keyboard.down('Space');
+      48 |     try {
+        at /workspace/scratch/cd965ebd4c33/kaisen/browser-tests/00-00-input-method.spec.ts:45:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/pause-followup/00-00-input-method-custom--db9a2-firing-rules-own-their-keys-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/pause-followup/00-00-input-method-custom--db9a2-firing-rules-own-their-keys-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/pause-followup/00-00-input-method-custom--db9a2-firing-rules-own-their-keys-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/pause-followup/00-00-input-method-custom--db9a2-firing-rules-own-their-keys-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Slow test file: [chromium] › browser-tests/00-easy-victory.spec.ts (6.8m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    [chromium] › browser-tests/00-00-input-method.spec.ts:32:3 › custom desktop input › committed custom keys fire and pause, old keys stop firing, rules own their keys 
+  47 passed (17.6m)

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 // This route really flies across two 40-second replenishment boundaries. No clock/state injection or product test controls.
 test.use({ trace: 'off' });
 test('repeated 40-second replenishment stays bounded and pause freezes its clock', async ({page, context}) => {
@@ -26,6 +27,8 @@ test('repeated 40-second replenishment stays bounded and pause freezes its clock
   expect(paused.tick).toBeLessThan(2400); expect(paused.enemies).toHaveLength(5);
   await page.waitForTimeout(1200);
   expect((await read()).tick).toBe(paused.tick);
+  const viewport=page.viewportSize();
+  await waitForPausedView(page,{tick:paused.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   await page.locator('#resume').tap(); await climb();
   await expect.poll(async () => (await read()).reinforcementsSpawned, {timeout:10000}).toBe(true);
   await expect.poll(async () => (await read()).render.planes).toBe(10);

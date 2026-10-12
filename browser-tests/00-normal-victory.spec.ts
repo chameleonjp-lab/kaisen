@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { expectScoreResult, inspectScoreResultLayout } from './score-result';
+import { waitForPausedView } from './paused-view';
 
 // This route verifies mixed real input: CDP touch steering plus the ordinary
 // Space key for manual fire and W/S throttle. Three-finger button ownership has a separate test.
@@ -55,12 +56,13 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await expect(page.locator('#pause-reason')).toHaveText('描画が復帰しました。操作して再開できます');
         await expect(page.locator('#resume')).toBeEnabled();
+        const viewport = page.viewportSize();
+        await waitForPausedView(page,{tick:state.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
         const frozen = await read();
         const world = (s: any) => ({tick:s.tick,elapsed:s.elapsed,player:s.player,
           allies:s.allies,enemies:s.enemies,ships:s.ships,stats:s.stats,bullets:s.bullets,
           ordnance:s.ordnance,allyRespawnAt:s.allyRespawnAt,result:s.result,deathCause:s.deathCause});
         expect(world(frozen)).toEqual(world(state));
-        expect(frozen.render.queue.completedCount).toBeGreaterThanOrEqual(state.lastInterruption.render.queue.submittedCount);
         await page.waitForTimeout(150);
         const settled = await read();
         expect(settled.phase).toBe('paused');
