@@ -51,7 +51,7 @@ test('Normal default fleet clears through manual fire and circular input with si
 });
 
 
-test('bombing pilot extends after an overhead pass with payloads still available at high altitude', async () => {
+test('bombing pilot extends after an overhead pass through a legal held-rate input at high altitude', async () => {
   const {updateQuaternion}=await import('../src/flight');
   for(const mode of ['easy','normal'] as const) for(const bombs of [1,2]) {
     const state=createGame(undefined,mode),pilot=createNormalMissionPilot(),ship=state.ships[0];
@@ -64,8 +64,21 @@ test('bombing pilot extends after an overhead pass with payloads still available
     state.player.position.copy(ship.position).addScaledVector(stern,180);state.player.position.y=900;
     assert.ok(state.player.position.distanceTo(ship.position)>900,'3D distance cannot trigger a240m overhead escape');
     const before=JSON.stringify(state),command=pilot(state);assert.equal(JSON.stringify(state),before);
-    assert.ok(command.climb>.2,'ordinary climbing extension creates another attack run');
+    assert.ok(command.climb>0,'the extension requests a nose-up manual rate');
+    assert.ok(Math.hypot(command.turn,command.climb)<=1+1e-9,'the converted command stays inside the legal circular stick');
     assert.equal(command.bomb,false);assert.equal(command.fire,false);
+    const startingAltitude=state.player.position.y,startingRange=state.player.position.distanceTo(ship.position);
+    // The adapter converts the former absolute-pitch target into a rate for
+    // the observed ten-second input interval. Hold that legal input through
+    // the corresponding 600 fixed ticks and verify the actual extension.
+    startGame(state);
+    for(let tick=0;tick<600&&state.phase==='playing';tick++)stepGame(state,{...command,steeringActive:true});
+    assert.equal(state.tick,1200,'the converted command remains a real fixed-step flight input');
+    assert.equal(state.phase,'playing');
+    assert.ok(state.player.position.y>startingAltitude+100,'the held rate climbs away from the overhead pass');
+    assert.ok(state.player.position.distanceTo(ship.position)>startingRange+250,'the extension creates room for another approach');
+    assert.equal(state.player.bombs,bombs,'the pilot preserves the remaining payloads during the extension');
+    assert.equal(state.result,null,'the test does not substitute a mission result');
   }
 });
 

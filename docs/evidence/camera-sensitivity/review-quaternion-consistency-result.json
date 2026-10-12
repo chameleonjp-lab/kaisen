@@ -1,0 +1,30 @@
+{
+  "healthy": {
+    "count": 390,
+    "maxQuaternionComponentError": 2.220446049250313e-16,
+    "maxForwardAngle": 5.661048867003675e-16,
+    "maxPositionError": 0
+  },
+  "impact": [
+    {
+      "mode": "easy",
+      "phase": "ended",
+      "deathCause": "sea",
+      "bodyCameraAngle": 0.02296047375036635,
+      "lookAngleError": 2.706168622523819e-16,
+      "oldEulerLookError": 0.008494298890425304,
+      "maxProjectionError": 1.222980050563649e-16,
+      "maxSightPixelError": 0
+    },
+    {
+      "mode": "normal",
+      "phase": "ended",
+      "deathCause": "sea",
+      "bodyCameraAngle": 0.18999999999999997,
+      "lookAngleError": 2.7755575615628914e-17,
+      "oldEulerLookError": 0.00767913061042938,
+      "maxProjectionError": 5.551115123125783e-17,
+      "maxSightPixelError": 5.684341886080802e-14
+    }
+  ]
+}

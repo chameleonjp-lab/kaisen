@@ -1,3 +1,13 @@
+# 2026-10-12 手動カメラ感度・PR17失敗修正
+
+開始PR17 head9f049007d90190c5c4b008b82557dae70eaf349dのCI49は319/325 pass・6fail。再開バッチで6件の原因を修正し、独立レビューの衝突終了frame・active dodge・snapshot不変の指摘も解消した。
+
+最終ローカルは327単体pass（fail/skip0）、型/build pass、関連Chromium8経路pass。旧CI38の原本は不変更、新poseは旧mainの独立再生と全値一致。古い全traceのtick/scoreを新ルールへ付け替えていない。全滅/HP/600秒・入力/勝利条件、依存・公式CIを維持する。
+
+詳細・再現方法・現source/test SHA・最初の失敗・局所負例・未確認は [CAMERA_SENSITIVITY_VERIFICATION.md](CAMERA_SENSITIVITY_VERIFICATION.md) と [followup-evidence.json](evidence/camera-sensitivity/followup-evidence.json)。最終CIは新headのPR17 Checksで別に確認する。ソフトウェア描画・日本語フォント不足のローカル画像を、実機や視覚の受入合格へ数えない。未マージ・未公開、ほか7作品は本バッチ未変更。
+
+以下は前回までの検査履歴。
+
 # 2026-10-05 僚機通知・魚雷表示の修正検査
 
 対象基点 `ac346bb5ef79e4187232f9809d3bb74b785fc8ef`。承認済み9ファイルの完全控えを保持し、基点treeの167 blobすべてと作業開始時の内容が一致することを照合した。既存作業のdirty状態は書き換えず、独立コピーで作業している。

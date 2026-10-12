@@ -77,6 +77,12 @@ function cameraForward(plane: ReturnType<typeof makeAircraft>, mode: 'easy' | 'n
   return new Vector3(0, 0, -1).applyQuaternion(rotation).normalize();
 }
 
+function cameraAngle(before: Vector3, after: Vector3): number {
+  // atan2 keeps the small per-tick angle accurate; acos loses significant
+  // digits near a dot product of one, especially when comparing rate ratios.
+  return Math.atan2(new Vector3().crossVectors(before, after).length(), before.dot(after));
+}
+
 function expectedAuthority(speed: number): number {
   const lowSpeed = speed <= 85 ? .92 + ((speed - 65) / 20) * .23
     : speed <= 110 ? 1.15 - ((speed - 85) / 25) * .15 : 1;
@@ -93,7 +99,7 @@ test('manual pitch and yaw share signed per-second rates across the speed envelo
         const beforeVertical = cameraForward(vertical, mode);
         manualStep(vertical, 0, direction * .6, 1, mode);
         assert.ok(Math.abs(vertical.pitch - direction * .6 * step) < 1e-12, `pitch ${speed}m/s ${direction}`);
-        assert.ok(Math.abs(beforeVertical.angleTo(cameraForward(vertical, mode)) - .6 * step) < 1e-12,
+        assert.ok(Math.abs(cameraAngle(beforeVertical, cameraForward(vertical, mode)) - .6 * step) < 1e-12,
           `${mode} actual camera-forward pitch angle ${speed}m/s ${direction}`);
 
         const horizontal = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
@@ -102,7 +108,8 @@ test('manual pitch and yaw share signed per-second rates across the speed envelo
         neutralBaseline.speed = speed;
         manualStep(neutralBaseline, 0, 0, 1, mode);
         manualStep(horizontal, direction * .6, 0, 1, mode);
-        assert.ok(Math.abs(cameraForward(neutralBaseline, mode).angleTo(cameraForward(horizontal, mode)) - .6 * step) < 1e-12,
+        assert.ok(horizontal.yaw * direction < 0, 'right and left preserve their signed yaw directions');
+        assert.ok(Math.abs(cameraAngle(cameraForward(neutralBaseline, mode), cameraForward(horizontal, mode)) - .6 * step) < 1e-12,
           `${mode} actual camera-forward yaw angle against neutral baseline ${speed}m/s ${direction}`);
       }
     }
@@ -111,12 +118,13 @@ test('manual pitch and yaw share signed per-second rates across the speed envelo
 
 test('manual keyboard diagonals share one circular authority budget in actual camera angle', () => {
   const speed = 110, step = .82 * expectedAuthority(speed) * dt;
-  for (const mode of ['easy', 'normal'] as const) {
+  for (const mode of ['easy', 'normal'] as const) for (const turn of [-1, 1]) for (const climb of [-1, 1]) {
     const plane = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'); plane.speed = speed;
     const before = cameraForward(plane, mode);
-    manualStep(plane, 1 / Math.SQRT2, 1 / Math.SQRT2, 1, mode);
-    assert.ok(Math.abs(plane.pitch - step / Math.SQRT2) < 1e-12);
-    assert.ok(Math.abs(before.angleTo(cameraForward(plane, mode)) - step) < 1e-12,
+    manualStep(plane, turn, climb, 1, mode);
+    assert.ok(Math.abs(plane.pitch - climb * step / Math.SQRT2) < 1e-12);
+    assert.ok(plane.yaw * turn < 0);
+    assert.ok(Math.abs(cameraAngle(before, cameraForward(plane, mode)) - step) < 1e-12,
       `${mode} combined input has the exact finite camera-forward rate`);
   }
 });
@@ -127,18 +135,20 @@ test('actual camera rate keeps direction, strength, pitch and yaw symmetric in b
       const authority = expectedAuthority(speed), angularStep = .82 * authority * dt;
       const vertical = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
       vertical.speed = speed; vertical.pitch = initialPitch;
+      updateQuaternion(vertical);
       const beforeVertical = cameraForward(vertical, mode);
       manualStep(vertical, 0, direction * .45, 1, mode);
-      assert.ok(Math.abs(beforeVertical.angleTo(cameraForward(vertical, mode)) - .45 * angularStep) < 1e-12,
+      assert.ok(Math.abs(cameraAngle(beforeVertical, cameraForward(vertical, mode)) - .45 * angularStep) < 1e-12,
         `${mode} vertical p=${initialPitch} v=${speed} sign=${direction}`);
 
       const yawed = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
       yawed.speed = speed; yawed.pitch = initialPitch;
       const neutral = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
       neutral.speed = speed; neutral.pitch = initialPitch;
+      updateQuaternion(yawed); updateQuaternion(neutral);
       manualStep(neutral, 0, 0, 1, mode);
       manualStep(yawed, direction * .45, 0, 1, mode);
-      assert.ok(Math.abs(cameraForward(neutral, mode).angleTo(cameraForward(yawed, mode)) - .45 * angularStep) < 1e-12,
+      assert.ok(Math.abs(cameraAngle(cameraForward(neutral, mode), cameraForward(yawed, mode)) - .45 * angularStep) < 1e-12,
         `${mode} horizontal p=${initialPitch} v=${speed} sign=${direction}`);
     }
 });
@@ -151,11 +161,11 @@ test('camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplie
     boosted.speed = visible.speed = speed;
     manualStep(boosted, .6, 0, 1.65, mode);
     manualStep(visible, .6, 0, 1, mode);
-    const boostedAngle = cameraForward(makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'), mode)
-      .angleTo(cameraForward(boosted, mode));
+    const boostedAngle = cameraAngle(
+      cameraForward(makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'), mode), cameraForward(boosted, mode));
     const visibleBaseline = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'); visibleBaseline.speed = speed;
     manualStep(visibleBaseline, 0, 0, 1, mode);
-    const visibleAngle = cameraForward(visibleBaseline, mode).angleTo(cameraForward(visible, mode));
+    const visibleAngle = cameraAngle(cameraForward(visibleBaseline, mode), cameraForward(visible, mode));
     assert.ok(Math.abs(boostedAngle - .6 * angularStep * 1.65) < 1e-12);
     assert.ok(Math.abs(visibleAngle - .6 * angularStep) < 1e-12);
     assert.ok(Math.abs(boostedAngle / visibleAngle - 1.65) < 1e-12);

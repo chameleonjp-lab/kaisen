@@ -31,6 +31,16 @@ function advance(state: ReturnType<typeof createGame>, input: FlightInput, ticks
   for (let i = 0; i < ticks; i++) stepGame(state, input);
 }
 
+function cameraForward(state: ReturnType<typeof createGame>): Vector3 {
+  const rotation = new Quaternion();
+  getFlightCameraPose(state.player, state.mode, new Vector3(), rotation);
+  return new Vector3(0, 0, -1).applyQuaternion(rotation).normalize();
+}
+
+function cameraAngle(before: Vector3, after: Vector3): number {
+  return Math.atan2(new Vector3().crossVectors(before, after).length(), before.dot(after));
+}
+
 test('Normal emits no automatic shots or visible-target steering; Easy keeps both', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const state = quiet(mode), target = screenTarget(state, .8, .3);
@@ -105,9 +115,18 @@ test('source offscreen yaw boost ramps gently in both modes without amplifying b
   for (const mode of ['easy', 'normal'] as const) {
     const offscreen = quiet(mode), visible = quiet(mode);
     screenTarget(visible, 0, 0);
+    const before = cameraForward(visible), pitchBefore = visible.player.pitch;
     const input = { ...neutral, turn: 1, climb: .4 };
     stepGame(offscreen, input); stepGame(visible, input);
-    assert.ok(Math.abs(Math.abs(offscreen.player.yaw / visible.player.yaw) - (1 + 2.5 / 60)) < 1e-10);
+    // Finite yaw is compensated for the camera pitch. Measure its actual
+    // contribution to the optical-axis angle, not the obsolete Euler ratio.
+    const pitchDelta = visible.player.pitch - pitchBefore;
+    const visibleAngle = cameraAngle(before, cameraForward(visible));
+    const boostedAngle = cameraAngle(before, cameraForward(offscreen));
+    const horizontal = Math.sqrt(visibleAngle ** 2 - pitchDelta ** 2);
+    const boostedHorizontal = Math.sqrt(boostedAngle ** 2 - pitchDelta ** 2);
+    assert.ok(horizontal > 0);
+    assert.ok(Math.abs(boostedHorizontal / horizontal - (1 + 2.5 / 60)) < 1e-10);
     assert.equal(offscreen.player.bank, visible.player.bank);
     assert.equal(offscreen.player.pitch, visible.player.pitch);
     const noTargets = getFlightAssist(offscreen.player, [], input, mode);
@@ -134,10 +153,23 @@ test('Normal sight projects fixed forward convergence plane through the real cam
       assert.equal(JSON.stringify(state.player), before);
     }
   }
-  state.player.quaternion.setFromEuler(new Euler(0, 0, 0));
+  state.player.pitch = state.player.yaw = state.player.bank = 0;
+  updateQuaternion(state.player);
   const fallback = projectGunSight(state.player, [], 393, 852);
   assert.equal(fallback.depth, 500); assert.ok(fallback.y < 426 - 80, 'Normal sight is above center due to the source camera tilt');
   target.health = 0; assert.equal(projectGunSight(state.player, [target], 393, 852).depth, 500);
+});
+
+test('the sea-contact final frame keeps the camera look angle tied to the actual impact attitude', () => {
+  const state = quiet('normal');
+  state.player.position.set(0, 3.6, 0); state.player.previous.copy(state.player.position);
+  state.player.pitch = -.5; updateQuaternion(state.player);
+  stepGame(state, { ...neutral, turn: .6, climb: -.6, steeringActive: true });
+  assert.equal(state.phase, 'ended');
+  assert.equal(state.deathCause, 'sea');
+  const opticalAxis = cameraForward(state);
+  assert.ok(Math.abs(cameraAngle(forwardOf(state.player), opticalAxis) - Math.abs(NORMAL_CAMERA_LOOK_ANGLE)) < 1e-12,
+    'a sub-tick impact cannot leave the camera looking from the full-tick Euler attitude');
 });
 
 test('Normal input releases only the ended finger while steering and another action remain held', () => {
