@@ -1,5 +1,13 @@
 # カメラ感度の変更と検査
 
+## CI52で残ったChromium実行方式の対応候補（2026-10-12 UTC）
+
+head `d59f1dd854bde50ca910e8790d4700c33f1a3725` / tree `aa361578998f04089c429feca7bc98e5421e58f6` の[CI52](https://github.com/chameleonjp-lab/kaisen/actions/runs/38269526457) は331単体・型/build・manifest・固定旧版比較成功、browser57/58成功。Normalだけ反復描画停止が残った。原本ではpaused提出10/完了10がreadyで150ms安定してから再開し、次のplaying提出11が1298.3ms待機で停止。前回の受付修正は動いたが、描画待機そのものの原因は未特定である。
+
+公式CIの実行物はPlaywright1.61.1が選ぶheadless shell149.0.7827.55、ローカルはSparticuzのheadless shell153.0.8010.0で、ローカルも通常Chromiumではなかった。固定実装と[公式Playwright資料](https://playwright.dev/docs/browsers#chromium-new-headless-mode)で、`channel: "chromium"`は同じ149の通常Chromiumによる統合headlessを選ぶことを確認した。CIには両方が既にインストールされるため、Chromium projectのこの1項目だけを変更する。資料は速度向上を保証しておらず、性能改善や遅延原因の確定とはまだ扱わない。
+
+製品src・画質・物理・素材・依存・公式workflow・WebKit・SwiftShader引数・viewport/DPR・workers1/retries0・1秒監視・回復許容1回・600秒・全58検査を維持する。58件/17filesの列挙は成功。ローカルのexecutablePathはchannelより優先するので、既存ローカルbinaryで候補の実行成功を主張しない。正式な新headの全CIで検証する。原本counter/環境識別/候補SHA/未実行は `evidence/camera-sensitivity/ci52-channel-candidate.json`。
+
 ## CI51の描画復帰受付を修正（2026-10-12）
 
 対象はPR17の `19a4db4bc51360f4a2ec31fed7d07fbb7208c10b` / tree `b6a841c364d206a238915eefcf90ee75cda5a540`。[CI51](https://github.com/chameleonjp-lab/kaisen/actions/runs/38258798280) は329単体・型/build・成果物・固定旧版比較が成功、browserは56/57成功だった。前回のEasy勝利と魚雷投下は成功し、Normalの反復描画停止だけが残った。artifact11752526178は17,337,548 bytes、ZIP SHA256 `6eee9f9ce267bcf0d4622e7fd1d3434bc6bef1a779e36f0b340798c4a5459a05`。

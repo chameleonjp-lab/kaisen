@@ -1,0 +1,195 @@
+{
+  "recordedAt": "2026-10-12T15:53:53.711562+00:00",
+  "repository": "chameleonjp-lab/kaisen",
+  "pr": 17,
+  "sourceHead": "d59f1dd854bde50ca910e8790d4700c33f1a3725",
+  "sourceTree": "aa361578998f04089c429feca7bc98e5421e58f6",
+  "failedRun": {
+    "id": 38269526457,
+    "number": 52,
+    "unitPass": 331,
+    "browserPass": 57,
+    "browserFail": 1,
+    "artifact": {
+      "id": 11757571544,
+      "bytes": 17012436,
+      "sha256": "2d41f82384f310d2d521cb19a36a69d7c3b1a51e74b81283a987d63ad04e3e57"
+    }
+  },
+  "normalStages": {
+    "first": {
+      "tick": 267,
+      "elapsed": 4.45,
+      "phase": "paused",
+      "queue": {
+        "status": "stalled",
+        "failure": null,
+        "pendingMs": 1045,
+        "lastCompletedPendingMs": 905.5,
+        "completedFrameIntervalMs": 932.9000000000233,
+        "submittedCount": 9,
+        "completedCount": 8,
+        "skippedCount": 649
+      },
+      "pausedView": {
+        "missionId": 3,
+        "phase": "paused",
+        "tick": 267,
+        "showHUD": null,
+        "layoutRevision": 1,
+        "cssWidth": 393,
+        "cssHeight": 852,
+        "bufferWidth": 393,
+        "bufferHeight": 852,
+        "overlayBufferWidth": 393,
+        "overlayBufferHeight": 852,
+        "submittedCount": null,
+        "completedCount": 8,
+        "ready": false
+      },
+      "interruptionReason": "stalled"
+    },
+    "frozen": {
+      "tick": 267,
+      "elapsed": 4.45,
+      "phase": "paused",
+      "queue": {
+        "status": "ready",
+        "failure": null,
+        "pendingMs": 0,
+        "lastCompletedPendingMs": 892.8000000000466,
+        "completedFrameIntervalMs": 903.6999999999534,
+        "submittedCount": 10,
+        "completedCount": 10,
+        "skippedCount": 757
+      },
+      "pausedView": {
+        "missionId": 3,
+        "phase": "paused",
+        "tick": 267,
+        "showHUD": true,
+        "layoutRevision": 1,
+        "cssWidth": 393,
+        "cssHeight": 852,
+        "bufferWidth": 393,
+        "bufferHeight": 852,
+        "overlayBufferWidth": 393,
+        "overlayBufferHeight": 852,
+        "submittedCount": 10,
+        "completedCount": 10,
+        "ready": true
+      },
+      "interruptionReason": "stalled"
+    },
+    "settled": {
+      "tick": 267,
+      "elapsed": 4.45,
+      "phase": "paused",
+      "queue": {
+        "status": "ready",
+        "failure": null,
+        "pendingMs": 0,
+        "lastCompletedPendingMs": 892.8000000000466,
+        "completedFrameIntervalMs": 903.6999999999534,
+        "submittedCount": 10,
+        "completedCount": 10,
+        "skippedCount": 757
+      },
+      "pausedView": {
+        "missionId": 3,
+        "phase": "paused",
+        "tick": 267,
+        "showHUD": true,
+        "layoutRevision": 1,
+        "cssWidth": 393,
+        "cssHeight": 852,
+        "bufferWidth": 393,
+        "bufferHeight": 852,
+        "overlayBufferWidth": 393,
+        "overlayBufferHeight": 852,
+        "submittedCount": 10,
+        "completedCount": 10,
+        "ready": true
+      },
+      "interruptionReason": "stalled"
+    },
+    "second": {
+      "tick": 327,
+      "elapsed": 5.45,
+      "phase": "paused",
+      "queue": {
+        "status": "stalled",
+        "failure": null,
+        "pendingMs": 1340.8999999999069,
+        "lastCompletedPendingMs": 892.8000000000466,
+        "completedFrameIntervalMs": 903.6999999999534,
+        "submittedCount": 11,
+        "completedCount": 10,
+        "skippedCount": 820
+      },
+      "pausedView": {
+        "missionId": 3,
+        "phase": "paused",
+        "tick": 327,
+        "showHUD": null,
+        "layoutRevision": 1,
+        "cssWidth": 393,
+        "cssHeight": 852,
+        "bufferWidth": 393,
+        "bufferHeight": 852,
+        "overlayBufferWidth": 393,
+        "overlayBufferHeight": 852,
+        "submittedCount": null,
+        "completedCount": 10,
+        "ready": false
+      },
+      "interruptionReason": "stalled"
+    }
+  },
+  "diagnosis": "Paused frame n10 fully completed and stayed ready before Resume. The next playing frame n11 stalled. The paused-view acceptance fix worked but did not remove the underlying fence delay.",
+  "environmentEvidence": {
+    "playwright": "1.61.1",
+    "officialShellAndFullChromium": "149.0.7827.55 / revision1228",
+    "local": "@sparticuz/chromium153.0.0, HeadlessChrome153.0.8010.0 headless shell, not full Chromium",
+    "localOverridesDoNotValidateCandidate": true,
+    "officialInstallAlreadyIncludesBoth": true,
+    "selectionImplementation": "playwright-core/lib/coreBundle.js getExecutableName: channel chromium -> full chromium; default headless -> chromium-headless-shell; explicit executablePath takes priority"
+  },
+  "candidate": {
+    "path": "playwright.config.ts",
+    "change": "chromium project use.channel = chromium",
+    "sha256": "c6b91df14ade0525c7d61cbc0dfe89b7c8a61c57616ee56c421f6679df037a50",
+    "runtimeSourceChangesAfterCI52": [],
+    "unchanged": [
+      "WebKit project",
+      "browser version",
+      "Playwright/lockfile",
+      "SwiftShader arguments",
+      "viewport/DPR",
+      "workers=1",
+      "retries=0",
+      "1-second watchdog",
+      "Normal recovery limit1",
+      "victory window600",
+      "all58 browser cases",
+      "official workflow",
+      "physics/quality/assets"
+    ]
+  },
+  "primarySources": [
+    "https://playwright.dev/docs/browsers#chromium-new-headless-mode",
+    "https://developer.chrome.com/docs/automation-and-testing/headless-chrome-shell"
+  ],
+  "validationAtRecordCreation": {
+    "officialCollection": {
+      "exit": 0,
+      "cases": 58,
+      "files": 17
+    },
+    "fullChromiumLocal": "not_run: official full binary unavailable; local override is a different shell and cannot certify this candidate",
+    "performanceImprovement": "unconfirmed",
+    "exactFenceDelayCause": "unknown",
+    "CI53": "not_run: full official checks required on published candidate"
+  },
+  "reviewScope": "Environment candidate, no relaxed game/test criteria. Same-version official full Chromium provides the integrated headless browser path; docs do not guarantee speed."
+}

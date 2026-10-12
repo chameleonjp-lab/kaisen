@@ -1,3 +1,11 @@
+# 2026-10-12 UTC CI52のChromium実行方式対応候補
+
+CI52 head `d59f1dd854bde50ca910e8790d4700c33f1a3725` / tree `aa361578998f04089c429feca7bc98e5421e58f6` は331単体・型/build・manifest・固定旧版比較成功、browser57/58成功。Normalはpaused提出10の完了・150ms安定後に再開できたが、新playing提出11の1298.3ms待機で2回目の停止。受付修正が動いたことと、待機原因が未特定であることを分ける。
+
+Chromium projectだけ `channel: "chromium"` を加え、Playwright既定のheadless shell149から、CIに同時インストール済みの同版通常Chromiumの統合headlessへ切り替える。[公式資料](https://playwright.dev/docs/browsers#chromium-new-headless-mode)と固定1.61.1実装の選択分岐を確認。ローカルSparticuz153もshellで、executablePathがchannelより優先するため候補のローカル実行証明には使えない。列挙58件/17filesは成功、速度改善・根因確定・full Chromiumローカルは未確認。新headの既存全CIで判定する。
+
+製品/画質/ルール/閾値/回復許容/検査58件・WebKit・依存・正式workflow・viewport/DPR・workers/retriesは不変更。[CI52原本と環境候補](evidence/camera-sensitivity/ci52-channel-candidate.json)へ保存した。
+
 # 2026-10-12 CI51の描画復帰受付修正
 
 対象PR17 head `19a4db4bc51360f4a2ec31fed7d07fbb7208c10b` / tree `b6a841c364d206a238915eefcf90ee75cda5a540`。[CI51](https://github.com/chameleonjp-lab/kaisen/actions/runs/38258798280) は329単体・型/build・配布成果物・旧版比較成功、browser56/57成功。Easy勝利と魚雷投下の前回修正はCIでも通り、Normalの反復描画停止だけが残った。
