@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from 'three';
+import { Euler, Quaternion, Vector3 } from 'three';
 import type { Aircraft, GameMode } from './types';
 
 export const FLIGHT_FOV = 64;
@@ -9,17 +9,23 @@ export const FLIGHT_CAMERA_BANK_FACTOR = 0.45;
 /** Radius as a fraction of the shorter CSS viewport edge. */
 export const EASY_AIM_RADIUS = 0.135;
 const CAMERA_OFFSET = new Vector3(0, 11, 29);
-const NORMAL_LOOK = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.19);
-const EASY_LOOK = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.atan2(11, 479));
+export const NORMAL_CAMERA_LOOK_ANGLE = -0.19;
+export const EASY_CAMERA_LOOK_ANGLE = -Math.atan2(11, 479);
+const NORMAL_LOOK = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), NORMAL_CAMERA_LOOK_ANGLE);
+const EASY_LOOK = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), EASY_CAMERA_LOOK_ANGLE);
 const TAN_HALF_FOV = Math.tan(FLIGHT_FOV * Math.PI / 360);
 
 /** Shared by rendering and targeting so the displayed circle is the actual firing gate. */
 export function getFlightCameraPose(player: Aircraft, mode: GameMode, position: Vector3, rotation: Quaternion): void {
-  // Retain pitch/yaw and loops, but transmit only 45% of the bank to the view.
-  // Using the same rotation for the offset avoids a sideways camera swing.
+  // Keep the established 45%-bank camera position so the offset does not
+  // acquire a sideways swing. The view direction itself must not be pulled
+  // sideways by bank; apply its retained roll around the optical axis after
+  // the fixed look angle instead.
   rotation.copy(player.quaternion).multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), player.bank * (1 - FLIGHT_CAMERA_BANK_FACTOR)));
   position.copy(CAMERA_OFFSET).applyQuaternion(rotation).add(player.position);
-  rotation.multiply(mode === 'easy' ? EASY_LOOK : NORMAL_LOOK);
+  rotation.setFromEuler(new Euler(player.pitch, player.yaw, 0, 'YXZ'))
+    .multiply(mode === 'easy' ? EASY_LOOK : NORMAL_LOOK)
+    .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -player.bank * FLIGHT_CAMERA_BANK_FACTOR));
 }
 
 export function projectFlightTarget(player: Aircraft, target: Vector3, aspect: number, mode: GameMode) {

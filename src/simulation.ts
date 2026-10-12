@@ -521,7 +521,7 @@ function fixedStep(state: GameState, input: FlightInput): void {
   const flight = meta.flight;
   const adjusted = { ...input, ...smoothFlightAssistance(flight, input, assist, FIXED_DT) };
   const loopPressed = input.loop && !flight.loopHeld; flight.loopHeld = input.loop;
-  const completed = updatePlayerLoop(player, flight, adjusted, input, loopPressed, FIXED_DT, advanceThrottle(flight, input, state.mode, FIXED_DT), MAX_SPEED, flight.responseMultiplier);
+  const completed = updatePlayerLoop(player, flight, adjusted, input, loopPressed, FIXED_DT, advanceThrottle(flight, input, state.mode, FIXED_DT), MAX_SPEED, flight.responseMultiplier, state.mode);
   if (completed) { state.stats.loops += 1; emit(state, 'loop', player.position, player.id); }
   assignTargets(state);
   for (const plane of [...state.allies, ...state.enemies]) {

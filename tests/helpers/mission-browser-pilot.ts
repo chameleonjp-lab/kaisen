@@ -4,6 +4,7 @@ import { EASY_AUTO_FIRE_RANGE, getFlightAssist } from '../../src/flight-assist';
 import { projectFlightTarget } from '../../src/flight-view';
 import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
+import { absolutePitchTargetToRateCommand } from './pitch-rate-conversion';
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value));
 const vector = (point: { x: number; y: number; z: number }) => new Vector3(point.x, point.y, point.z);
@@ -44,29 +45,37 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       if (old && dt > 0) angular.set(enemy.id, {yaw: Math.atan2(Math.sin(enemy.yaw - old.yaw), Math.cos(enemy.yaw-old.yaw)) / dt, pitch:(enemy.pitch - old.pitch)/dt});
     }
     history = new Map(enemies.map(e=>[e.id,{yaw:e.yaw,pitch:e.pitch,t:snapshot.elapsed}]));
+    let imminentThreat: { separation: Vector3; time: number } | null = null;
     for (const enemy of enemies) {
-      if (enemy.health <= 0 || snapshot.tick < dodgeUntil) continue;
+      if (enemy.health <= 0) continue;
       const relative = enemy.position.clone().sub(player.position);
       const velocity = forwardOf(enemy).multiplyScalar(enemy.speed).sub(forwardOf(player).multiplyScalar(player.speed));
       const time = -relative.dot(velocity) / Math.max(1, velocity.lengthSq());
-      if (relative.length() < 240 && time > 0 && time < 1.5 && relative.clone().addScaledVector(velocity,time).length() < 40) {
-        dodgeUntil = snapshot.tick + 120;
-        // Estimate clearance for Easy's full two-second dodge at cruise speed.
-        // The old 400m cutoff sent a 323m approach into higher traffic. Normal
-        // accelerates while dodging, so retain its existing altitude margin.
-        const canDescend = snapshot.mode === 'easy'
-          ? player.position.y - player.speed * 2 > 90 : player.position.y > 400;
-        dodgeClimb = canDescend && relative.y >= 0 ? -1 : 1;
-        dodgeTurn = 0;
-        // CI38: climbing from 274m into an above-player descending hostile
-        // caused the collision. A lateral turn preserves vertical clearance.
-        // 230m covers the observed 41-tick delivery plus neutral pitch settling
-        // above the 90m escape floor at 141m/s; it is not an arbitrary-lag guarantee.
-        if (snapshot.mode === 'normal' && !canDescend && relative.y >= 0 && player.position.y > 230) {
-          const right = new Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
-          dodgeTurn = relative.dot(right) >= 0 ? -1 : 1;
-          dodgeClimb = 0;
-        }
+      const closestSeparation = relative.clone().addScaledVector(velocity, time).length();
+      if (relative.length() < 240 && time > 0 && time < 1.5 && closestSeparation < 40
+        && (!imminentThreat || time < imminentThreat.time)) {
+        imminentThreat = { separation: relative, time };
+      }
+    }
+    if (imminentThreat) {
+      const relative = imminentThreat.separation;
+      dodgeUntil = snapshot.tick + 120;
+      // Estimate clearance for Easy's full two-second dodge at cruise speed.
+      // The old 400m cutoff sent a 323m approach into higher traffic. Normal
+      // accelerates while dodging, so retain its existing altitude margin.
+      const canDescend = snapshot.mode === 'easy'
+        ? player.position.y - player.speed * 2 > 90 : player.position.y > 400;
+      dodgeClimb = canDescend && relative.y >= 0 ? -1 : 1;
+      dodgeTurn = 0;
+      // CI38: climbing from 274m into an above-player descending hostile
+      // caused the collision. A lateral turn preserves vertical clearance.
+      // 230m covers the observed 41-tick delivery plus neutral pitch settling
+      // above the 90m escape floor; choose the most urgent live threat even if
+      // a prior two-second dodge is already underway.
+      if (snapshot.mode === 'normal' && !canDescend && relative.y >= 0 && player.position.y > 230) {
+        const right = new Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+        dodgeTurn = relative.dot(right) >= 0 ? -1 : 1;
+        dodgeClimb = 0;
       }
     }
     if (snapshot.tick < dodgeUntil) {
@@ -235,7 +244,11 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     // run. Use the same authority-aware damped heading controller as Normal.
     const headingGain = snapshot.mode === 'easy' && !slowInput ? Math.max(3.5,Math.min(8*.82/.7,.75/sampleDt)) : 3.5;
     let turn = clamp(-(yawRate + error * headingGain) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI));
-    let climb = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
+    const legacyAbsolutePitch = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
+    // This pilot historically emitted a normalized absolute-pitch target.
+    // Convert that target into the new manual-rate contract using the observed
+    // sample interval; the adapter saturates at the product's legal stick rate.
+    let climb = absolutePitchTargetToRateCommand(legacyAbsolutePitch, player.pitch, player.speed, sampleDt);
     // A held physical stick now owns turn/pitch, including small corrections.
     // Do not bias naval approaches upward to oppose the old Easy nose-down
     // assist: that assist is absent while this real-input pilot holds its stick.
