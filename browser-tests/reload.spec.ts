@@ -12,6 +12,7 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
+  const readPilot = () => page.evaluate(() => (window as any).__kaisenReadState(false));
   const capture = async (name: string) => {
     await mkdir('test-results/evidence', {recursive:true});
     await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({note:'Real clock and CDP touch input, no world/clock injection. Pause menu hidden only for screenshot.', snapshot:await read()},null,2));
@@ -28,9 +29,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   try {
     while (true) {
       if (lastSample >= 0) await page.waitForFunction(next => {
-        const s=(window as any).__kaisenReadState(); return s.phase !== 'playing' || s.tick >= next;
+        const s=(window as any).__kaisenReadState('clock'); return s.phase !== 'playing' || s.tick >= next;
       },lastSample+6,{polling:'raf'});
-      const s = await read();
+      const s = await readPilot();
       if (captured && s.player.reloadTicksRemaining < capturedRemaining) progressAdvanced = true;
       if (captured && s.phase === 'playing' && s.player.reloadTicksRemaining > 0) {
         const shown = Number(await page.locator('#reload-status').getAttribute('data-progress'));

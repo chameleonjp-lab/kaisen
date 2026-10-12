@@ -1,0 +1,267 @@
+{
+  "schema": "ci54-normal-release-diagnosis-v1",
+  "scope": "Scratch numerical evidence only; original product engine and captured efad helper. No repository/helper/runtime/workflow edits, no browser launched, no full tests. This does not establish browser delivery or device acceptance.",
+  "officialEvidence": {
+    "runId": 38282901314,
+    "jobId": 114924230488,
+    "artifactId": 11763690517,
+    "sourceCommitReportedByParent": "efadcb17",
+    "seed": 1262569811,
+    "config": {
+      "shipCount": 4,
+      "mode": "normal"
+    },
+    "consumedAuditRows": 1966,
+    "auditDropped": 0,
+    "samples": 2077,
+    "renderRecoveries": 0,
+    "terminal": {
+      "tick": 36007,
+      "elapsed": 600.1166666666667,
+      "phase": "playing",
+      "deathCause": null,
+      "hp": 58.84800000000019,
+      "minHp": 24.968000000000306,
+      "ships": [
+        {
+          "id": 100,
+          "hp": 400
+        },
+        {
+          "id": 101,
+          "hp": 0
+        },
+        {
+          "id": 102,
+          "hp": 0
+        },
+        {
+          "id": 103,
+          "hp": 0
+        }
+      ],
+      "liveEnemy": [
+        {
+          "id": 27814,
+          "hp": 80
+        },
+        {
+          "id": 27815,
+          "hp": 80
+        },
+        {
+          "id": 27816,
+          "hp": 80
+        },
+        {
+          "id": 28450,
+          "hp": 80
+        },
+        {
+          "id": 27817,
+          "hp": 80
+        }
+      ]
+    }
+  },
+  "exactNegativeReplay": {
+    "note": "Exact measured consumed-input replay in unchanged engine. Pilot recomputed with readiness=false for diagnosis only; measured inputs exclusively drive engine.",
+    "matched": 2077,
+    "maxPosition": 1.3122952981328221e-11,
+    "maxAngle": 5.329070518200751e-15,
+    "maxSpeed": 2.842170943040401e-14,
+    "maxHealth": 0,
+    "endPositionError": 8.952432436949508e-12,
+    "endShipHealthMatches": true,
+    "auditRows": 1966,
+    "runtimeSeconds": 12.252428153,
+    "shadowControllerMaxSteerError": 8.435585563404402e-12,
+    "shadowControllerFireThrottleMismatchCount": {
+      "fire": 0,
+      "accelerate": 0,
+      "brake": 0
+    },
+    "shadowReadiness": "false for target/phase/controller diagnosis; measured audit exclusively drives the real engine. Normal internal strategy does not depend on requested bomb bit."
+  },
+  "releaseFindings": {
+    "actualBombReleases": 15,
+    "resolvedEffectiveBombs": 3,
+    "resolvedWaterMisses": 11,
+    "stillInFlightAtBound": 1,
+    "remainingRound": {
+      "id": 28439,
+      "ageSeconds": 1.6666666666666632,
+      "forecastAtRelease": "water"
+    },
+    "effectiveBombs": [
+      {
+        "releaseTick": 4327,
+        "impactTick": 4619,
+        "ship": 102,
+        "kind": "blast",
+        "actualDamage": 67.54974525965129
+      },
+      {
+        "releaseTick": 6667,
+        "impactTick": 6796,
+        "ship": 103,
+        "kind": "direct",
+        "actualDamage": 1800
+      },
+      {
+        "releaseTick": 26852,
+        "impactTick": 27181,
+        "ship": 101,
+        "kind": "direct",
+        "actualDamage": 600
+      }
+    ],
+    "actualPlayerBombDamage": 2467.5497452596514,
+    "allObservationForecastsReady": true,
+    "alreadyWaterAtPayloadReread": 6,
+    "additionalWaterBeforeActualRelease": 6,
+    "observationToConsumedRelease": {
+      "minimumTicks": 18,
+      "medianTicks": 24,
+      "maximumTicks": 45
+    },
+    "payloadRereadToConsumedRelease": {
+      "minimumTicks": 16,
+      "medianTicks": 21,
+      "maximumTicks": 26
+    },
+    "observationCycle": {
+      "minimumTicks": 6,
+      "medianTicks": 18.0,
+      "maximumTicks": 70
+    },
+    "acceptedReplyDelay": {
+      "minimumTicks": 0,
+      "medianTicks": 11,
+      "maximumTicks": 62
+    },
+    "failedReleaseYawDriftAbsoluteRangeRadians": [
+      0.05171980920440866,
+      0.7355161300745285
+    ],
+    "maximumLinearVersusActualFutureShipDeviationMeters": 1.8986933532505268
+  },
+  "neutralCounterfactual": {
+    "label": "Synthetic legal-input prefix/tail experiment; not adopted helper behavior and not full mission completion evidence.",
+    "method": "At each of two exact consumed-audit prefixes with a direct green cue, hold the complete then-current input for N fixed steps (N=0,4,..40). Then submit ordinary held-stick turn=0,climb=0,fire=false,bomb=false; preserve existing throttle and viewAspect. Recalculate unchanged read-only bomb forecast after k=0,4,..40 neutral steps. The first neutral command is consumed at observationTick+N+1; k=0 uses that step's pre-motion pose. No player/world/time mutation.",
+    "cases": 22,
+    "observationTicks": [
+      34347,
+      35889
+    ],
+    "results": [
+      {
+        "observationTick": 34347,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": "0,4,8",
+        "result": "All sampled k=0..40 remain direct1800."
+      },
+      {
+        "observationTick": 34347,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": 12,
+        "result": "All sampled k=0..40 remain blast213.247..222.224; insufficient for remaining400."
+      },
+      {
+        "observationTick": 34347,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": "16,20,24,28,32,36,40",
+        "result": "All sampled k=0..40 are water."
+      },
+      {
+        "observationTick": 35889,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": 0,
+        "result": "k0..28 direct1800, k32 blast458.535, k36 blast395.015, k40 blast230.267."
+      },
+      {
+        "observationTick": 35889,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": 4,
+        "result": "k0 blast345.485 then decreases to12.183 at k28; k32..40 water. No sampled damage reaches400."
+      },
+      {
+        "observationTick": 35889,
+        "remainingShipHp": 400,
+        "heldOldInputTicks": "8,12,16,20,24,28,32,36,40",
+        "result": "All sampled k=0..40 are water."
+      }
+    ]
+  },
+  "recommendation": {
+    "supportedMinimumCandidate": "Confirm the requested steering first; gather fresh phase/current steering ownership/payload count/live ready cue/button box in one read-only packet immediately before ordinary touch dispatch; skip when the refreshed cue is not ready. Refresh observation after the first-cue screenshot before computing the next request.",
+    "why": "Every old release was requested from a green cue. Six were already water before button dispatch and six more aged into water during the remaining16..26ticks of delivery. Correct shared ship forecasts match actual effective impacts; ship motion linearization error is small relative to held-input yaw changes.",
+    "rejectedUniversalNeutral": "Neutral preserves some cues only if old steering stops early; it does not rescue expired geometry and in one late direct cue even immediate neutral yields sub400 blast after36ticks. Do not universally replace helper steering with neutral based on these tails.",
+    "deferred": "No full600s synthetic mission candidate was run, per parent instruction after causal tail evidence was sufficient. The minimum browser driver candidate must still demonstrate both real-input victories and official CI all-clear under unchanged600s/oneNormalGPUrecovery limits."
+  },
+  "references": [
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54/artifact/test-results/evidence/normal-victory-route-state.json",
+      "bytes": 3275982,
+      "sha256": "0a98a9b00ee37fb2741c6a22d68c9c13a14b5517727f37c1167bcf8f1de6701d"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/pilot-original.ts",
+      "bytes": 22269,
+      "sha256": "0181bcfca34b73a7657c74cc7fa3c0cd72ce36a173e9d1d669d8018d8584355b"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/negative-replay.json",
+      "bytes": 3258137,
+      "sha256": "56f34d78a42ad928748bb6c3d9b88e6558716cc1d3707a68d5e7bbabccad5600"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/release-gap.json",
+      "bytes": 138670,
+      "sha256": "dde25c68e4f0139a6c9ea37a6be2a6c2437fb5fa0575442565e144b5092237a0"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/neutral-tail-results.json",
+      "bytes": 124809,
+      "sha256": "d83f07e4b3d34e4185c4acf04e4d2c69d0657ece2a7e9e07d69dde17dd3a9e5a"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/kaisen/src/simulation.ts",
+      "bytes": 37461,
+      "sha256": "d9a9071bc9d73614793febae6eba70d6423b3cea3a5f09ecd0fd4326f09cf861"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/kaisen/src/bomb-guide.ts",
+      "bytes": 5179,
+      "sha256": "9b069f4ccda5a478adf67c7c42aa982a59b13d2e7820179d88415ee1485c762b"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/kaisen/src/ship-motion.ts",
+      "bytes": 1342,
+      "sha256": "add5748015717beb0a4a08f6f388e5a7030f679837e455b5854346ea75108dc8"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/kaisen/src/ordnance.ts",
+      "bytes": 17796,
+      "sha256": "524410fc8a90978fde49f2f8341cb39617509b2fc7ff765792c1e37e43aa86c7"
+    },
+    {
+      "path": "/workspace/scratch/cd965ebd4c33/ci54/artifact.zip",
+      "bytes": 16521005,
+      "sha256": "619c75c76a582c85ff17bb9b593611e13b14a237033b39d24ab41679c4d45e0b"
+    }
+  ],
+  "scripts": {
+    "command": "node --import ./kaisen/node_modules/tsx/dist/loader.mjs ci54-normal-analysis/<script>.mts",
+    "paths": [
+      "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/replay.mts",
+      "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/release-gap.mts",
+      "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/neutral-tail.mts"
+    ],
+    "scratchDiagnosticCopy": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/pilot-baseline.mts"
+  },
+  "fullDetailReference": {
+    "path": "/workspace/scratch/cd965ebd4c33/ci54-normal-analysis/summary-full.json",
+    "sha256": "5f741ca882c83fd4c8cbe835157fbf1dbd95b9ba8a39bd05b1c6699f0d46e865"
+  }
+}

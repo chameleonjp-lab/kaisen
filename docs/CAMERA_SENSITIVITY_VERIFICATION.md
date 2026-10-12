@@ -1,3 +1,23 @@
+# 2026-10-12 UTC CI54の投下順序修正と通信待機の集約
+
+head `efadcb17ab2b7ab72504044aefa030fc51b13c01` / tree `5b40ebf9687d103e88b5b3a563ecd9439321c1b8` の[CI54](https://github.com/chameleonjp-lab/kaisen/actions/runs/38282901314)は334単体・型/build・実SHAのmanifest・固定旧版比較が成功。browserは56成功・勝利2失敗の後、既存30分のjob上限で最後のreloadがcancelledとなった。成功済みの旧headを今回の全件成功とは扱わない。artifact11763690517、16,521,005 bytes、ZIP SHA256 `619c75c76a582c85ff17bb9b593611e13b14a237033b39d24ab41679c4d45e0b` を照合した。
+
+実消費入力の厳密再生はEasy1360観測・Normal2077観測と終了状態に一致した。Easyは332.35秒で敵機の射撃による敗北、5回の実投下のうち1回だけ艦へ1800ダメージ。Normalは600.1167秒で生存艦400HPを残し、有効投下3回・水面への外れ11回・未着弾1回だった。観測時のgreenはどちらも、実投下まで旧操舵が続く間にwaterへ変化した。Normalの観測→投下は18〜45tick、既に投下前の再読取でwaterになったものも6回あった。描画停止/GL failureは両経路で観測0。
+
+今回の候補は操舵の受理を先に確認し、投下直前の実表示・現guide・生存艦・操作ボタンの矩形を同じread-only読取で確かめる。照準が失効したら実ボタンを押さず、未押下のnullとして記録する。実投下の成功数は残弾低下だけから数え、終了/停止は従来のphase分岐へ戻る。初回green画像の保存後も状態を取り直してから次の入力を決める。前節の「新操舵より先に旧操舵を保持して投下する」候補は、CI54の実測に基づき置き換えた。
+
+入力受付のRAF待機とその成立時のtick/phase読取を1回のbrowser呼出しにまとめた。爆弾/魚雷も指のrelease・同一操縦指・実残弾の低下を同じ待機で確認する。5秒の独立timerは非表示のRAF停止でも働き、ゲーム時計を進めない。reloadの通常観測は既存のcompact読取、tick待機はclock読取を使い、停止時の完全状態比較と画像/最終証拠を維持する。navalの既存経路に、実際の有効圏外表示で未押下・残弾保持・同じ操縦指・auditの投下pulseなしを確認する回帰を加えた。
+
+試験pilotの戦略・製品source・物理/HP/兵装/AI・描画/素材・依存・公式workflowはCI54 headと一致する。どのgreenでも中立操舵にする案は、Easyの5つの区間で悪化する場合があり不採用。艦の未来位置の線形近似誤差はNormalで最大1.90mと小さく、今回の変更に含めない。区間の合法入力による数値比較を、実ブラウザの入力送達や全勝利の証明へ読み替えない。
+
+全334単体（fail/skip0）・型/buildが成功、関連browser3件が成功（naval15.9秒・clock5.0秒・reload57.7秒）。独立コードレビューは必須残件なし。Easyの関連勝利は257.35秒/HP80・全敵全艦0・実投下9回/失効skip1回で成功。Normalも229.1167秒/HP80.000・全敵全艦0・実投下10回/失効skip2回・描画停止0回で成功（勝利2経路の合計8.5分）。全59件/18files（Chromium49＋WebKit10）を維持して列挙した。600秒・全滅・HP>0・実入力・1秒監視・Normal回復1回・workers1/retries0・画質・job30分上限を緩めない。
+
+ローカルはNode24.19.0 / Playwright1.61.1 / Sparticuz headless_shell153.0.8010.0、393×852/DPR1。正式CIの通常Chromium149とは異なり、日本語glyph不足もある。新しい候補の全体CIと正式画像は、同じDraft PRの実SHAで確認する。マージ・Ready化・公開はしない。
+
+失敗と原因の根拠は [CI54原本識別](evidence/camera-sensitivity/ci54-failure.json)、[Easy厳密再生](evidence/camera-sensitivity/ci54-easy-payload-replay.json)、[Easyの限定照準比較](evidence/camera-sensitivity/ci54-easy-cue-horizons.json)、[Normal厳密再生と投下調査](evidence/camera-sensitivity/ci54-normal-release-analysis.json)。現在のsource識別と検査結果は [候補記録](evidence/camera-sensitivity/ci54-code-candidate.json)にまとめる。
+
+以下は前回までの候補・検査履歴。
+
 # 2026-10-12 UTC CI53の実入力修正と検査観測の軽量化
 
 head `14190408feb4b09d71d914c986653520d9eeecc4` / tree `9901ae860fabf6e55c507484de4a59549b8ebceb` の[CI53](https://github.com/chameleonjp-lab/kaisen/actions/runs/38273855546)は331単体・型/build・manifest・固定旧版比較成功、browser53/58成功・5失敗。Easyは299.6667秒の艦対空砲、Normalは66.9秒の機体衝突で敗北し、両方のbomb要求は0だった。両ルートでrender停止/GL failureは観測0だが、Chromium方式変更の一般的な性能改善や根因確定とは扱わない。artifact11759132178、18,322,928 bytes、SHA256 `4d7981e40a84add388e5454241705575425428def1476fce1f730c4197608920` を照合した。

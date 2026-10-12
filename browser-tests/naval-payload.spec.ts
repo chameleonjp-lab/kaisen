@@ -29,6 +29,16 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   const cdp=await context.newCDPSession(page),origin={x:180,y:500};
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   await steerAndObserve(page,cdp,origin,0,0);
+  const outsideCue=await read(page);
+  expect(outsideCue.bombGuide?.affected??[]).toEqual([]);
+  await expect(page.locator('#bomb')).toHaveAttribute('data-ready','false');
+  expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb',true),
+    'a fresh out-of-range cue skips the physical press').toBeNull();
+  const skipped=await read(page);
+  expect(skipped.player.bombs).toBe(outsideCue.player.bombs);
+  expect(skipped.controlsInput.steerPointer).toBe(outsideCue.controlsInput.steerPointer);
+  expect(skipped.controlsInput.heldPointers.bomb).toEqual([]);
+  expect((await page.evaluate(()=>(window as any).__kaisenReadState('audit'))).entries.some((entry:any)=>entry.input.bomb)).toBe(false);
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);
   await expect(page.locator('#bomb-ammo')).toHaveText('残り1発');
   await page.waitForFunction(()=>{const s=(window as any).__kaisenReadState();return s.player.payloadCooldown<=0;});

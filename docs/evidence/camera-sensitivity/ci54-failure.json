@@ -1,0 +1,26 @@
+{
+  "head": "efadcb17ab2b7ab72504044aefa030fc51b13c01",
+  "tree": "5b40ebf9687d103e88b5b3a563ecd9439321c1b8",
+  "run": 38282901314,
+  "job": 114924230488,
+  "runUrl": "https://github.com/chameleonjp-lab/kaisen/actions/runs/38282901314",
+  "conclusion": "cancelled",
+  "budgetMinutes": 30,
+  "browser": {
+    "expected": 59,
+    "passed": 56,
+    "failed": 2,
+    "cancelled": 1,
+    "failureCases": [
+      "Easy victory: defeat/enemy-aircraft",
+      "Normal victory: elapsed 600.0833333333334s >=600s"
+    ],
+    "cancelledCase": "reload real touch route"
+  },
+  "artifact": {
+    "id": 11763690517,
+    "sizeBytes": 16521005,
+    "sha256": "619c75c76a582c85ff17bb9b593611e13b14a237033b39d24ab41679c4d45e0b"
+  },
+  "rawLogSha256": "a9b8326afe5311342b68ade8e6653954c658c0efaf1a96fa288f15aab62b79a2"
+}

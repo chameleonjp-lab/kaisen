@@ -1,0 +1,454 @@
+{
+  "source": {
+    "artifact": "CI54 touch-victory-state.json",
+    "sha256": "7bf4845c29acc74656b92e10bf8089761e670756248e0b473cff1db94f60f95f",
+    "mode": "easy",
+    "seed": 1262569811,
+    "simulation": "unchanged createGame/startGame/stepGame/predictBombEffect; consumedInputs only; phase-only pause/resume at replay ticks 69 and 366; no browser or pilot re-execution"
+  },
+  "recordedFailure": {
+    "status": "failed",
+    "tick": 19941,
+    "elapsed": 332.35,
+    "phase": "ended",
+    "endReason": null,
+    "deathCause": "enemy-aircraft",
+    "playerHealth": 0,
+    "playerBombs": 1,
+    "ships": [
+      {
+        "id": 100,
+        "health": 1300
+      },
+      {
+        "id": 101,
+        "health": 2400
+      },
+      {
+        "id": 102,
+        "health": 600
+      },
+      {
+        "id": 103,
+        "health": 1500
+      }
+    ]
+  },
+  "exactReplay": {
+    "sampleCount": 1360,
+    "matchedSampleCount": 1360,
+    "maxPositionError": 1.114e-12,
+    "maxYawError": 4.441e-16,
+    "maxPitchError": 0,
+    "maxSpeedError": 0,
+    "maxPlayerHealthError": 0,
+    "maxShipHealthError": 0,
+    "maxShipPositionError": 1.647e-11,
+    "finalTick": 19941,
+    "finalPositionError": 1.114e-12,
+    "finalShipPositionError": 1.647e-11,
+    "finalEnemyPositionError": 3.77e-11,
+    "finalEnemyHealthError": 0,
+    "finalPhase": "ended",
+    "finalDeathCause": "enemy-aircraft",
+    "finalOutcome": "defeat",
+    "finalPlayerHealth": 0,
+    "finalShipHealth": [
+      {
+        "id": 100,
+        "health": 1300
+      },
+      {
+        "id": 101,
+        "health": 2400
+      },
+      {
+        "id": 102,
+        "health": 600
+      },
+      {
+        "id": 103,
+        "health": 1500
+      }
+    ]
+  },
+  "releaseCount": 5,
+  "releaseEvidence": [
+    {
+      "index": 1,
+      "requestTick": 1491,
+      "acceptedTick": 1545,
+      "pilotControls": {
+        "oldAccepted": {
+          "turn": 0.5730067182147789,
+          "climb": -0.0009168206693672938
+        },
+        "requested": {
+          "turn": -0.00942,
+          "climb": -0.00036
+        }
+      },
+      "cueAtRequest": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 1800
+          }
+        ]
+      },
+      "cueAtPayloadRead": {
+        "kind": "water",
+        "affected": []
+      },
+      "uiPayloadAttempt": {
+        "beforeTick": 1509,
+        "afterTick": 1537,
+        "released": true,
+        "bombsBefore": 2,
+        "bombsAfter": 1
+      },
+      "actualConsume": {
+        "tick": 1531,
+        "delayFromRequest": 40,
+        "preReleaseStateTick": 1530,
+        "preReleaseStateDelay": 39,
+        "pose": {
+          "position": [
+            1462.9,
+            871.41,
+            -370.23
+          ],
+          "yaw": 0.74022,
+          "pitch": 0.02038
+        },
+        "steering": {
+          "turn": 0.5730067182147789,
+          "climb": -0.0009168206693672938
+        },
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null,
+        "dud": null
+      },
+      "oldAcceptedInputCounterfactual": {
+        "firstNonGreenDelay": 2,
+        "lastGreenDelay": 1,
+        "guideAtPreReleaseState": {
+          "green": false
+        },
+        "consumedSteeringChangesBeforeRelease": 0,
+        "matchedActualReleaseSteering": true
+      }
+    },
+    {
+      "index": 2,
+      "requestTick": 6633,
+      "acceptedTick": 6667,
+      "pilotControls": {
+        "oldAccepted": {
+          "turn": 0.09354574485895216,
+          "climb": 0.0006886079673218773
+        },
+        "requested": {
+          "turn": -0.03732,
+          "climb": -0.0011
+        }
+      },
+      "cueAtRequest": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 384.36
+          }
+        ]
+      },
+      "cueAtPayloadRead": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 223.65
+          }
+        ]
+      },
+      "uiPayloadAttempt": {
+        "beforeTick": 6635,
+        "afterTick": 6656,
+        "released": true,
+        "bombsBefore": 1,
+        "bombsAfter": 0
+      },
+      "actualConsume": {
+        "tick": 6656,
+        "delayFromRequest": 23,
+        "preReleaseStateTick": 6655,
+        "preReleaseStateDelay": 22,
+        "pose": {
+          "position": [
+            904.43,
+            841.91,
+            -278.37
+          ],
+          "yaw": 0.98612,
+          "pitch": 0.04152
+        },
+        "steering": {
+          "turn": 0.09354574485895216,
+          "climb": 0.0006886079673218773
+        },
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null,
+        "dud": null
+      },
+      "oldAcceptedInputCounterfactual": {
+        "firstNonGreenDelay": 5,
+        "lastGreenDelay": 4,
+        "guideAtPreReleaseState": {
+          "green": false
+        },
+        "consumedSteeringChangesBeforeRelease": 0,
+        "matchedActualReleaseSteering": true
+      }
+    },
+    {
+      "index": 3,
+      "requestTick": 8374,
+      "acceptedTick": 8411,
+      "pilotControls": {
+        "oldAccepted": {
+          "turn": -0.35036841000093694,
+          "climb": -0.5026659360227071
+        },
+        "requested": {
+          "turn": -0.00874,
+          "climb": 0.04714
+        }
+      },
+      "cueAtRequest": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 143.83
+          }
+        ]
+      },
+      "cueAtPayloadRead": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 74.3
+          }
+        ]
+      },
+      "uiPayloadAttempt": {
+        "beforeTick": 8375,
+        "afterTick": 8400,
+        "released": true,
+        "bombsBefore": 2,
+        "bombsAfter": 1
+      },
+      "actualConsume": {
+        "tick": 8399,
+        "delayFromRequest": 25,
+        "preReleaseStateTick": 8398,
+        "preReleaseStateDelay": 24,
+        "pose": {
+          "position": [
+            317.87,
+            520.46,
+            -642.35
+          ],
+          "yaw": 1.18789,
+          "pitch": -0.50482
+        },
+        "steering": {
+          "turn": -0.35036841000093694,
+          "climb": -0.5026659360227071
+        },
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null,
+        "dud": null
+      },
+      "oldAcceptedInputCounterfactual": {
+        "firstNonGreenDelay": 2,
+        "lastGreenDelay": 1,
+        "guideAtPreReleaseState": {
+          "green": false
+        },
+        "consumedSteeringChangesBeforeRelease": 0,
+        "matchedActualReleaseSteering": true
+      }
+    },
+    {
+      "index": 4,
+      "requestTick": 17674,
+      "acceptedTick": 17709,
+      "pilotControls": {
+        "oldAccepted": {
+          "turn": 0.25940724270022675,
+          "climb": 0.41985787861241247
+        },
+        "requested": {
+          "turn": 0.40096,
+          "climb": 0.16943
+        }
+      },
+      "cueAtRequest": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 100,
+            "damage": 1800
+          }
+        ]
+      },
+      "cueAtPayloadRead": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 100,
+            "damage": 1800
+          }
+        ]
+      },
+      "uiPayloadAttempt": {
+        "beforeTick": 17675,
+        "afterTick": 17697,
+        "released": true,
+        "bombsBefore": 1,
+        "bombsAfter": 0
+      },
+      "actualConsume": {
+        "tick": 17688,
+        "delayFromRequest": 14,
+        "preReleaseStateTick": 17687,
+        "preReleaseStateDelay": 13,
+        "pose": {
+          "position": [
+            -1154.02,
+            338.48,
+            -936.95
+          ],
+          "yaw": 1.87421,
+          "pitch": -0.38293
+        },
+        "steering": {
+          "turn": 0.25940724270022675,
+          "climb": 0.41985787861241247
+        },
+        "guide": {
+          "kind": "direct",
+          "affected": [
+            {
+              "shipId": 100,
+              "damage": 1800
+            }
+          ]
+        },
+        "impact": {
+          "tick": 17989,
+          "target": 100,
+          "targetKind": "ship",
+          "damage": 1800,
+          "detail": "direct"
+        },
+        "dud": null
+      },
+      "oldAcceptedInputCounterfactual": {
+        "firstNonGreenDelay": 20,
+        "lastGreenDelay": 19,
+        "guideAtPreReleaseState": {
+          "delayTicks": 13,
+          "green": true,
+          "kind": "direct",
+          "shipId": 100,
+          "damage": 1800
+        },
+        "consumedSteeringChangesBeforeRelease": 0,
+        "matchedActualReleaseSteering": true
+      }
+    },
+    {
+      "index": 5,
+      "requestTick": 18311,
+      "acceptedTick": 18354,
+      "pilotControls": {
+        "oldAccepted": {
+          "turn": -0.9994527843750395,
+          "climb": -0.033077663233380794
+        },
+        "requested": {
+          "turn": -0.99976,
+          "climb": 0.02213
+        }
+      },
+      "cueAtRequest": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 103,
+            "damage": 1800
+          }
+        ]
+      },
+      "cueAtPayloadRead": {
+        "kind": "water",
+        "affected": []
+      },
+      "uiPayloadAttempt": {
+        "beforeTick": 18313,
+        "afterTick": 18337,
+        "released": true,
+        "bombsBefore": 2,
+        "bombsAfter": 1
+      },
+      "actualConsume": {
+        "tick": 18331,
+        "delayFromRequest": 20,
+        "preReleaseStateTick": 18330,
+        "preReleaseStateDelay": 19,
+        "pose": {
+          "position": [
+            -1643.6,
+            664.24,
+            -788.33
+          ],
+          "yaw": 0.38505,
+          "pitch": -0.0172
+        },
+        "steering": {
+          "turn": -0.9994527843750395,
+          "climb": -0.033077663233380794
+        },
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null,
+        "dud": null
+      },
+      "oldAcceptedInputCounterfactual": {
+        "firstNonGreenDelay": 2,
+        "lastGreenDelay": 1,
+        "guideAtPreReleaseState": {
+          "green": false
+        },
+        "consumedSteeringChangesBeforeRelease": 0,
+        "matchedActualReleaseSteering": true
+      }
+    }
+  ],
+  "interpretation": "The recorded helper decisions were green at observation. Holding the exact previously consumed input from each observation produced initial contiguous green windows of 2, 5, 2, 20, and 2 ticks before the first water forecast. The original click was consumed at event delays 40, 23, 25, 14, and 20 ticks; the corresponding pre-release world states are one tick earlier. Only release 4 had a green forecast at its pre-release state and it was the only player bomb to damage a ship. Fresh-cue revalidation belongs in the browser driver; this trace does not test the later steer-first driver or establish full-mission success."
+}

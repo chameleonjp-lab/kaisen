@@ -97,7 +97,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
       const clock = (window as any).__kaisenReadState('clock');
       return clock.phase !== 'playing' || clock.tick >= next;
     }, lastSample + 6, { polling: 'raf' });
-    const s = await pilotState(page);
+    let s = await pilotState(page);
     if (s.phase === "ended") break;
     expect(s.phase, "Unexpected pause during real touch flight").toBe(
       "playing",
@@ -112,6 +112,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
       await page.screenshot({path:'test-results/evidence/bomb-ready-easy.png'});
       await writeFile('test-results/evidence/bomb-ready-easy.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:s,after:await pilotState(page)},null,2));
       bombCueCaptured=true;
+      s=await pilotState(page);
+      if(s.phase!=='playing')continue;
     }
 
     const player = s.player,
@@ -150,20 +152,24 @@ test("physical circular-stick inputs reach the victory screen", async ({
     }
     const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
+    const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
+    lastSample=accepted.tick;
+    if(accepted.phase==='ended')break;
+    if(accepted.phase!=='playing')continue;
     let payloadAttempt: any = null;
     if(request.bomb) {
       const payloadBefore=await pilotState(page);
       if(payloadBefore.phase==='ended')break;
       if(payloadBefore.phase==='paused')continue;
       expect(payloadBefore.phase).toBe('playing');
-      let released=false;
+      let released: boolean | null = false;
       let payloadAfter: any = payloadBefore;
       try {
-        released=await releasePayloadAndObserve(page,cdp,origin,payloadBefore.controlsInput.turn,payloadBefore.controlsInput.climb,'bomb');
+        released=await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb',true);
       } finally {
         payloadAfter=await pilotState(page);
         if(payloadAfter.player.bombs<payloadBefore.player.bombs)payloadPresses++;
-        payloadAttempt={attempted:true,order:'payload-before-steering',released,
+        payloadAttempt={attempted:released!==null,order:'accepted-steering-before-fresh-payload-cue',released,
           beforeTick:payloadBefore.tick,afterTick:payloadAfter.tick,
           bombsBefore:payloadBefore.player.bombs,bombsAfter:payloadAfter.player.bombs,
           phaseBefore:payloadBefore.phase,phaseAfter:payloadAfter.phase};
@@ -172,10 +178,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
       if(payloadAfter.phase==='ended')break;
       if(payloadAfter.phase==='paused')continue;
       expect(payloadAfter.phase).toBe('playing');
-      expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
+      if(released!==null)expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
     }
-    const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
-    lastSample=accepted.tick;
     samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,payloadAttempt,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
     if(accepted.phase!=='playing')break;
 

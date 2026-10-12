@@ -36,7 +36,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         const state = (window as any).__kaisenReadState('clock');
         return state.phase !== 'playing' || state.tick >= next;
       }, lastSample + 6, { polling: 'raf' });
-      const state = await observePilot();
+      let state = await observePilot();
       expect(state.mode).toBe('normal');
       if (state.player.reloadTicksRemaining > 0) sawReload = true;
       else if (sawReload) completedReload = true;
@@ -88,24 +88,32 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
       await page.screenshot({path:'test-results/evidence/bomb-ready-normal.png'});
       await writeFile('test-results/evidence/bomb-ready-normal.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:state,after:await observePilot()},null,2));
       bombCueCaptured=true;
+      state=await observePilot();
+      if(state.phase!=='playing')continue;
     }
 
       const input = pilot(state), { dx, dy } = pointerOffsetForControls(input.turn, input.climb);
       expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(36 + 1e-9);
+      const accepted = await steerAndObserve(page,cdp,origin,input.turn,input.climb);
+      const acceptedTick = accepted.tick;
+      lastSample = acceptedTick;
+      // Do not send controls to the result screen's newly focused retry button.
+      if (accepted.phase === 'ended') break;
+      if (accepted.phase !== 'playing') continue;
       let payloadAttempt: any = null;
       if(input.bomb) {
         const payloadBefore=await observePilot();
         if(payloadBefore.phase==='ended')break;
         if(payloadBefore.phase==='paused')continue;
         expect(payloadBefore.phase).toBe('playing');
-        let released=false;
+        let released: boolean | null = false;
         let payloadAfter: any = payloadBefore;
         try {
-          released=await releasePayloadAndObserve(page,cdp,origin,payloadBefore.controlsInput.turn,payloadBefore.controlsInput.climb,'bomb');
+          released=await releasePayloadAndObserve(page,cdp,origin,input.turn,input.climb,'bomb',true);
         } finally {
           payloadAfter=await observePilot();
           if(payloadAfter.player.bombs<payloadBefore.player.bombs)payloadPresses++;
-          payloadAttempt={attempted:true,order:'payload-before-steering',released,
+          payloadAttempt={attempted:released!==null,order:'accepted-steering-before-fresh-payload-cue',released,
             beforeTick:payloadBefore.tick,afterTick:payloadAfter.tick,
             bombsBefore:payloadBefore.player.bombs,bombsAfter:payloadAfter.player.bombs,
             phaseBefore:payloadBefore.phase,phaseAfter:payloadAfter.phase};
@@ -114,14 +122,8 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         if(payloadAfter.phase==='ended')break;
         if(payloadAfter.phase==='paused')continue;
         expect(payloadAfter.phase).toBe('playing');
-        expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
+        if(released!==null)expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
       }
-      const accepted = await steerAndObserve(page,cdp,origin,input.turn,input.climb);
-      const acceptedTick = accepted.tick;
-      lastSample = acceptedTick;
-      // Do not send Space to the result screen's newly focused retry button.
-      if (accepted.phase === 'ended') break;
-      if (accepted.phase !== 'playing') continue;
       if (input.fire !== fireHeld) {
         if (input.fire) await page.keyboard.down('Space');
         else await page.keyboard.up('Space');
