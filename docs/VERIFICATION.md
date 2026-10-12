@@ -1,3 +1,11 @@
+# 2026-10-12 CI50の3失敗への追補
+
+PR17 head `11b83a050deb721abe2e824bc5bd26c2ada9238f` のCI50は327単体/build/成果物/比較が成功、browserは54/57成功・3失敗。Easyの実投下後離脱と魚雷試験の旧絶対pitch入力を修正した。Normalの2回の描画保護停止は原因未特定で、同じコードのローカル単独実行では179.7833秒・HP77.44の勝利・停止0回。描画の製品コード・停止閾値・通常回復許容は不変更。
+
+最終ローカルは329単体pass・fail/skip0、型/build成功、旧3失敗の実ブラウザも3/3成功。Easy343.65秒/HP80、Normal213.1833秒/HP80/保護停止0回で全滅勝利、魚雷の実投下/水面/装填/停止凍結/再出撃を確認。隔離した旧helperでは新しい投下後離脱の局所検査が期待どおり失敗。根拠・fixtureの実測/推定区別・今回の最終候補は [CAMERA_SENSITIVITY_VERIFICATION.md](CAMERA_SENSITIVITY_VERIFICATION.md) と `docs/evidence/camera-sensitivity/ci50-followup-evidence.json`。製品/build/公開素材/依存/workflowの61blobは開始headと同一。GitHubの全57browserは新headのChecksで別に確定する。未マージ・未公開。
+
+以下は前回までの検査履歴。
+
 # 2026-10-12 手動カメラ感度・PR17失敗修正
 
 開始PR17 head9f049007d90190c5c4b008b82557dae70eaf349dのCI49は319/325 pass・6fail。再開バッチで6件の原因を修正し、独立レビューの衝突終了frame・active dodge・snapshot不変の指摘も解消した。

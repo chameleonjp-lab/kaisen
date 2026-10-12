@@ -27,6 +27,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
   let recovering = false, targetProgressAt = 0, observedTargetHealth = Infinity;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
+  let pendingBombCount: number | null = null;
   let waypoint = new Vector3();
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
   let slowInput = false;
@@ -38,6 +39,15 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     if (sampleDt > .15) slowInput = true;
     estimatedTrim = Math.max(65,Math.min(141,estimatedTrim + trimDirection * 18 * sampleDt));
     const player = plane(snapshot.player);
+    // The browser applies steering before it taps the payload button. Keep the
+    // predicted approach through that release, then exit only after a later
+    // observation confirms the game consumed the bomb.
+    if (snapshot.mode === 'easy' && pendingBombCount !== null && player.bombs < pendingBombCount) {
+      pendingBombCount = null;
+      shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
+      waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
+      waypoint.y = Math.max(900, player.position.y + 220);
+    }
     const enemies = snapshot.enemies.map(plane);
     const angular = new Map<number, {yaw:number,pitch:number}>();
     for (const enemy of enemies) {
@@ -208,6 +218,11 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         }
       }
     }
+    // Continue the confirmed post-release exit even if target selection moved
+    // to another ship (or an aircraft) during the escape window.
+    if (snapshot.mode === 'easy' && snapshot.tick < escapeUntil) {
+      aim = waypoint; evasive = true; bomb = false;
+    }
     if (snapshot.mode === 'normal' && player.reloadTicksRemaining > 0 && target.kind === 'aircraft') {
       aim = player.position.clone().addScaledVector(forwardOf(player),800);
       aim.y = Math.max(400,player.position.y+200); evasive = true;
@@ -262,6 +277,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     // let the faster target recede throughout the reinforcement recovery leg.
     const wantedSpeed = fastChase || evasive ? 141 : target.kind === 'ship' || distance > 250 ? 110 : 85;
     trimDirection = snapshot.mode === 'easy' ? 0 : estimatedTrim < wantedSpeed - 1 ? 1 : estimatedTrim > wantedSpeed + 1 ? -1 : 0;
+    if (snapshot.mode === 'easy' && bomb) pendingBombCount = player.bombs;
     return {turn,climb,bomb,torpedo:false,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
 
   };

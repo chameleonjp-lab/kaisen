@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
+import { absolutePitchTargetToRateCommand } from '../tests/helpers/pitch-rate-conversion';
 const read=(page:any)=>page.evaluate(()=>(window as any).__kaisenReadState());
 
 test.afterEach(async({page},info)=>{
@@ -40,19 +41,32 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   expect((await read(page)).ordnance).toEqual(paused.ordnance);
   await page.locator('#resume').tap();
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
-  let last=-6;
+  let last=-6, lastCommandElapsed:number|null=null;
   while(true) {
     const s=await read(page);expect(s.phase).toBe('playing');expect(s.elapsed).toBeLessThan(30);
-    if(s.player.position.y<80&&Math.abs(s.player.pitch)<.2)break;
-    if(s.tick-last<6){await page.waitForTimeout(30);continue;}last=s.tick;
-    const climb=Math.max(-.65,Math.min(.3,(65-s.player.position.y)/180));
-    await steerAndObserve(page,cdp,origin,0,climb);
+    if(s.player.position.y>=20&&s.player.position.y<80&&Math.abs(s.player.pitch)<.2)break;
+    if(s.tick-last<6){await page.waitForTimeout(30);continue;}
+    const sampleDt=lastCommandElapsed===null?6/60:Math.max(1/60,s.elapsed-lastCommandElapsed);
+    const absolutePitchTarget=Math.max(-.65,Math.min(.3,(65-s.player.position.y)/180));
+    const climb=absolutePitchTargetToRateCommand(absolutePitchTarget,s.player.pitch,s.player.speed,sampleDt);
+    const accepted=await steerAndObserve(page,cdp,origin,0,climb);
+    expect(accepted.phase).toBe('playing');
+    const acceptedSnapshot=await read(page);
+    last=acceptedSnapshot.tick;lastCommandElapsed=acceptedSnapshot.elapsed;
   }
   await steerAndObserve(page,cdp,origin,0,0);
+  const releasePose=await read(page);
+  expect(releasePose.player.position.y).toBeGreaterThanOrEqual(20);
+  expect(releasePose.player.position.y).toBeLessThan(80);
+  expect(Math.abs(releasePose.player.pitch)).toBeLessThan(.2);
   await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','true');
   await expect(page.locator('#torpedo-hint')).toHaveText('投下可能');
   await expect(page.locator('#payload-status')).toContainText('投下可能');
   expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'torpedo')).toBe(true);
+  const released=await read(page);
+  expect(released.player.position.y).toBeGreaterThanOrEqual(20);
+  expect(released.player.position.y).toBeLessThan(80);
+  expect(Math.abs(released.player.pitch)).toBeLessThan(.2);
   await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','false');
   await expect(page.locator('#torpedo-hint')).toHaveText('装填中');
   await expect(page.locator('#payload-status')).toContainText('装填');
