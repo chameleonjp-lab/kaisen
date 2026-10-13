@@ -10,7 +10,7 @@ import type { FlightController } from './flight';
 import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
 import { beginPlayerReload, tickPlayerReload } from './ammunition';
 import { aircraftDamageMultiplier, AIRCRAFT_BASE_DAMAGE } from './aircraft-damage';
-import { releaseBomb, releaseTorpedo, checkTorpedoRelease, stepOrdnance, type OrdnanceKind } from './ordnance';
+import { releaseBomb, releaseTorpedo, checkGuidedTorpedoRelease, stepOrdnance, type OrdnanceKind } from './ordnance';
 import { beginShipWreck, shipWreckPose, isShipObstacle } from './ship-wreck';
 import { applyAircraftRoundToShip, segmentMountContact, exposedNavalMountPoint } from './naval-damage';
 import { aircraftSeaContact } from './sea-contact';
@@ -307,12 +307,14 @@ function firePayload(state: GameState, plane: Aircraft, kind: OrdnanceKind): voi
   if (plane[ammo] <= 0 || plane[clock] > 0) { reject('reload'); return; }
   if (plane.payloadCooldown > 0) { reject('cooldown'); return; }
   if (state.ordnance.length >= MAX_ORDNANCE - (player ? 0 : 4)) { reject('capacity'); return; }
+  let targetShipId: number | undefined;
   if (kind === 'torpedo') {
-    const check = checkTorpedoRelease(plane, state.elapsed);
-    if (!check.allowed) { reject(check.reason ?? 'invalid'); return; }
+    const check = checkGuidedTorpedoRelease(plane, state.ships, state.elapsed);
+    if (!check.allowed || check.targetShipId === null) { reject(check.reason ?? 'invalid'); return; }
+    targetShipId = check.targetShipId;
   }
   const id = metaFor(state).nextEntityId;
-  const round = kind === 'bomb' ? releaseBomb(id, plane) : releaseTorpedo(id, plane, state.elapsed);
+  const round = kind === 'bomb' ? releaseBomb(id, plane) : releaseTorpedo(id, plane, state.elapsed, targetShipId);
   if (!round) { reject('invalid'); return; }
   metaFor(state).nextEntityId++;
   if (!player) round.damage *= .5;

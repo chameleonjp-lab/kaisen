@@ -1,6 +1,6 @@
 import type { GameState } from './types';
 import { MAX_ORDNANCE } from './mission';
-import { checkTorpedoRelease, ORDNANCE_TUNING } from './ordnance';
+import { checkGuidedTorpedoRelease, ORDNANCE_TUNING } from './ordnance';
 
 /** The tally is credited to the whole friendly formation and never rolls back on a wave. */
 export function missionProgress(state: GameState) {
@@ -16,6 +16,24 @@ export function payloadReadout(rounds: number, reloadTicks: number): string {
   return reloadTicks > 0 ? `装填 ${(Math.ceil(reloadTicks / 6) / 10).toFixed(1)}秒` : `残り${rounds}発`;
 }
 
+/** User-facing explanation for a rejected torpedo button or key press. */
+export function payloadRejectionNotice(reason: string | null | undefined): string {
+  const reasons: Record<string, string> = {
+    altitude: '魚雷：高度20〜80mを目安に',
+    speed: '魚雷：450km/h以下に減速',
+    pitch: '魚雷：機首を水平に',
+    bank: '魚雷：翼を水平に',
+    'no-target': '誘導魚雷：生存する敵艦がいません',
+    'out-of-range': '誘導魚雷：敵艦との距離と投下位置を調整してください',
+    'unsafe-entry': '誘導魚雷：安全に着水できる位置と姿勢へ移動してください',
+    reload: '兵装を再装填中',
+    cooldown: '続けての投下は少し待って',
+    capacity: '飛翔中の兵装が戻るまで待って',
+    invalid: 'この姿勢では投下できません',
+  };
+  return reasons[reason ?? 'invalid'] ?? 'この姿勢では投下できません';
+}
+
 /** The HUD follows firePayload's rejection order without changing any launch rule. */
 export function torpedoReleaseCue(state: GameState): { ready: boolean; short: string; text: string } {
   const p = state.player;
@@ -25,15 +43,18 @@ export function torpedoReleaseCue(state: GameState): { ready: boolean; short: st
   if (p.torpedoes <= 0 || p.torpedoReloadTicks > 0) return blocked('装填中', `魚雷：${payloadReadout(p.torpedoes, p.torpedoReloadTicks)}`);
   if (p.payloadCooldown > 0) return blocked('投下待ち', `魚雷：あと${(Math.ceil(p.payloadCooldown * 10) / 10).toFixed(1)}秒`);
   if (state.ordnance.length >= MAX_ORDNANCE) return blocked('投下待ち', '魚雷：飛翔中の兵装が多いため待機');
-  const check = checkTorpedoRelease(p, state.elapsed);
+  const check = checkGuidedTorpedoRelease(p, state.ships, state.elapsed);
   if (!check.allowed) {
     if (check.reason === 'altitude') return blocked(check.altitude > ORDNANCE_TUNING.torpedo.maxReleaseAltitude ? '高度↓' : '高度↑', '魚雷：高度20〜80mを目安に');
     if (check.reason === 'speed') return blocked('減速', '魚雷：450km/h以下に減速');
     if (check.reason === 'pitch') return blocked('機首水平', '魚雷：機首を水平に');
     if (check.reason === 'bank') return blocked('翼を水平', '魚雷：翼を水平に');
+    if (check.reason === 'no-target') return blocked('標的なし', '誘導魚雷：生存する敵艦がいません');
+    if (check.reason === 'out-of-range') return blocked('射程外', '誘導魚雷：敵艦との距離と投下位置を調整してください');
+    if (check.reason === 'unsafe-entry') return blocked('投下不可', '誘導魚雷：安全に着水できる位置と姿勢へ移動してください');
     return blocked('投下不可', '魚雷：この姿勢では投下できません');
   }
-  return { ready: true, short: '投下可能', text: '魚雷：投下可能' };
+  return { ready: true, short: '投下可能', text: '誘導魚雷：投下可能' };
 }
 
 export type HudRect = { x: number; y: number; width: number; height: number };

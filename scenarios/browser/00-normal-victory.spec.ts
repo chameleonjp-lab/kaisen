@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
+import { steerAndObserve, releasePayloadAndObserve } from '../../browser-tests/touch-command';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createBrowserMissionPilot, shouldAttemptBomb } from '../tests/helpers/mission-browser-pilot';
-import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
-import { expectScoreResult, inspectScoreResultLayout } from './score-result';
-import { waitForPausedView } from './paused-view';
+import { createBrowserMissionPilot, shouldAttemptBomb } from '../../tests/helpers/mission-browser-pilot';
+import { pointerOffsetForControls } from '../../tests/helpers/touch-reload-pilot';
+import { expectScoreResult, inspectScoreResultLayout } from '../../browser-tests/score-result';
+import { waitForPausedView } from '../../browser-tests/paused-view';
 
 // This route verifies mixed real input: CDP touch steering plus the ordinary
 // Space key for manual fire and W/S throttle. Three-finger button ownership has a separate test.
@@ -169,9 +169,9 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     await inspectScoreResultLayout(page, result.result, { narrow: true });
     const submitted = result.render.queue.submittedCount;
     await expect.poll(async () => (await read()).render.queue.completedCount).toBeGreaterThanOrEqual(submitted + 1);
-    await mkdir('test-results/evidence', { recursive: true });
-    await page.screenshot({ path: 'test-results/evidence/normal-result-victory.png' });
-    await writeFile('test-results/evidence/normal-result-victory.json', JSON.stringify({
+    await mkdir('scenario-results/evidence', { recursive: true });
+    await page.screenshot({ path: 'scenario-results/evidence/normal-result-victory.png' });
+    await writeFile('scenario-results/evidence/normal-result-victory.json', JSON.stringify({
       note: 'Chromium touch emulation plus ordinary Space-key manual fire, W/S throttle, and simultaneous touch bomb-button input. Read-only snapshots, no world/health/time injection. Not iPhone hardware or human playability evidence.',
       snapshot: await read(), samples, sawReload, completedReload, payloadPresses, payloadAttempts, consumedInputs, renderRecoveries,
     }, null, 2));
@@ -186,15 +186,15 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     if (fireHeld) await page.keyboard.up('Space').catch(() => {});
     if (accelerateHeld) await page.keyboard.up('w').catch(() => {});
     if (brakeHeld) await page.keyboard.up('s').catch(() => {});
-    await mkdir('test-results/evidence', { recursive: true });
-    await writeFile('test-results/evidence/normal-victory-route-state.json', JSON.stringify({
+    await mkdir('scenario-results/evidence', { recursive: true });
+    await writeFile('scenario-results/evidence/normal-victory-route-state.json', JSON.stringify({
       won, sawReload, completedReload, errors, samples, payloadAttempts, renderRecoveries, snapshot: await read().catch(() => null),
       consumedInputs: consumedInputs ?? await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null),
     }, null, 2));
-    if (bombCueEvidence) await writeFile('test-results/evidence/bomb-cue-victory-normal.json',JSON.stringify({
+    if (bombCueEvidence) await writeFile('scenario-results/evidence/bomb-cue-victory-normal.json',JSON.stringify({
       note:'Live unmodified gameplay cue observation from this victory run. Its green PNG is captured with an exact pose snapshot in the separate short bomb-guide route.',
       ...bombCueEvidence,payloadAttempts,
     },null,2));
-    if (!won) await page.screenshot({ path: 'test-results/evidence/normal-victory-route-failure.png' }).catch(() => {});
+    if (!won) await page.screenshot({ path: 'scenario-results/evidence/normal-victory-route-failure.png' }).catch(() => {});
   }
 });

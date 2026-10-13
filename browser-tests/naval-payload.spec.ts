@@ -104,6 +104,10 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect(page.locator('#payload-status')).toContainText('投下可能');
   expect(await releasePayloadAndObserve(page,cdp,origin,'torpedo')).toBe(true);
   const released=await read(page);
+  const guidedRound=released.ordnance.find((round:any)=>round.owner===released.player.id&&round.kind==='torpedo');
+  expect(guidedRound, 'the ordinary button creates a real guided round').toBeDefined();
+  expect(Number.isInteger(guidedRound.targetShipId)).toBe(true);
+  expect(released.ships.some((ship:any)=>ship.id===guidedRound.targetShipId&&ship.health>0)).toBe(true);
   expect(released.player.position.y).toBeGreaterThanOrEqual(20);
   expect(released.player.position.y).toBeLessThan(80);
   expect(Math.abs(released.player.pitch)).toBeLessThan(.2);
@@ -112,6 +116,13 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect(page.locator('#payload-status')).toContainText('装填');
   await expect.poll(async()=>(await read(page)).ordnance.some((o:any)=>o.owner===1&&o.kind==='torpedo'&&o.phase==='water'),{timeout:12000}).toBe(true);
   const water=await read(page);
+  expect(water.ordnance.find((round:any)=>round.owner===water.player.id&&round.kind==='torpedo')?.targetShipId).toBe(guidedRound.targetShipId);
+  const afterLaunchTurn=await steerAndObserve(page,cdp,origin,.15,.03);
+  await page.waitForFunction(tick=>(window as any).__kaisenReadState('clock').tick>=tick,afterLaunchTurn.tick+6,{polling:'raf'});
+  const independentlySteered=await read(page);
+  expect(independentlySteered.controlsInput.turn).toBeCloseTo(.15,5);
+  expect(independentlySteered.ordnance.find((round:any)=>round.owner===water.player.id&&round.kind==='torpedo')?.targetShipId,
+    'changing the aircraft steering after launch preserves the captured ship').toBe(guidedRound.targetShipId);
   expect(water.player.health).toBeGreaterThan(0);expect(water.player.bombs).toBe(2);
   expect(water.controlsInput.steerPointer).not.toBeNull();
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.locator('#pause').tap();
@@ -119,7 +130,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await waitForPausedView(page,{tick:pausedWater.tick});
   await mkdir('test-results/evidence',{recursive:true});
   await page.screenshot({path:'test-results/evidence/torpedo-water-flight.png',style:'#pause-screen {visibility:hidden!important}'});
-  await writeFile('test-results/evidence/naval-payload-route.json',JSON.stringify({note:'Actual touch controls and real simulation clock. Screenshot is explicitly paused with only pause menu hidden. No game-state injection.',paused,water},null,2));
+  await writeFile('test-results/evidence/naval-payload-route.json',JSON.stringify({note:'Actual touch controls and real simulation clock. Screenshot is explicitly paused with only pause menu hidden and uses pausedWater. No game-state injection.',paused,water,guidedRound,independentlySteered,pausedWater},null,2));
   await page.locator('#pause-restart').tap();const retry=await read(page);
   expect(retry.player.bombs).toBe(2);expect(retry.player.torpedoes).toBe(1);expect(retry.ordnance).toHaveLength(0);
   expect(errors).toEqual([]);

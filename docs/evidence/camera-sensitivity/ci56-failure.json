@@ -1,0 +1,38 @@
+{
+  "schema": "kaisen-pr17-ci56-historical-result-v1",
+  "head": "5656f91f5765a4233195a2180a2a19f07748791b",
+  "tree": "4b267cc97f7a82fcfaa82568938b76ca968768bb",
+  "rulesVersion": "kaisen-air-sea-11",
+  "run": {
+    "number": 56,
+    "id": 38333781732,
+    "job": 115089192900,
+    "url": "https://github.com/chameleonjp-lab/kaisen/actions/runs/38333781732",
+    "conclusion": "failure",
+    "browserPassed": 58,
+    "browserFailed": 1,
+    "browserTotal": 59,
+    "browserMinutesRounded": 27.0
+  },
+  "unit": {
+    "passed": 338,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 53804.907889
+  },
+  "otherGates": "type/build, exact-head manifest and pinned baseline comparison passed",
+  "failure": {
+    "test": "Easy external-pilot whole-mission victory route",
+    "condition": "elapsed < 600",
+    "observedElapsed": 600.2,
+    "classification": "Historical strategy reachability failure; not by itself a product contract failure. Original assertions retained in optional scenario."
+  },
+  "artifact": {
+    "id": 11785485568,
+    "bytes": 18274965,
+    "githubReportedSha256": "97ad7c5cfabfe5537d7bb643df59e3d66599632c2191c0cff275d7170e525a45",
+    "downloadVerification": "not_downloaded_for_this_historical_result; digest is GitHub-reported"
+  },
+  "jobLogSha256": "acf6b85ff7a9d3a7023ab00e2e25d9894b970d07f0fbd4927e03ce09b0a5bafe",
+  "notEvidenceFor": "Integrated guided-torpedo air-sea-12 candidate; no local or official result is transferred to the merged source."
+}

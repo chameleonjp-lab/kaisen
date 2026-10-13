@@ -12,7 +12,7 @@ import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
 import { KeyboardSettings, ControlInputPresentation } from "./keyboard-settings";
-import { missionProgress, payloadReadout, torpedoReleaseCue, placeHudNotice, type HudRect } from "./mission-hud";
+import { missionProgress, payloadReadout, payloadRejectionNotice, torpedoReleaseCue, placeHudNotice, type HudRect } from "./mission-hud";
 import { RulesGuide } from "./rules-guide";
 import { AllyAnnouncements } from "./ally-announcements";
 import { aimRadius } from "./aim-indicator";
@@ -555,8 +555,7 @@ function frame() {
       if (e.type === "reinforcement") announce(`敵${e.amount ?? 0}機が復活 · 撃破でHP回復`, 4, 3);
       if (e.type === "payload-release" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾投下" : "魚雷投下 · 80m航走で起爆可能", 2, 1);
       if (e.type === "payload-rejected" && e.owner === state.player.id) {
-        const reasons: Record<string, string> = { altitude: "魚雷：高度20〜80mを目安に", speed: "魚雷：450km/h以下に減速", pitch: "魚雷：機首を水平に", bank: "魚雷：翼を水平に", reload: "兵装を再装填中", cooldown: "続けての投下は少し待って", capacity: "飛翔中の兵装が戻るまで待って", invalid: "この姿勢では投下できません" };
-        announce(reasons[e.detail ?? "invalid"], 2, 1);
+        announce(payloadRejectionNotice(e.detail), 2, 1);
       }
       if (e.type === "ordnance-dud" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾不発 · 投下直後の接触" : "魚雷不発 · 進入条件/航走距離を確認", 3, 1);
       if (e.type === "ordnance-impact" && e.owner === state.player.id) announce(e.detail === "wreck" ? "沈没中の残骸に命中" : `${e.weapon === "bomb" ? "爆弾" : "魚雷"}${e.detail === "blast" ? "至近弾" : "命中"} · 艦体損傷`, 2, 1);

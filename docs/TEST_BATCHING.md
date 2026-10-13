@@ -1,3 +1,13 @@
+# 2026-10-13 JST 通常検査と任意の操縦試行
+
+本人の10:29 JSTの検査方針変更（PLAN.md先頭）に基づく。通常の提出ゲートは `npm test`、`npm run build`、実候補SHAの `scripts/prepare-pages.mjs`、固定旧版との比較、`npm run test:browser`。既存workflow・30分上限・workers1/retries0・WebKitを保持する。通常browserの2つの長いbot勝利経路は、同じ操作の受理/消費・旋回の向き・手動射撃・実弾消費・停止/解除・復帰を確認する短い経路へ置き換える。ゲームの勝利条件は変更しない。
+
+Normal/AIの全mission勝利とCI28/29のcomponent送達の戦略経路も任意の `pilot-victories.scenario.ts` / `browser-components.scenario.ts` へ保存する。通常単体の局所的な結果確定・物理接触・決定性検査は維持する。
+
+`npm run test:scenarios:browser` は保存した2つの長い実操縦、`npm run test:scenarios:simulation` は保存した数値戦略試行（過去のCI操縦間隔の試行も含む）を明示的に実行する。これらは通常CIの必須集合には含めない。任意試行の失敗は成功へ計上せず、製品の仕様違反と試験操縦の戦略/過去の状態一致を分けて記録する。旧CI55や未反映候補の失敗も履歴に残す。
+
+以下は2026-10-03採用時の規約。関連検査の集約・最終候補の通常ゲート・対象SHAと証拠の照合は引き続き適用し、検査集合の意味は上記の新指示を優先する。
+
 # カイセンの検査を作業単位でまとめる
 
 ## 採用範囲

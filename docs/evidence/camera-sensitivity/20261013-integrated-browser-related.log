@@ -1,0 +1,22 @@
+[WebServer] (node:18) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:68) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:35:42 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  1 [chromium] › browser-tests/00-easy-controls.spec.ts:4:1 › Easy touch commands are consumed, payloads consume one round, and pause freezes the mission (6.5s)
+[WebServer] 11:35:48 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/00-normal-controls.spec.ts:4:1 › Normal touch and manual fire are consumed, payloads consume one round, and pause clears inputs (5.9s)
+[WebServer] 11:35:54 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  3 [chromium] › browser-tests/bomb-guide.spec.ts:133:39 › easy bomb cue keeps ammo/reload and pause state legible through actual buttons (9.9s)
+[WebServer] 11:36:04 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  4 [chromium] › browser-tests/bomb-guide.spec.ts:133:39 › normal bomb cue keeps ammo/reload and pause state legible through actual buttons (11.2s)
+[WebServer] 11:36:15 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  5 [chromium] › browser-tests/naval-payload.spec.ts:14:1 › payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock (16.9s)
+
+  5 passed (52.0s)

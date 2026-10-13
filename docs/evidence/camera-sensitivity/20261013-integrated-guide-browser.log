@@ -1,0 +1,16 @@
+[WebServer] (node:19) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:32) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:66) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 11:39:04 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  1 [chromium] › browser-tests/mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 393x648 (7.6s)
+[WebServer] 11:39:12 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 568x320 (6.0s)
+
+  2 passed (14.9s)

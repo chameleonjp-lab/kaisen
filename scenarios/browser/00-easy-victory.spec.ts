@@ -1,10 +1,10 @@
-import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
-import { createBrowserMissionPilot, shouldAttemptBomb } from '../tests/helpers/mission-browser-pilot';
-import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { steerAndObserve, releasePayloadAndObserve } from '../../browser-tests/touch-command';
+import { createBrowserMissionPilot, shouldAttemptBomb } from '../../tests/helpers/mission-browser-pilot';
+import { pointerOffsetForControls } from '../../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
-import { expectScoreResult, inspectScoreResultLayout } from './score-result';
-import { waitForPausedView } from './paused-view';
+import { expectScoreResult, inspectScoreResultLayout } from '../../browser-tests/score-result';
+import { waitForPausedView } from '../../browser-tests/paused-view';
 // This long real-input route avoids video readback. Final screenshots and state
 // are saved separately; no product state or result is injected.
 test.use({ trace: "off" });
@@ -30,16 +30,16 @@ async function started(page: Page) {
   await expect.poll(async () => (await state(page)).phase).toBe("playing");
 }
 async function capture(page: Page, name: string, inspectPausedScene = false) {
-  await mkdir("test-results/evidence", { recursive: true });
+  await mkdir("scenario-results/evidence", { recursive: true });
   if (inspectPausedScene) {
     const snapshot = await state(page), viewport = page.viewportSize();
     await waitForPausedView(page,{tick:snapshot.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   }
-  await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({
+  await writeFile(`scenario-results/evidence/${name}.json`, JSON.stringify({
     note: inspectPausedScene ? "Real-input gameplay, explicitly paused. Only pause menu hidden for this screenshot; camera/world unchanged." : "Unmodified gameplay screen",
     snapshot: await state(page),
   }, null, 2));
-  await page.screenshot({ path: `test-results/evidence/${name}.png`,
+  await page.screenshot({ path: `scenario-results/evidence/${name}.png`,
     ...(inspectPausedScene ? { style: "#pause-screen { visibility: hidden !important; }" } : {}),
   });
 }
@@ -55,7 +55,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 test.afterEach(async ({ page }, info) => {
-  await mkdir("test-results/evidence", { recursive: true });
+  await mkdir("scenario-results/evidence", { recursive: true });
   const snapshot = await state(page).catch(() => null);
   if (info.status !== "passed") {
     console.error('EASY_VICTORY_PAUSE_DIAGNOSTICS ' + JSON.stringify({
@@ -67,17 +67,17 @@ test.afterEach(async ({ page }, info) => {
     }));
   }
   await writeFile(
-    "test-results/evidence/touch-victory-state.json",
+    "scenario-results/evidence/touch-victory-state.json",
     JSON.stringify({ status: info.status, errors, snapshot, samples, payloadAttempts,
       consumedInputs:await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null) }, null, 2),
   );
-  if (bombCueEvidence) await writeFile('test-results/evidence/bomb-cue-victory-easy.json',JSON.stringify({
+  if (bombCueEvidence) await writeFile('scenario-results/evidence/bomb-cue-victory-easy.json',JSON.stringify({
     note:'Live unmodified gameplay cue observation from this victory run. Its green PNG is captured with an exact pose snapshot in the separate short bomb-guide route.',
     ...bombCueEvidence,payloadAttempts,
   },null,2));
   if (info.status !== "passed")
     await page
-      .screenshot({ path: "test-results/evidence/touch-victory-failure.png" })
+      .screenshot({ path: "scenario-results/evidence/touch-victory-failure.png" })
       .catch(() => {});
   expect(errors).toEqual([]);
 });

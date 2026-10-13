@@ -25,6 +25,68 @@ for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }
     const speedRule = page.locator('#rules-content p').filter({ hasText: '速いクリアが必ず高得点になるわけではありません' });
     await speedRule.scrollIntoViewIfNeeded(); await expect(speedRule).toBeInViewport();
     await page.screenshot({ path: `test-results/evidence/score-rules-${browserName}-${viewport.width}x${viewport.height}.png` });
+    const torpedoText = '誘導魚雷は1発。高度20〜80mを目安に、450km/h以下で機首と翼を水平にして投下します。安全に着水でき、着水後80m以上の航走で船体へ届き、残り航走時間内に到達できる生存敵艦がいると投下できます。条件を満たす艦のうち機首方向に近い艦を選びます。';
+    const torpedoRule = page.locator('#rules-content p').filter({ hasText: '誘導魚雷は1発。' });
+    await expect(torpedoRule).toHaveCount(1);
+    await torpedoRule.scrollIntoViewIfNeeded();
+    await expect(torpedoRule).toBeVisible(); await expect(torpedoRule).toBeInViewport({ ratio: 1 });
+    await expect(torpedoRule).toHaveText(torpedoText);
+    await page.screenshot({ path: `test-results/evidence/guide-torpedo-${browserName}-${viewport.width}x${viewport.height}.png` });
+
+    const originalHtmlFontSize = await page.locator('html').evaluate(element => element.style.fontSize);
+    try {
+      await page.locator('html').evaluate(element => { element.style.fontSize = '200%'; });
+      await expect(page.locator('html')).toHaveCSS('font-size', '32px');
+      await torpedoRule.scrollIntoViewIfNeeded();
+      await expect(page.locator('#rules-guide')).toBeVisible();
+      await expect(torpedoRule).toBeVisible();
+      await expect(page.locator('#rules-close')).toBeVisible(); await expect(page.locator('#rules-close')).toBeInViewport();
+      await expect(page.locator('#rules-back')).toBeVisible(); await expect(page.locator('#rules-back')).toBeInViewport();
+      await expect(torpedoRule).toHaveText(torpedoText);
+      const unclipped = await torpedoRule.evaluate(element => ({
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+      }));
+      expect(unclipped.scrollHeight).toBeLessThanOrEqual(unclipped.clientHeight);
+      const beginning = '誘導魚雷は1発。';
+      const beginningVisible = await page.evaluate(text => {
+        const paragraph = Array.from(document.querySelectorAll('#rules-content p')).find(element => element.textContent?.includes(text));
+        const container = document.getElementById('rules-content');
+        if (!paragraph || !container) return false;
+        const paragraphRect = paragraph.getBoundingClientRect(), containerRect = container.getBoundingClientRect();
+        container.scrollTop += paragraphRect.top - containerRect.top;
+        const node = paragraph.firstChild;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return false;
+        const offset = node.textContent!.indexOf(text);
+        if (offset < 0) return false;
+        const range = document.createRange();
+        range.setStart(node, offset); range.setEnd(node, offset + text.length);
+        const rect = range.getBoundingClientRect(), contentRect = container.getBoundingClientRect();
+        return rect.top >= contentRect.top && rect.bottom <= contentRect.bottom;
+      }, beginning);
+      expect(beginningVisible, 'the first sentence remains reachable by scrolling at 200% text size').toBe(true);
+      await page.screenshot({ path: `test-results/evidence/guide-torpedo-${browserName}-${viewport.width}x${viewport.height}-200.png` });
+      const ending = '条件を満たす艦のうち機首方向に近い艦を選びます。';
+      const endingVisible = await page.evaluate(text => {
+        const paragraph = Array.from(document.querySelectorAll('#rules-content p')).find(element => element.textContent?.includes(text));
+        const container = document.getElementById('rules-content');
+        if (!paragraph || !container) return false;
+        const paragraphRect = paragraph.getBoundingClientRect(), containerRect = container.getBoundingClientRect();
+        container.scrollTop += paragraphRect.bottom - containerRect.bottom;
+        const node = paragraph.firstChild;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return false;
+        const offset = node.textContent!.lastIndexOf(text);
+        if (offset < 0) return false;
+        const range = document.createRange();
+        range.setStart(node, offset); range.setEnd(node, offset + text.length);
+        const rect = range.getBoundingClientRect(), contentRect = container.getBoundingClientRect();
+        return rect.top >= contentRect.top && rect.bottom <= contentRect.bottom;
+      }, ending);
+      expect(endingVisible, 'the final sentence remains reachable by scrolling at 200% text size').toBe(true);
+      await expect(page.locator('#rules-close')).toBeInViewport(); await expect(page.locator('#rules-back')).toBeInViewport();
+    } finally {
+      await page.locator('html').evaluate((element, fontSize) => { element.style.fontSize = fontSize; }, originalHtmlFontSize);
+    }
     await page.locator('#rules-content').evaluate(element => { element.scrollTop = element.scrollHeight; });
     await expect(page.locator('#rules-content')).toContainText('残り2発');
     await page.locator('#rules-back').tap(); await expect(page.locator('#home-rules')).toBeFocused();

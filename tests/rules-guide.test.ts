@@ -24,6 +24,8 @@ for (const mode of ['easy', 'normal'] as const) {
       } else assert.ok(score.includes('誤射による損傷・撃墜の減点はありません'));
       const guide = sections.flatMap(section => section.paragraphs).join('\n');
       assert.ok(guide.includes('自機で撃墜するとHPが15回復'));
+      for (const rule of ['誘導魚雷は1発', '安全に着水', '80m以上', '残り航走時間内', '生存敵艦', '機首方向に近い艦', '発射時に選んだ敵艦を追尾', '標的は変わりません', '再捕捉せず', '魚雷を消費しません'])
+        assert.ok(guide.includes(rule), `Missing guided torpedo explanation: ${rule}`);
       assert.equal(guide.includes('CUSTOM-KEYS'), input === 'keyboard');
       assert.equal(guide.includes('別の指'), input === 'touch');
     });

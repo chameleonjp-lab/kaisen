@@ -38,8 +38,9 @@ export function isUsefulBombCue(snapshot: {
   });
 }
 
-/** Easy uses a pre-established straight pass; Normal fires from the current
- * accepted pose because its driver pulses before submitting the next turn. */
+/** A delayed payload pulse keeps the current accepted steering in force until
+ * the release arrives. Require an established straight pass in both modes;
+ * Easy's manual pitch path uses a small held climb command to stay level. */
 export function hasAcceptedBombSteering(snapshot: {
   mode?: 'easy' | 'normal';
   controlsInput?: { turn?: number; climb?: number } | null;
@@ -47,8 +48,11 @@ export function hasAcceptedBombSteering(snapshot: {
   const controls = snapshot.controlsInput;
   if (!controls || typeof controls.turn !== 'number' || !Number.isFinite(controls.turn)
     || typeof controls.climb !== 'number' || !Number.isFinite(controls.climb)) return false;
-  return snapshot.mode === 'normal' ||
-    (Math.abs(controls.turn) <= .01 && Math.abs(Math.abs(controls.climb) - .02) <= .01);
+  if (snapshot.mode === 'normal')
+    return Math.abs(controls.turn) <= .01 && Math.abs(controls.climb - .02) <= .01;
+  if (snapshot.mode === 'easy')
+    return Math.abs(controls.turn) <= .01 && Math.abs(Math.abs(controls.climb) - .02) <= .01;
+  return false;
 }
 
 export function shouldAttemptBomb(snapshot: {
@@ -317,7 +321,9 @@ export function createBrowserMissionPilot(preferAircraft = false) {
               attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = true;
             } else if (!attackLockBlocked) {
               attackLockShipId = target.id; attackLockUntil = snapshot.tick + 60;
-              attackLockClimb = Math.abs(player.pitch) < .02 || Math.abs(player.pitch) > 1.12
+              // Normal's release gate requires the same positive holding cue
+              // used by its short contract; Easy follows the current pitch sign.
+              attackLockClimb = snapshot.mode === 'normal' || Math.abs(player.pitch) < .02 || Math.abs(player.pitch) > 1.12
                 ? .02 : Math.sign(player.pitch) * .02;
               aim = player.position.clone().addScaledVector(forwardOf(player), 1200);
               evasive = true;
@@ -392,7 +398,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     // Convert that target into the new manual-rate contract using the observed
     // sample interval; the adapter saturates at the product's legal stick rate.
     let climb = absolutePitchTargetToRateCommand(legacyAbsolutePitch, player.pitch, player.speed, sampleDt);
-    if (snapshot.mode === 'easy' && attackLockShipId === target.id && snapshot.tick <= attackLockUntil
+    if (attackLockShipId === target.id && snapshot.tick <= attackLockUntil
       && target.kind === 'ship' && shipPhase === 'attack') {
       turn = 0;
       climb = attackLockClimb;

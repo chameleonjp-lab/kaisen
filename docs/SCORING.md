@@ -53,6 +53,6 @@ CI38のNormal受入は、旧版にも同じ入力で再現する敵機衝突だ�
 
 ## モード・版と今後の接続
 
-確定結果へmode、既存物理のrulesVersion `kaisen-air-sea-11`、採点版scoreRulesVersion `kaisen-contribution-1`を保持する。EasyとNormal、および旧0点方式の結果を同じ母集団へ混ぜない。
+確定結果へmode、誘導魚雷を採用した戦闘規則のrulesVersion `kaisen-air-sea-12`、採点版scoreRulesVersion `kaisen-contribution-1`を保持する。誘導化前のair-sea-11や旧0点方式の結果、EasyとNormalを同じ母集団へ混ぜない。誘導魚雷も実船体接触で減ったHPを既存の台帳へ一度だけ記録し、発射や標的の捕捉だけでは加点しない。
 
 今回はオンラインランキング、名前入力、開始集計、送信、DBや公開設定を追加しない。将来の接続ではモード・ルール版・艦数、同点順、本人認証、開始と結果の関連付け、再送の一回性、サーバーでの検証を実契約に合わせて決める。クライアントの凍結だけでサーバー側の重複や不正を防げるとはしない。これはカイセン固有の採点であり、FightFlightへの自動同期対象ではない。
