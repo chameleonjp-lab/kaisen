@@ -1,0 +1,90 @@
+{
+  "head": "349ed823b15d7d406e09e69084c0fcd32c88e803",
+  "tree": "701788307409c1be49d30354966fe2f3fdfc9c93",
+  "run": {
+    "number": 55,
+    "id": 38289541275,
+    "job": 114946026427,
+    "url": "https://github.com/chameleonjp-lab/kaisen/actions/runs/38289541275",
+    "conclusion": "failure",
+    "browserPassed": 57,
+    "browserFailed": 2,
+    "browserTotal": 59,
+    "browserDurationMinutes": 24.0
+  },
+  "artifact": {
+    "id": 11767316696,
+    "bytes": 16642400,
+    "sha256": "259d96d6346f87e26e0c603d7aef0cdbf8091fcfae3b945a5b9c53ec9ab99406"
+  },
+  "replays": {
+    "easy": {
+      "recordedTick": 2504,
+      "replayedTick": 2504,
+      "maxNumericDifference": 2.7284841053187847e-12,
+      "materiallyDifferent": [],
+      "outcome": "shot-down",
+      "cause": "enemy-aircraft",
+      "hp": 0
+    },
+    "normal": {
+      "recordedTick": 36004,
+      "replayedTick": 36004,
+      "maxNumericDifference": 1.2607870303327218e-10,
+      "materiallyDifferent": [],
+      "outcome": null,
+      "cause": null,
+      "hp": 80
+    }
+  },
+  "easyReplayPauses": {
+    "source": [
+      "fleet-approach-paused.json",
+      "wingman-activity-paused.json"
+    ],
+    "ticks": [
+      67,
+      364
+    ],
+    "method": "pauseGame/resumeGame through ordinary product functions in an isolated Node replay; no browser state injection"
+  },
+  "cueCapture": {
+    "easy": {
+      "beforeTick": 1480,
+      "afterTick": 1506,
+      "elapsedTicks": 26,
+      "before": {
+        "ready": "true",
+        "text": "至近弾圏内"
+      },
+      "after": {
+        "ready": "false",
+        "text": "有効圏外"
+      },
+      "beforeKind": "blast",
+      "afterKind": "water"
+    },
+    "normal": {
+      "beforeTick": 1341,
+      "afterTick": 1369,
+      "elapsedTicks": 28,
+      "before": {
+        "ready": "true",
+        "text": "命中見込み"
+      },
+      "after": {
+        "ready": "false",
+        "text": "有効圏外"
+      },
+      "beforeKind": "direct",
+      "afterKind": "water"
+    }
+  },
+  "normalAttempts": {
+    "count": 9,
+    "allSkipped": true,
+    "finalBombs": 2,
+    "playerShipKills": 0,
+    "renderRecoveries": 0
+  }
+}

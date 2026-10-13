@@ -3,13 +3,18 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { expectScoreResult, inspectScoreResultLayout } from './score-result';
+import { waitForPausedView } from './paused-view';
 
 const records: unknown[] = [];
 async function state(page: Page) {
   return page.evaluate(() => (window as any).__kaisenReadState());
 }
-async function capture(page: Page, name: string) {
+async function capture(page: Page, name: string, paused = false) {
   await mkdir("test-results/evidence", { recursive: true });
+  if (paused) {
+    const snapshot = await state(page), viewport = page.viewportSize();
+    await waitForPausedView(page,{tick:snapshot.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+  }
   await page.screenshot({
     path: `test-results/evidence/${name}.png`,
     fullPage: false,
@@ -212,12 +217,14 @@ test("touch steering, two-finger release, loop and explicit resume", async ({
   const before = await state(page);
   await page.keyboard.press("ArrowDown");
   expect((await state(page)).tick).toBe(before.tick);
+  const viewport = page.viewportSize();
+  await waitForPausedView(page,{tick:before.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   await page.locator("#resume").click();
   await expect
     .poll(async () => (await state(page)).tick)
     .toBeGreaterThan(before.tick);
   await page.locator("#pause").click();
-  await capture(page, "paused");
+  await capture(page, "paused", true);
 });
 test("real flight to sea failure, result, replay, and home", async ({
   page,
@@ -261,11 +268,9 @@ test("ten replays keep renderer resources bounded", async ({ page }) => {
     await started(page);
     await page.locator("#pause").click();
     await expect.poll(async () => (await state(page)).phase).toBe("paused");
-    const submittedBefore = (await state(page)).render.queue.submittedCount;
-    // Wait beyond every already-submitted frame so at least one frame of this
-    // paused mission is fully uploaded/rendered. Never mix pre-upload counts.
-    await expect.poll(async () => (await state(page)).render.queue.completedCount)
-      .toBeGreaterThanOrEqual(submittedBefore + 1);
+    const paused = await state(page);
+    const viewport = page.viewportSize();
+    await waitForPausedView(page,{tick:paused.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
     const s = await state(page);
     samples.push({ ...s.render, tick: s.tick, phase: s.phase });
     await page.locator("#pause-home").click();
@@ -348,6 +353,8 @@ test("long interruption pauses explicitly and audio mute releases sources", asyn
   const tick = (await state(page)).tick;
   await page.waitForTimeout(200);
   expect((await state(page)).tick).toBe(tick);
+  const viewport = page.viewportSize();
+  await waitForPausedView(page,{tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   await page.locator("#resume").click();
   await expect.poll(async () => (await state(page)).tick).toBeGreaterThan(tick);
   expect((await state(page)).audio.enabled).toBe(false);

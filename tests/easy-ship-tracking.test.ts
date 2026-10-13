@@ -76,8 +76,10 @@ test('air-to-ship switching keeps the existing smooth response and manual climb 
  stepGame(s,neutral);
  assert.ok(Math.abs(s.player.pitch-before)<.05,'target switch must not snap the camera/aircraft');
  for(const climb of [.2,.6]){
-  const prior=s.player.pitch,expected=prior+(climb*.95-prior)*(1-Math.exp(-4.2/60));
-  stepGame(s,{...neutral,climb});assert.ok(Math.abs(s.player.pitch-expected)<1e-12,'manual climb owns the command even with prior downward residue');
+  const prior=s.player.pitch,speed=s.player.speed;
+  const authority=(speed<=85?.92+((speed-65)/20)*.23:speed<=110?1.15-((speed-85)/25)*.15:1)*Math.max(.78,Math.min(1,1-Math.max(0,speed-115)*.008));
+  const expected=prior+climb*.82*authority/60;
+  stepGame(s,{...neutral,climb,steeringActive:true});assert.ok(Math.abs(s.player.pitch-expected)<1e-12,'held manual climb uses the signed rate even with prior downward residue');
  }
  // Rebuild actual ship assistance after the manual reset, then lose that target.
  for(let i=0;i<30;i++){
@@ -86,7 +88,9 @@ test('air-to-ship switching keeps the existing smooth response and manual climb 
  }
  assert.ok(s.player.pitch<-.02);
  ship.position.set(10000,0,-10000);ship.previous.copy(ship.position);
- const prior=s.player.pitch,withoutResidue=prior+(0-prior)*(1-Math.exp(-4.2/60));
+ const prior=s.player.pitch,speed=s.player.speed,authority=(speed<=85?.92+((speed-65)/20)*.23:speed<=110?1.15-((speed-85)/25)*.15:1)*Math.max(.78,Math.min(1,1-Math.max(0,speed-115)*.008));
+ const neutralDelta=Math.max(-.82*authority/60,Math.min(.82*authority/60,-prior*(1-Math.exp(-4.2/60))));
+ const withoutResidue=prior+neutralDelta;
  stepGame(s,neutral);assert.ok(Number.isFinite(s.player.pitch));assert.ok(Math.abs(s.player.pitch-prior)<.05);
  assert.ok(Math.abs(s.player.pitch-withoutResidue)<1e-10,'loss clears stale pull and resumes the unchanged neutral pitch equation');
  air.health=80;air.position.copy(point(-.65,.45));air.previous.copy(air.position);

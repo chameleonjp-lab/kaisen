@@ -1,0 +1,16 @@
+[WebServer] (node:19) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:32) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:66) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 12:12:09 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  1 [chromium] › browser-tests/00-00-input-method.spec.ts:6:1 › changing from touch to mouse or back cannot move a pressed home control (7.1s)
+[WebServer] 12:12:16 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/00-00-input-method.spec.ts:32:3 › custom desktop input › committed custom keys fire and pause, old keys stop firing, rules own their keys (7.6s)
+
+  2 passed (15.8s)

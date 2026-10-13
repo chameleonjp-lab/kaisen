@@ -1,0 +1,761 @@
+{
+  "targetHeadReportedByRoot": "19a4db4bc51360f4a2ec31fed7d07fbb7208c10b",
+  "localSnapshotHead": "59551ec287d1f98028ad2304ab32a35b1c1a684d",
+  "sourceEdits": "none by render_profile; instrumentation and candidate changes only in browser scratch",
+  "environment": {
+    "viewport": [
+      393,
+      852
+    ],
+    "deviceScaleFactor": 1,
+    "touch": true,
+    "isMobile": true,
+    "headless": true,
+    "ANGLE": "swiftshader",
+    "timerExtension": "EXT_disjoint_timer_query_webgl2 available",
+    "canvas": "393x852; antialias true; model/effects/quality unchanged",
+    "measurement": "KaisenScene clears GL buffer through fence submission (includes overlay CPU), native draw CPU, nonblocking clientWaitSync completion latency, GPU TIME_ELAPSED query per entire frame; not physical iPhone or CI acceptance",
+    "quantile": "sorted nearest lower index floor((n-1)*p)",
+    "readback": "captured only outside timed blocks and marked observation=true; not mixed into performance samples",
+    "chromium": "153.0.8010.0",
+    "node": "v24.19.0",
+    "playwright": "1.61.1",
+    "three": "0.186.1",
+    "packageLockSha256": "5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78"
+  },
+  "liveBaseline": {
+    "mode": "normal",
+    "ordinaryInputs": "CDP touch plus Space/W/S from existing mission browser pilot",
+    "elapsed": 7.083333333333333,
+    "phase": "playing",
+    "tick": 425,
+    "timedFrames": 53,
+    "stats": {
+      "cpuClearToFenceMs": {
+        "n": 53,
+        "mean": 4.156603773950406,
+        "p50": 3.5,
+        "p95": 6.800000004470348,
+        "p99": 12.100000001490116,
+        "max": 12.5
+      },
+      "cpuFirstDrawToFenceMs": {
+        "n": 53,
+        "mean": 3.9830188679526435,
+        "p50": 3.399999998509884,
+        "p95": 5.600000001490116,
+        "p99": 11.899999998509884,
+        "max": 12.100000001490116
+      },
+      "fenceObservedMs": {
+        "n": 53,
+        "mean": 119.73207547122016,
+        "p50": 105.69999999552965,
+        "p95": 172.10000000149012,
+        "p99": 414.70000000298023,
+        "max": 488.29999999701977
+      },
+      "gpuTimerMs": {
+        "n": 53,
+        "mean": 46.00209194339623,
+        "p50": 40.548956,
+        "p95": 82.445581,
+        "p99": 99.850748,
+        "max": 116.263331
+      }
+    },
+    "simulationUpdateMeanMs": 0.8471563979277114,
+    "GLFailure": null
+  },
+  "integerPow": {
+    "baseline": {
+      "n": 268,
+      "tick": 432,
+      "phase": "paused",
+      "stats": {
+        "cpuClearToFenceMs": {
+          "n": 268,
+          "mean": 3.442164179271282,
+          "p50": 3.1999999955296516,
+          "p95": 5.300000004470348,
+          "p99": 7.100000001490116,
+          "max": 7.899999998509884
+        },
+        "cpuFirstDrawToFenceMs": {
+          "n": 268,
+          "mean": 3.314925372961964,
+          "p50": 3,
+          "p95": 5.199999995529652,
+          "p99": 7,
+          "max": 7.799999997019768
+        },
+        "fenceObservedMs": {
+          "n": 268,
+          "mean": 51.59477611959203,
+          "p50": 46.599999994039536,
+          "p95": 65.70000000298023,
+          "p99": 80.19999999552965,
+          "max": 97.29999999701977
+        },
+        "gpuTimerMs": {
+          "n": 268,
+          "mean": 34.1985377238806,
+          "p50": 33.16216,
+          "p95": 42.753459,
+          "p99": 50.791932,
+          "max": 53.245922
+        }
+      }
+    },
+    "expanded": {
+      "n": 260,
+      "tick": 432,
+      "phase": "paused",
+      "stats": {
+        "cpuClearToFenceMs": {
+          "n": 260,
+          "mean": 3.6484615385532377,
+          "p50": 3.100000001490116,
+          "p95": 5.899999998509884,
+          "p99": 9,
+          "max": 16.700000002980232
+        },
+        "cpuFirstDrawToFenceMs": {
+          "n": 260,
+          "mean": 3.52269230765792,
+          "p50": 3,
+          "p95": 5.799999997019768,
+          "p99": 8.800000004470348,
+          "max": 16.600000001490116
+        },
+        "fenceObservedMs": {
+          "n": 260,
+          "mean": 52.98923076924223,
+          "p50": 46.899999998509884,
+          "p95": 74.39999999850988,
+          "p99": 90.89999999850988,
+          "max": 127.90000000596046
+        },
+        "gpuTimerMs": {
+          "n": 260,
+          "mean": 35.56526455,
+          "p50": 33.207918,
+          "p95": 47.596157,
+          "p99": 69.242854,
+          "max": 94.407762
+        }
+      }
+    },
+    "images": {
+      "comparison": {
+        "width": 393,
+        "height": 852,
+        "changedPixels": 0,
+        "totalPixels": 334836,
+        "maxChannel": 0,
+        "meanAbsRGB": 0,
+        "channelsOverOne": 0
+      },
+      "repeat": {
+        "width": 393,
+        "height": 852,
+        "changedPixels": 0,
+        "totalPixels": 334836,
+        "maxChannel": 0,
+        "meanAbsRGB": 0,
+        "channelsOverOne": 0
+      }
+    },
+    "judgment": "no consistent performance improvement; do not adopt as cause fix",
+    "blocks": [
+      {
+        "mode": "baseline",
+        "n": 91,
+        "gpuTimerMs": {
+          "n": 91,
+          "mean": 33.31819340659341,
+          "p50": 31.791278,
+          "p95": 40.543956,
+          "p99": 42.776251,
+          "max": 50.791932
+        },
+        "fenceObservedMs": {
+          "n": 91,
+          "mean": 50.58901098960049,
+          "p50": 46.20000000298023,
+          "p95": 64.70000000298023,
+          "p99": 69.89999999850988,
+          "max": 80.20000000298023
+        }
+      },
+      {
+        "mode": "expanded",
+        "n": 86,
+        "gpuTimerMs": {
+          "n": 86,
+          "mean": 36.399348802325584,
+          "p50": 33.030437,
+          "p95": 55.114968,
+          "p99": 71.325674,
+          "max": 94.407762
+        },
+        "fenceObservedMs": {
+          "n": 86,
+          "mean": 53.919767441964424,
+          "p50": 47.399999998509884,
+          "p95": 77.20000000298023,
+          "p99": 81.70000000298023,
+          "max": 127.90000000596046
+        }
+      },
+      {
+        "mode": "expanded",
+        "n": 83,
+        "gpuTimerMs": {
+          "n": 83,
+          "mean": 37.05883792771084,
+          "p50": 34.817706,
+          "p95": 45.45553,
+          "p99": 59.996053,
+          "max": 84.680827
+        },
+        "fenceObservedMs": {
+          "n": 83,
+          "mean": 54.97831325295819,
+          "p50": 48.5,
+          "p95": 69.59999999403954,
+          "p99": 98.89999999850988,
+          "max": 110.20000000298023
+        }
+      },
+      {
+        "mode": "baseline",
+        "n": 87,
+        "gpuTimerMs": {
+          "n": 87,
+          "mean": 35.16492856321839,
+          "p50": 33.939545,
+          "p95": 45.24395,
+          "p99": 51.265245,
+          "max": 53.245922
+        },
+        "fenceObservedMs": {
+          "n": 87,
+          "mean": 53.31149425271941,
+          "p50": 47.30000000447035,
+          "p95": 75.19999999552965,
+          "p99": 83.79999999701977,
+          "max": 97.29999999701977
+        }
+      },
+      {
+        "mode": "baseline",
+        "n": 90,
+        "gpuTimerMs": {
+          "n": 90,
+          "mean": 34.15448583333333,
+          "p50": 32.859575,
+          "p95": 40.924874,
+          "p99": 45.30892,
+          "max": 51.048988
+        },
+        "fenceObservedMs": {
+          "n": 90,
+          "mean": 50.95222222233812,
+          "p50": 47,
+          "p95": 64.20000000298023,
+          "p99": 75.80000000447035,
+          "max": 80.19999999552965
+        }
+      },
+      {
+        "mode": "expanded",
+        "n": 91,
+        "gpuTimerMs": {
+          "n": 91,
+          "mean": 33.41473887912088,
+          "p50": 32.665923,
+          "p95": 39.436997,
+          "p99": 42.45441,
+          "max": 45.871868
+        },
+        "fenceObservedMs": {
+          "n": 91,
+          "mean": 50.29560439558802,
+          "p50": 46.399999998509884,
+          "p95": 64,
+          "p99": 67.5,
+          "max": 73.60000000149012
+        }
+      }
+    ],
+    "candidate": "replace only nonnegative integer pow(reflected,28/140) and pow(sunFacing,28/520) with repeated squaring; keep non-integer pow and fresnel pow3 unchanged; alternate programs with same vertex shaders, attribute locations and copied uniform values"
+  },
+  "lateSeaSky": {
+    "baseline": {
+      "n": 117,
+      "tick": 434,
+      "phase": "paused",
+      "stats": {
+        "cpuClearToFenceMs": {
+          "n": 117,
+          "mean": 5.064102564420965,
+          "p50": 4.0999999940395355,
+          "p95": 10.200000002980232,
+          "p99": 16.5,
+          "max": 20.299999997019768
+        },
+        "cpuFirstDrawToFenceMs": {
+          "n": 117,
+          "mean": 4.827350427898077,
+          "p50": 3.899999998509884,
+          "p95": 10,
+          "p99": 16.299999997019768,
+          "max": 20.19999999552965
+        },
+        "fenceObservedMs": {
+          "n": 117,
+          "mean": 129.88376068381163,
+          "p50": 126.10000000149012,
+          "p95": 175.80000000447035,
+          "p99": 245.39999999850988,
+          "max": 1139.8000000044703
+        },
+        "gpuTimerMs": {
+          "n": 117,
+          "mean": 88.55769583760683,
+          "p50": 89.246546,
+          "p95": 128.038396,
+          "p99": 139.93276,
+          "max": 206.578683
+        }
+      }
+    },
+    "late": {
+      "n": 116,
+      "tick": 434,
+      "phase": "paused",
+      "stats": {
+        "cpuClearToFenceMs": {
+          "n": 116,
+          "mean": 5.093965517742367,
+          "p50": 3.8000000044703484,
+          "p95": 11,
+          "p99": 16.69999999552965,
+          "max": 20.5
+        },
+        "cpuFirstDrawToFenceMs": {
+          "n": 116,
+          "mean": 4.955172413638953,
+          "p50": 3.600000001490116,
+          "p95": 10.899999998509884,
+          "p99": 16.69999999552965,
+          "max": 20.5
+        },
+        "fenceObservedMs": {
+          "n": 116,
+          "mean": 122.83017241331781,
+          "p50": 122.79999999701977,
+          "p95": 180.39999999850988,
+          "p99": 192.19999999552965,
+          "max": 196.60000000149012
+        },
+        "gpuTimerMs": {
+          "n": 116,
+          "mean": 91.1337975862069,
+          "p50": 90.733772,
+          "p95": 132.077925,
+          "p99": 142.897534,
+          "max": 161.033885
+        }
+      }
+    },
+    "images": {
+      "comparison": {
+        "width": 393,
+        "height": 852,
+        "changedPixels": 0,
+        "totalPixels": 334836,
+        "maxChannel": 0,
+        "meanAbsRGB": 0,
+        "channelsOverOne": 0
+      },
+      "repeat": {
+        "width": 393,
+        "height": 852,
+        "changedPixels": 0,
+        "totalPixels": 334836,
+        "maxChannel": 0,
+        "meanAbsRGB": 0,
+        "channelsOverOne": 0
+      }
+    },
+    "judgment": "no consistent performance improvement; do not adopt as cause fix",
+    "blocks": [
+      {
+        "order": "baseline",
+        "n": 41,
+        "gpuTimerMs": {
+          "n": 41,
+          "mean": 74.78423048780489,
+          "p50": 71.849928,
+          "p95": 128.038396,
+          "p99": 131.357613,
+          "max": 139.93276
+        },
+        "fenceObservedMs": {
+          "n": 41,
+          "mean": 135.32439024382975,
+          "p50": 108.80000000447035,
+          "p95": 245,
+          "p99": 293.30000000447035,
+          "max": 1139.8000000044703
+        }
+      },
+      {
+        "order": "late",
+        "n": 46,
+        "gpuTimerMs": {
+          "n": 46,
+          "mean": 75.44160158695652,
+          "p50": 77.318963,
+          "p95": 101.923505,
+          "p99": 110.276456,
+          "max": 113.874055
+        },
+        "fenceObservedMs": {
+          "n": 46,
+          "mean": 102.81521739033253,
+          "p50": 96.89999999850988,
+          "p95": 130.40000000596046,
+          "p99": 145.59999999403954,
+          "max": 145.80000000447035
+        }
+      },
+      {
+        "order": "late",
+        "n": 33,
+        "gpuTimerMs": {
+          "n": 33,
+          "mean": 107.98331993939394,
+          "p50": 106.637923,
+          "p95": 141.130856,
+          "p99": 142.897534,
+          "max": 160.792306
+        },
+        "fenceObservedMs": {
+          "n": 33,
+          "mean": 143.3515151515603,
+          "p50": 141.80000000447035,
+          "p95": 191.19999999552965,
+          "p99": 192.19999999552965,
+          "max": 195.30000000447035
+        }
+      },
+      {
+        "order": "baseline",
+        "n": 38,
+        "gpuTimerMs": {
+          "n": 38,
+          "mean": 93.87821231578948,
+          "p50": 90.837452,
+          "p95": 124.818159,
+          "p99": 134.515486,
+          "max": 147.309321
+        },
+        "fenceObservedMs": {
+          "n": 38,
+          "mean": 125.78947368440659,
+          "p50": 128.40000000596046,
+          "p95": 160.70000000298023,
+          "p99": 162.29999999701977,
+          "max": 208.5
+        }
+      },
+      {
+        "order": "baseline",
+        "n": 38,
+        "gpuTimerMs": {
+          "n": 38,
+          "mean": 98.09802355263157,
+          "p50": 92.956505,
+          "p95": 126.214874,
+          "p99": 132.199789,
+          "max": 206.578683
+        },
+        "fenceObservedMs": {
+          "n": 38,
+          "mean": 128.10789473688132,
+          "p50": 127.19999999552965,
+          "p95": 162,
+          "p99": 175.80000000447035,
+          "max": 245.39999999850988
+        }
+      },
+      {
+        "order": "late",
+        "n": 37,
+        "gpuTimerMs": {
+          "n": 37,
+          "mean": 95.61506186486487,
+          "p50": 91.583572,
+          "p95": 132.077925,
+          "p99": 132.101429,
+          "max": 161.033885
+        },
+        "fenceObservedMs": {
+          "n": 37,
+          "mean": 129.4108108104886,
+          "p50": 126.39999999850988,
+          "p95": 179.60000000149012,
+          "p99": 191.5,
+          "max": 196.60000000149012
+        }
+      }
+    ],
+    "candidate": "existing exported KaisenScene.prototype.render wrapped in scratch evaluation; sea.renderOrder100 and sky101 after opaque materials; no product source hook",
+    "queryOffBlocks": [
+      {
+        "order": "baseline",
+        "n": 53,
+        "stats": {
+          "cpuClearToFenceMs": {
+            "n": 53,
+            "mean": 3.967924528807964,
+            "p50": 3.2000000029802322,
+            "p95": 6.300000004470348,
+            "p99": 7.300000004470348,
+            "max": 10.600000001490116
+          },
+          "fenceObservedMs": {
+            "n": 53,
+            "mean": 89.81698113145693,
+            "p50": 80.89999999850988,
+            "p95": 146.60000000149012,
+            "p99": 162.89999999850988,
+            "max": 175.70000000298023
+          }
+        }
+      },
+      {
+        "order": "late",
+        "n": 40,
+        "stats": {
+          "cpuClearToFenceMs": {
+            "n": 40,
+            "mean": 4.897499999403953,
+            "p50": 3.5,
+            "p95": 13.100000001490116,
+            "p99": 13.5,
+            "max": 20.899999998509884
+          },
+          "fenceObservedMs": {
+            "n": 40,
+            "mean": 119.83000000081957,
+            "p50": 110.70000000298023,
+            "p95": 179.70000000298023,
+            "p99": 184.69999999552965,
+            "max": 210.5
+          }
+        }
+      }
+    ]
+  },
+  "naturalSlowFence": [
+    {
+      "mode": "baseline",
+      "order": "baseline",
+      "begin": 14277.89999999851,
+      "firstDraw": 14278,
+      "drawCalls": 45,
+      "drawNativeCpuMs": 0.10000000149011612,
+      "seaCpuMs": 0,
+      "skyCpuMs": 0,
+      "seaDraws": 1,
+      "skyDraws": 1,
+      "observation": false,
+      "cpuClearToFenceMs": 8.100000001490116,
+      "cpuFirstDrawToFenceMs": 8,
+      "submittedAt": 14286.09999999404,
+      "polls": 137,
+      "pollCpuMs": 1.4999999925494194,
+      "fenceObservedMs": 1139.8000000044703,
+      "result": 37148,
+      "gpuTimerMs": 62.23198
+    }
+  ],
+  "numericGpuFloat32": {
+    "status": "pass",
+    "renderer": "WebKit WebGL",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "precision": 23,
+    "glError": 0,
+    "domain": "4096 evenly spaced samples inside (0,1),4096 inside (.99,1),and 0/1 endpoints",
+    "exponents": [
+      {
+        "exponent": 28,
+        "samples": 12288,
+        "maxAbsolute": 4.0531158447265625e-06,
+        "maxAt": {
+          "x": 0.993939220905304,
+          "baseline": 0.8434845805168152,
+          "expanded": 0.8434805274009705
+        },
+        "maxRelative": 5.8282969645927945e-06,
+        "maxRelAt": 0.2393798828125,
+        "countDifferent": 7843,
+        "countAbove1e6": 1566,
+        "meanAbsolute": 3.086659233897479e-07,
+        "maxBaselineErrorVsDouble": 3.8016720985689645e-06,
+        "maxExpandedErrorVsDouble": 6.342376902557234e-07
+      },
+      {
+        "exponent": 140,
+        "samples": 12288,
+        "maxAbsolute": 1.531839370727539e-05,
+        "maxAt": {
+          "x": 0.9997082352638245,
+          "baseline": 0.959953784942627,
+          "expanded": 0.9599691033363342
+        },
+        "maxRelative": 2.3872089158204522e-05,
+        "maxRelAt": 0.993939220905304,
+        "countDifferent": 5958,
+        "countAbove1e6": 3050,
+        "meanAbsolute": 9.204107851962069e-07,
+        "maxBaselineErrorVsDouble": 1.642809237467624e-05,
+        "maxExpandedErrorVsDouble": 2.7750992425135124e-06
+      },
+      {
+        "exponent": 520,
+        "samples": 12288,
+        "maxAbsolute": 5.453824996948242e-05,
+        "maxAt": {
+          "x": 0.999957263469696,
+          "baseline": 0.9780728816986084,
+          "expanded": 0.9780183434486389
+        },
+        "maxRelative": 8.869599828972315e-05,
+        "maxRelAt": 0.993939220905304,
+        "countDifferent": 4724,
+        "countAbove1e6": 2036,
+        "meanAbsolute": 1.2146808384645048e-06,
+        "maxBaselineErrorVsDouble": 5.497153036548852e-05,
+        "maxExpandedErrorVsDouble": 9.583760889886328e-06
+      }
+    ]
+  },
+  "notRun": [
+    "Physical iPhone acceptance",
+    "Official CI validation",
+    "Alternative pose/replay image regressions for candidates because no performance improvement was established",
+    "Prior long Easy then Normal process reuse investigation"
+  ],
+  "scripts": {
+    "render-profile-init.mjs": {
+      "path": "/workspace/scratch/cd965ebd4c33/render-profile-init.mjs",
+      "sha256": "02be8a9298808a751c2c8aebd3a0d5b6aeda53138644fa3a9773ed6dc3f4ab5c"
+    },
+    "render-profile.mts": {
+      "path": "/workspace/scratch/cd965ebd4c33/render-profile.mts",
+      "sha256": "db13bfcf6cf0bdb63362b25ffda223a428bae1eb55131e652545d7e537ed0fca"
+    },
+    "render-order-profile.mts": {
+      "path": "/workspace/scratch/cd965ebd4c33/render-order-profile.mts",
+      "sha256": "7f1d848dd3d696b2ee586451c8ef674c41004d9e319f3df33d225604d47a57a7"
+    },
+    "render-pow-numeric.mjs": {
+      "path": "/workspace/scratch/cd965ebd4c33/render-pow-numeric.mjs",
+      "sha256": "32d53e1d0a3f73af2b3d8a784a5f7c8da1bfa8c8d4c625a7fcf980bf2f37f74d"
+    },
+    "render-profile-init-pow-measured.mjs": {
+      "path": "/workspace/scratch/cd965ebd4c33/render-profile-init-pow-measured.mjs",
+      "sha256": "480789d1d8a88e529c801de1192b0f07e4032f5b90763f0194cb17f1750df1bc",
+      "note": "Exact content of initialization used for original pow measurement reconstructed from local patch history; subsequent shared init added order/drawKinds/timer toggle solely for order run. Original pow driver imported render-profile-init.mjs at that earlier version."
+    }
+  },
+  "sourceSnapshotSha256": {
+    "src/atmosphere.ts": "e6b9c95f0685bb2732926e72730c96712251813a2c6c6faa150a21793c2c1f7a",
+    "src/scene.ts": "8ad3f417686f7808e499e7a585be3a9c87a35500efaecadcec3808ffdc76367f",
+    "src/main.ts": "2227f16259771a165c8f93819145c119553889c3ef13cf05e3eeda1e828d2ad3",
+    "src/render-queue.ts": "8ec4611984beb7168ead1a7e758faf399b0cc0b73939502352be984ab35648f7"
+  },
+  "ci51ReadOnlyCounterEvidence": {
+    "first": {
+      "tick": 283,
+      "elapsed": 4.716666666666667,
+      "phase": "paused",
+      "queue": {
+        "status": "stalled",
+        "failure": null,
+        "pendingMs": 1028.6999999999534,
+        "lastCompletedPendingMs": 919.8999999999069,
+        "completedFrameIntervalMs": 939.0999999998603,
+        "submittedCount": 10,
+        "completedCount": 9,
+        "skippedCount": 665
+      },
+      "triangles": 89868,
+      "tracerSegments": 26
+    },
+    "frozen": {
+      "tick": 283,
+      "elapsed": 4.716666666666667,
+      "phase": "paused",
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 19.4000000001397,
+        "lastCompletedPendingMs": 1143.8000000000466,
+        "completedFrameIntervalMs": 1169.9000000001397,
+        "submittedCount": 11,
+        "completedCount": 10,
+        "skippedCount": 667
+      },
+      "triangles": 89808,
+      "tracerSegments": 21
+    },
+    "settled": {
+      "tick": 283,
+      "elapsed": 4.716666666666667,
+      "phase": "paused",
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 225.9000000001397,
+        "lastCompletedPendingMs": 1143.8000000000466,
+        "completedFrameIntervalMs": 1169.9000000001397,
+        "submittedCount": 11,
+        "completedCount": 10,
+        "skippedCount": 689
+      },
+      "triangles": 89808,
+      "tracerSegments": 21
+    },
+    "second": {
+      "tick": 322,
+      "elapsed": 5.366666666666666,
+      "phase": "paused",
+      "queue": {
+        "status": "stalled",
+        "failure": null,
+        "pendingMs": 1075,
+        "lastCompletedPendingMs": 1143.8000000000466,
+        "completedFrameIntervalMs": 1169.9000000001397,
+        "submittedCount": 11,
+        "completedCount": 10,
+        "skippedCount": 772
+      },
+      "triangles": 89808,
+      "tracerSegments": 21
+    }
+  },
+  "ci51ReadOnlyCounterJudgment": "n11 was first submission of frozen tick283 pose while paused and remained outstanding on resume, causing second stall at tick322. It is not safe to eliminate that first final-pose render; wait until it completes, then skip duplicate paused renders and allow Resume.",
+  "sourceTreeVerifiedByRoot": "b6a841c364d206a238915eefcf90ee75cda5a540",
+  "ci51ArtifactVerifiedByRoot": {
+    "id": 11752526178,
+    "bytes": 17337548,
+    "sha256": "6eee9f9ce267bcf0d4622e7fd1d3434bc6bef1a779e36f0b340798c4a5459a05"
+  },
+  "diagnosisScope": "Pause/resume accepted an unfinished paused-view frame. The cause of the first one-second fence delay remains unknown; shader changes were rejected after measurement."
+}

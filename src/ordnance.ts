@@ -3,8 +3,11 @@ import { Quaternion, Vector3 } from 'three';
 import { CAPITAL_SHIP, NAVAL_GRAVITY, NAVAL_COLLISION_BOUNDS, segmentNavalHullEntry, shipCollisionBoxes } from './naval';
 import type { NavalMountState } from './naval';
 import { oceanHeight } from './ocean';
-import type { Aircraft, Team } from './types';
+import type { Aircraft, Ship, Team } from './types';
 import { segmentMountContact } from './naval-damage';
+import { FIXED_DT } from './mission';
+import { advanceShipMotion } from './ship-motion';
+import { isShipObstacle } from './ship-wreck';
 
 /** Provisional game tuning, not a historical weapon performance model. Metres/seconds. */
 export const ORDNANCE_TUNING = Object.freeze({
@@ -20,6 +23,8 @@ export interface OrdnanceRound {
   id: number; owner: number; team: Team; kind: OrdnanceKind; phase: 'air' | 'water';
   position: Vector3; previous: Vector3; velocity: Vector3;
   life: number; age: number; waterDistance: number; damage: number;
+  /** Captured on release; losing this ship permanently leaves the last water heading. */
+  targetShipId?: number; guidanceLost?: boolean;
 }
 export type OrdnanceAircraft = Pick<Aircraft, 'id' | 'team' | 'position' | 'quaternion' | 'speed' | 'pitch' | 'bank'>;
 /** Previous/current transforms bracket this caller-owned fixed step. No HP is mutated here. */
@@ -29,8 +34,9 @@ export interface OrdnanceShip {
   quaternion: Quaternion; previousQuaternion?: Quaternion;
   length: number; width: number; height: number; guns?: NavalMountState[];
 }
-export type TorpedoReleaseRejection = 'invalid' | 'altitude' | 'speed' | 'pitch' | 'bank';
+export type TorpedoReleaseRejection = 'invalid' | 'altitude' | 'speed' | 'pitch' | 'bank' | 'no-target' | 'out-of-range' | 'unsafe-entry';
 export interface TorpedoReleaseCheck { allowed: boolean; reason: TorpedoReleaseRejection | null; altitude: number; }
+export interface GuidedTorpedoReleaseCheck extends TorpedoReleaseCheck { targetShipId: number | null; }
 type OutcomeBase = { kind: OrdnanceKind; position: Vector3 };
 export type OrdnanceOutcome =
   | (OutcomeBase & { type: 'impact'; shipId: number; damage: number; blast?: boolean })
@@ -75,8 +81,12 @@ export function checkTorpedoRelease(aircraft: OrdnanceAircraft, time: number): T
       Math.abs(aircraft.bank) > t.maxReleaseBank + EPS ? 'bank' : null;
   return { allowed: reason === null, reason, altitude };
 }
-export function releaseTorpedo(id: number, aircraft: OrdnanceAircraft, time: number): OrdnanceRound | null {
-  return checkTorpedoRelease(aircraft, time).allowed ? release(id, aircraft, 'torpedo') : null;
+/** Without a target this remains the raw physical release used by low-level tests. */
+export function releaseTorpedo(id: number, aircraft: OrdnanceAircraft, time: number, targetShipId?: number): OrdnanceRound | null {
+  if (!checkTorpedoRelease(aircraft, time).allowed || (targetShipId !== undefined && !Number.isFinite(targetShipId))) return null;
+  const round = release(id, aircraft, 'torpedo');
+  if (round && targetShipId !== undefined) { round.targetShipId = targetShipId; round.guidanceLost = false; }
+  return round;
 }
 /** Ordinary vacuum aiming guide at one chosen height; it reads no target or future state. */
 export function predictBombImpact(aircraft: OrdnanceAircraft, surfaceHeight: number): BombImpactPrediction | null {
@@ -109,6 +119,13 @@ function validShip(ship: OrdnanceShip): boolean {
 interface ShipSweep {
   ship: OrdnanceShip; before: Quaternion; after: Quaternion; scale: Vector3;
   boxes: { min: Vector3; max: Vector3 }[];
+}
+function shipSweeps(ships: readonly OrdnanceShip[]): ShipSweep[] {
+  return ships.filter(validShip).map(ship => ({ ship,
+    before: (ship.previousQuaternion ?? ship.quaternion).clone().normalize(), after: ship.quaternion.clone().normalize(),
+    scale: new Vector3(ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length),
+    boxes: shipCollisionBoxes(ship),
+  }));
 }
 function localAt(point: Vector3, sweep: ShipSweep, fraction: number): Vector3 {
   const position = sweep.ship.previous.clone().lerp(sweep.ship.position, fraction);
@@ -180,6 +197,7 @@ function validRound(round: OrdnanceRound): boolean {
     [round.id, round.owner, round.life, round.age, round.waterDistance, round.damage].every(Number.isFinite) &&
     round.age >= 0 && round.waterDistance >= 0 && round.damage >= 0 && round.velocity.lengthSq() <= 1000 ** 2 &&
     (round.kind === 'bomb' || round.kind === 'torpedo') &&
+    (round.targetShipId === undefined || (round.kind === 'torpedo' && Number.isFinite(round.targetShipId))) &&
     (round.phase === 'air' || (round.phase === 'water' && round.kind === 'torpedo')) &&
     round.life <= ORDNANCE_TUNING[round.kind].life + EPS;
 }
@@ -187,7 +205,8 @@ function elapse(round: OrdnanceRound, time: number): void {
   round.age += time; round.life = Math.max(0, round.life - time);
 }
 /**
- * Advances one fixed step without aiming, damage application, clock changes or array removal.
+ * Advances one fixed step without damage application, clock changes or array removal.
+ * A guided torpedo steers only after splash, toward the one captured live ship ID.
  * Every supplied live ship is a physical obstacle; the caller owns any team damage policy.
  * Translation is swept in relative space; short angular/ballistic substeps bound curved-path error.
  * Invalid/paused dt leaves the round untouched. Expired or malformed rounds return inactive.
@@ -208,20 +227,23 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
       Math.min(round.position[axis], endBound[axis]) <= Math.max(ship.previous[axis], ship.position[axis]) + radius &&
       Math.max(round.position[axis], endBound[axis]) >= Math.min(ship.previous[axis], ship.position[axis]) - radius);
   };
-  const sweeps: ShipSweep[] = ships.filter(validShip).filter(nearBomb).map(ship => ({ ship,
-    before: (ship.previousQuaternion ?? ship.quaternion).clone().normalize(), after: ship.quaternion.clone().normalize(),
-    scale: new Vector3(ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length),
-    boxes: shipCollisionBoxes(ship),
-  }));
+  return advanceOrdnance(round, shipSweeps(ships.filter(nearBomb)), startTime, dt);
+}
+
+/** Forecasts may reuse collision geometry and consume only the remaining part of a ship frame. */
+function advanceOrdnance(round: OrdnanceRound, sweeps: readonly ShipSweep[], startTime: number, dt: number, from = 0, to = 1, stopAtSplash = false): OrdnanceStepResult {
+  const outcomes: OrdnanceOutcome[] = [];
   const rotationSteps = Math.max(1, ...sweeps.map(s => Math.ceil(s.before.angleTo(s.after) / .02)));
   const substep = Math.min(AIR_SUBSTEP, dt / rotationSteps), expiresThisStep = round.life <= dt, horizon = Math.min(dt, round.life);
   round.previous.copy(round.position);
   let elapsed = 0;
   while (elapsed < horizon - EPS && round.life > 0) {
     const duration = Math.min(substep, horizon - elapsed), start = round.position.clone();
+    const startFraction = from + (to - from) * elapsed / dt;
+    const endFraction = from + (to - from) * (elapsed + duration) / dt;
     if (round.phase === 'air') {
       const end = ballisticPosition(start, round.velocity, duration);
-      const hit = firstShipContact(start, end, sweeps, elapsed / dt, (elapsed + duration) / dt);
+      const hit = firstShipContact(start, end, sweeps, startFraction, endFraction);
       const water = waterContact(start, round.velocity, startTime + elapsed, duration);
       // A deck/hull encountered before the sea always owns the first contact, including duds.
       if (hit && (water === null || hit.fraction * duration <= water + EPS)) {
@@ -239,7 +261,7 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
         outcomes.push({ type: 'splash', kind: round.kind, position: round.position.clone() });
         const horizontalSpeed = Math.hypot(round.velocity.x, round.velocity.z);
         if (round.kind === 'bomb') {
-          outcomes.push(...bombWaterBlast(round, sweeps, elapsed / dt));
+          outcomes.push(...bombWaterBlast(round, sweeps, from + (to - from) * elapsed / dt));
           round.life = 0; break;
         }
         if (Math.abs(round.velocity.y) > ORDNANCE_TUNING.torpedo.maxEntryVerticalSpeed + EPS || horizontalSpeed <= EPS) {
@@ -248,15 +270,28 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
         }
         round.phase = 'water'; round.velocity.multiplyScalar(ORDNANCE_TUNING.torpedo.waterSpeed / horizontalSpeed); round.velocity.y = 0;
         // No instant 1.5m vertical teleport: the remaining step begins at the actual splash.
+        if (stopAtSplash) return { active: round.life > 0, outcomes };
         continue;
       }
       round.position.copy(end); round.velocity.y -= NAVAL_GRAVITY * duration;
     } else {
+      if (round.targetShipId !== undefined && !round.guidanceLost) {
+        const target = sweeps.find(s => s.ship.id === round.targetShipId && s.ship.health > 0);
+        if (!target) round.guidanceLost = true;
+        else {
+          const position = target.ship.previous.clone().lerp(target.ship.position, startFraction);
+          const dx = position.x - start.x, dz = position.z - start.z, distance = Math.hypot(dx, dz);
+          if (distance > EPS) {
+            round.velocity.x = dx / distance * ORDNANCE_TUNING.torpedo.waterSpeed;
+            round.velocity.z = dz / distance * ORDNANCE_TUNING.torpedo.waterSpeed;
+          }
+        }
+      }
       const end = start.clone().addScaledVector(round.velocity, duration), t = ORDNANCE_TUNING.torpedo;
       const desiredY = oceanHeight(end.x, end.z, startTime + elapsed + duration) - t.depth;
       end.y = start.y + Math.max(-t.diveSpeed * duration, Math.min(t.diveSpeed * duration, desiredY - start.y));
       const horizontalDistance = Math.hypot(end.x - start.x, end.z - start.z);
-      const hit = firstShipContact(start, end, sweeps, elapsed / dt, (elapsed + duration) / dt);
+      const hit = firstShipContact(start, end, sweeps, startFraction, endFraction);
       const fraction = hit?.fraction ?? 1;
       round.position.copy(start).lerp(end, fraction); round.waterDistance += horizontalDistance * fraction;
       round.velocity.y = (end.y - start.y) / duration;
@@ -274,4 +309,80 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
   if (round.life > 0 && elapsed < horizon) elapse(round, horizon - elapsed);
   if (expiresThisStep) round.life = 0;
   return { active: round.life > 0, outcomes };
+}
+
+function copyForecastShip(ship: Ship, time: number): Ship & { collisionActive: boolean } {
+  return { ...ship, collisionActive: isShipObstacle(ship, time), position: ship.position.clone(), previous: ship.previous.clone(),
+    quaternion: ship.quaternion.clone(), previousQuaternion: ship.previousQuaternion.clone(), velocity: ship.velocity.clone(),
+    wreck: ship.wreck ? { ...ship.wreck, position: ship.wreck.position.clone(), rotation: ship.wreck.rotation.clone(), velocity: ship.wreck.velocity.clone() } : null };
+}
+
+/** Shared product launch rule. Includes the launch tick's immediate payload step, then splash and the first 80m.
+ * The aircraft/ships have already moved in this tick; its wave time and ship sweep still start one tick earlier.
+ * No future combat or aircraft input is read.
+ */
+export function checkGuidedTorpedoRelease(aircraft: OrdnanceAircraft, ships: readonly Ship[], time: number): GuidedTorpedoReleaseCheck {
+  const envelope = checkTorpedoRelease(aircraft, time);
+  const reject = (reason: TorpedoReleaseRejection): GuidedTorpedoReleaseCheck => ({ ...envelope, allowed: false, reason, targetShipId: null });
+  if (!envelope.allowed) return reject(envelope.reason ?? 'invalid');
+  const live = ships.filter(ship => ship.health > 0 && ship.team !== aircraft.team && validShip(ship));
+  if (!live.length) return reject('no-target');
+  const predicted = ships.filter(ship => validShip({ ...ship, collisionActive: isShipObstacle(ship, time) })).map(ship => copyForecastShip(ship, time));
+  const geometry = shipSweeps(predicted);
+  const nextFrame = (endTime: number) => {
+    for (const ship of predicted) {
+      advanceShipMotion(ship, endTime, FIXED_DT); ship.collisionActive = isShipObstacle(ship, endTime);
+    }
+    for (const sweep of geometry) {
+      sweep.before.copy(sweep.ship.previousQuaternion ?? sweep.ship.quaternion).normalize();
+      sweep.after.copy(sweep.ship.quaternion).normalize();
+    }
+    return geometry.filter(sweep => sweep.ship.health > 0 || sweep.ship.collisionActive);
+  };
+  const falling = release(-1, aircraft, 'torpedo')!;
+  const launchStepTime = time - FIXED_DT;
+  let frameTime = launchStepTime, sweeps: readonly ShipSweep[] = geometry, launchFrame = true;
+  while (falling.phase === 'air' && falling.life > 0) {
+    if (launchFrame) launchFrame = false;
+    else sweeps = nextFrame(frameTime + FIXED_DT);
+    const result = advanceOrdnance(falling, sweeps, frameTime, FIXED_DT, 0, 1, true);
+    if (!result.active || result.outcomes.some(outcome => outcome.type === 'dud')) return reject('unsafe-entry');
+    if (falling.phase === 'air') frameTime += FIXED_DT;
+  }
+  if (falling.phase !== 'water') return reject('unsafe-entry');
+  const splashTime = launchStepTime + falling.age, splashFraction = Math.max(0, Math.min(1, (splashTime - frameTime) / FIXED_DT));
+  const t = ORDNANCE_TUNING.torpedo;
+  const candidates = live.filter(ship => {
+    const sweep = sweeps.find(item => item.ship.id === ship.id);
+    if (!sweep || !finiteVector(ship.velocity)) return false;
+    const speed = ship.velocity.length(), position = sweep.ship.previous.clone().lerp(sweep.ship.position, splashFraction);
+    // The air leg consumes lifetime; it never increases the underwater range budget.
+    const distance = Math.hypot(position.x - falling.position.x, position.z - falling.position.z);
+    return speed < t.waterSpeed && distance / (t.waterSpeed - speed) <= falling.life + EPS;
+  }).map(ship => ({ ship, round: { ...falling, position: falling.position.clone(), previous: falling.position.clone(),
+    velocity: falling.velocity.clone(), targetShipId: ship.id, guidanceLost: false } as OrdnanceRound, eligible: true }));
+  if (!candidates.length) return reject('out-of-range');
+  // Inspect the real first hull contact, rather than measuring 80m to the ship's centre.
+  const checkArming = (dt: number, from = 0) => {
+    for (const candidate of candidates) {
+      if (!candidate.eligible || candidate.round.waterDistance + EPS >= t.armingDistance || candidate.round.life <= 0) continue;
+      const result = advanceOrdnance(candidate.round, sweeps, frameTime + from * FIXED_DT, dt, from, 1);
+      if (result.outcomes.some(outcome => outcome.type === 'dud') || (!result.active && !result.outcomes.some(outcome => outcome.type === 'impact')))
+        candidate.eligible = false;
+    }
+  };
+  const remainder = FIXED_DT * (1 - splashFraction);
+  if (remainder > EPS) checkArming(remainder, splashFraction);
+  frameTime += FIXED_DT;
+  while (candidates.some(candidate => candidate.eligible && candidate.round.life > 0 && candidate.round.waterDistance + EPS < t.armingDistance)) {
+    sweeps = nextFrame(frameTime + FIXED_DT); checkArming(FIXED_DT); frameTime += FIXED_DT;
+  }
+  const origin = releasePosition(aircraft), forward = new Vector3(0, 0, -1).applyQuaternion(aircraft.quaternion.clone().normalize());
+  forward.y = 0; forward.normalize();
+  const ranked = candidates.filter(candidate => candidate.eligible).map(candidate => {
+    const offset = candidate.ship.position.clone().sub(origin); offset.y = 0;
+    const distance = offset.length(), alignment = distance > EPS ? forward.dot(offset) / distance : 1;
+    return { id: candidate.ship.id, distance, alignment };
+  }).sort((a, b) => b.alignment - a.alignment || a.distance - b.distance || a.id - b.id);
+  return ranked.length ? { ...envelope, targetShipId: ranked[0].id } : reject('out-of-range');
 }

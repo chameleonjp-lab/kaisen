@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, startGame } from '../src/simulation';
-import { missionProgress, payloadReadout, torpedoReleaseCue, placeHudNotice, type HudRect } from '../src/mission-hud';
+import { missionProgress, payloadReadout, payloadRejectionNotice, torpedoReleaseCue, placeHudNotice, type HudRect } from '../src/mission-hud';
 import { ruleSections } from '../src/rules-guide';
 
 test('formation kill tallies start at zero and retain prior kills through enemy replenishment', () => {
@@ -19,6 +19,14 @@ test('payload readout distinguishes one remaining bomb from an action number and
   assert.equal(payloadReadout(2, 0), '残り2発'); assert.equal(payloadReadout(1, 0), '残り1発');
   assert.equal(payloadReadout(0, 360), '装填 6.0秒'); assert.equal(payloadReadout(0, 1), '装填 0.1秒');
 });
+test('torpedo rejection notices cover guided-target reasons and always provide an unknown fallback', () => {
+  assert.equal(payloadRejectionNotice('no-target'), '誘導魚雷：生存する敵艦がいません');
+  assert.equal(payloadRejectionNotice('out-of-range'), '誘導魚雷：敵艦との距離と投下位置を調整してください');
+  assert.equal(payloadRejectionNotice('unsafe-entry'), '誘導魚雷：安全に着水できる位置と姿勢へ移動してください');
+  assert.equal(payloadRejectionNotice('altitude'), '魚雷：高度20〜80mを目安に');
+  assert.equal(payloadRejectionNotice(undefined), 'この姿勢では投下できません');
+  assert.equal(payloadRejectionNotice('unexpected-reason'), 'この姿勢では投下できません');
+});
 test('rule guide shows only the active device instructions and current keyboard bindings', () => {
   for (const mode of ['easy','normal'] as const) {
     const touch = JSON.stringify(ruleSections({ mode, input: 'touch', keyboardDescription: 'CUSTOM-KEYS' }));
@@ -35,6 +43,9 @@ test('torpedo cue follows real ammunition, cooldown, capacity and envelope rejec
   const { releaseBomb } = await import('../src/ordnance');
   const state = createGame(123, 'normal'); startGame(state);
   state.player.position.set(0, 50, 0); state.player.pitch = 0; state.player.bank = 0; state.player.quaternion.identity();
+  state.ships.forEach(ship => { ship.health = 0; });
+  const target = state.ships[0]; target.health = target.maxHealth;
+  target.position.set(800, 0, -700); target.previous.copy(target.position); target.velocity.set(0, 0, 0);
   const check = (ready: boolean, short: string, text: RegExp) => {
     const before = JSON.stringify(state), cue = torpedoReleaseCue(state);
     assert.equal(cue.ready, ready); assert.equal(cue.short, short); assert.match(cue.text, text);
@@ -52,7 +63,10 @@ test('torpedo cue follows real ammunition, cooldown, capacity and envelope rejec
   state.player.position.y = 50; check(false, '減速', /450km\/h以下/);
   state.player.speed = 110; state.player.pitch = .3; check(false, '機首水平', /機首を水平/);
   state.player.pitch = 0; state.player.bank = .5; check(false, '翼を水平', /翼を水平/);
-  state.player.bank = 0; check(true, '投下可能', /投下可能/);
+  state.player.bank = 0; check(true, '投下可能', /誘導魚雷：投下可能/);
+  target.health = 0; check(false, '標的なし', /生存する敵艦/); target.health = target.maxHealth;
+  target.position.set(30000, 0, 30000); target.previous.copy(target.position); check(false, '射程外', /距離と投下位置/);
+  target.position.set(800, 0, -700); target.previous.copy(target.position);
   state.player.speed = NaN; check(false, '投下不可', /姿勢/);
   state.player.speed = 110; state.player.health = 0; check(false, '投下不可', /投下できません/);
 });
@@ -62,7 +76,8 @@ test('torpedo cue tracks actual bomb cooldown, launch, six-second reload and pau
   const state=createGame(123,'normal'), neutral={turn:0,climb:0,fire:false,loop:false};
   for(const p of [...state.allies,...state.enemies])p.health=0;
   for(const ship of state.ships)ship.health=0;
-  state.ships[0].health=state.ships[0].maxHealth;state.ships[0].position.set(30000,0,30000);state.ships[0].previous.copy(state.ships[0].position);
+  state.ships[0].health=state.ships[0].maxHealth;state.ships[0].position.set(800,0,-700);state.ships[0].previous.copy(state.ships[0].position);
+  state.ships[0].velocity.set(0,0,0);state.ships[0].guns.forEach(gun=>{gun.health=0;});
   state.player.position.set(0,50,0);state.player.previous.copy(state.player.position);startGame(state);
   stepGame(state,{...neutral,bomb:true});assert.equal(torpedoReleaseCue(state).short,'投下待ち');
   stepGame(state,{...neutral,torpedo:true});assert.equal(state.events.find(e=>e.type==='payload-rejected')?.detail,'cooldown');

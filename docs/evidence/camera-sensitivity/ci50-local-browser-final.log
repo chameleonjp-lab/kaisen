@@ -1,0 +1,22 @@
+[WebServer] (node:18) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:65) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 10:31:29 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  1 [chromium] › browser-tests/00-easy-victory.spec.ts:78:1 › physical circular-stick inputs reach the victory screen (6.0m)
+[WebServer] 10:37:28 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/00-normal-victory.spec.ts:12:1 › Normal mixed real touch and keyboard inputs reach the victory screen (3.7m)
+(node:164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 10:41:11 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  3 [chromium] › browser-tests/naval-payload.spec.ts:13:1 › payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock (16.7s)
+
+  Slow test file: [chromium] › browser-tests/00-easy-victory.spec.ts (6.0m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  3 passed (10.0m)

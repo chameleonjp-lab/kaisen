@@ -1,0 +1,141 @@
+{
+  "run": 53,
+  "runId": 38273855546,
+  "head": "14190408feb4b09d71d914c986653520d9eeecc4",
+  "tree": "9901ae860fabf6e55c507484de4a59549b8ebceb",
+  "runUrl": "https://github.com/chameleonjp-lab/kaisen/actions/runs/38273855546",
+  "artifact": {
+    "id": 11759132178,
+    "bytes": 18322928,
+    "sha256": "4d7981e40a84add388e5454241705575425428def1476fce1f730c4197608920"
+  },
+  "browser": {
+    "startTime": "2026-10-12T15:59:31.364Z",
+    "duration": 1169999.372,
+    "expected": 53,
+    "skipped": 0,
+    "unexpected": 5,
+    "flaky": 0
+  },
+  "routes": {
+    "easy": {
+      "tick": 17980,
+      "elapsed": 299.6666666666667,
+      "outcome": "defeat",
+      "deathCause": "naval-fire",
+      "bombs": 2,
+      "bombRequests": 0,
+      "sampleCount": 1155,
+      "sampleGapTicks": {
+        "min": 6,
+        "median": 16.0,
+        "max": 45
+      },
+      "observationToAcknowledgedTick": {
+        "min": 0,
+        "median": 8,
+        "max": 36,
+        "note": "Acknowledgement upper bound; consumed tick is separately recorded in audit"
+      },
+      "pauseReasons": [],
+      "lastInterruption": null,
+      "renderRecoveries": 0,
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 67,
+        "lastCompletedPendingMs": 218.79999999981374,
+        "completedFrameIntervalMs": 222.39999999990687,
+        "submittedCount": 2005,
+        "completedCount": 2004,
+        "skippedCount": 7920
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "readyCue": {
+        "tick": 1460,
+        "ready": "true",
+        "guide": {
+          "position": {
+            "x": 141.4234044248244,
+            "y": -0.3514436434211671,
+            "z": -821.0788532433052
+          },
+          "time": 13.550985935444738,
+          "kind": "blast",
+          "affected": [
+            {
+              "shipId": 102,
+              "damage": 1.2385515279365045
+            }
+          ]
+        }
+      },
+      "sourceArtifactFile": "test-results/evidence/touch-victory-state.json",
+      "sourceSha256": "a2dc58481b70b6db123c127bb516b36b95e12eb6960219d4662591f236635ec2"
+    },
+    "normal": {
+      "tick": 4014,
+      "elapsed": 66.9,
+      "outcome": "defeat",
+      "deathCause": "aircraft-collision",
+      "bombs": 2,
+      "bombRequests": 0,
+      "sampleCount": 205,
+      "sampleGapTicks": {
+        "min": 9,
+        "median": 18.0,
+        "max": 56
+      },
+      "observationToAcknowledgedTick": {
+        "min": 2,
+        "median": 11,
+        "max": 42,
+        "note": "Acknowledgement upper bound; consumed tick is separately recorded in audit"
+      },
+      "pauseReasons": [],
+      "lastInterruption": null,
+      "renderRecoveries": 0,
+      "queue": {
+        "status": "pending",
+        "failure": null,
+        "pendingMs": 89.9000000001397,
+        "lastCompletedPendingMs": 238.69999999995343,
+        "completedFrameIntervalMs": 258.39999999990687,
+        "submittedCount": 415,
+        "completedCount": 414,
+        "skippedCount": 1695
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "readyCue": {
+        "tick": 1636,
+        "ready": "true",
+        "guide": {
+          "position": {
+            "x": 35.45745323314335,
+            "y": 0.6703941071312521,
+            "z": -798.251474991306
+          },
+          "time": 13.543070038526269,
+          "kind": "blast",
+          "affected": [
+            {
+              "shipId": 102,
+              "damage": 249.20562337469897
+            }
+          ]
+        }
+      },
+      "sourceArtifactFile": "test-results/evidence/normal-victory-route-state.json",
+      "sourceSha256": "7af9e3a836bf725905c8f3786f5c53e52f6c9c09f5721096c292383aa08f66c2"
+    }
+  },
+  "faviconEvidence": {
+    "trace": "test-results/game-long-interruption-pau-48969-audio-mute-releases-sources-chromium/trace.zip",
+    "console404Url": "http://127.0.0.1:4176/favicon.ico"
+  },
+  "limits": "Single CI53 run; no proof of general GPU root cause or hardware usability. No watchdog/quality/victory/timeout criteria changed."
+}

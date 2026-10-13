@@ -1,0 +1,123 @@
+{
+  "sourceHead": "4755c42bd451967a41a053017797aa187e4b40d9",
+  "sourceRun": "https://github.com/chameleonjp-lab/kaisen/actions/runs/37237056777",
+  "sourceFixtureSha256": "fa519da268334d51a1007249ae7792bf32ca05314b4e7a9cfd66757a761d34a6",
+  "decisionTick": 7832,
+  "steeringTick": 7837,
+  "dodgeExpiryTick": 7952,
+  "elapsed": 130.53333333333333,
+  "player": {
+    "kind": "aircraft",
+    "id": 1,
+    "team": "friendly",
+    "role": "player",
+    "position": {
+      "x": -586.7555817337,
+      "y": 273.7562576887314,
+      "z": -497.25682678704226
+    },
+    "previous": {
+      "x": -588.5512698953213,
+      "y": 272.9850478492466,
+      "z": -497.624639951484
+    },
+    "quaternion": [
+      0.34542959354259145,
+      -0.6878652665169871,
+      -0.0381067323064018,
+      0.6372343744474576
+    ],
+    "yaw": -1.7728330347731334,
+    "pitch": 0.39825947846201704,
+    "bank": 0.6043862611175684,
+    "speed": 119.31625878844038,
+    "health": 52.00000000000021,
+    "maxHealth": 80,
+    "mg": 114,
+    "cannon": 36,
+    "reloadTicksRemaining": 0,
+    "generation": "initial",
+    "fireClock": 0,
+    "cannonClock": 0,
+    "bombs": 2,
+    "torpedoes": 1,
+    "bombReloadTicks": 0,
+    "torpedoReloadTicks": 0,
+    "payloadCooldown": 0,
+    "aiBomb": false,
+    "loopProgress": 0,
+    "loopCooldown": 0,
+    "mode": "pursue",
+    "age": 130.53333333332935,
+    "targetId": null,
+    "aiPhase": "approach",
+    "aiPhaseTime": 0,
+    "aiWaypoint": {
+      "x": 0,
+      "y": 220,
+      "z": 240
+    },
+    "aiTurn": 0,
+    "aiClimb": 0,
+    "aiFire": false
+  },
+  "threat": {
+    "kind": "aircraft",
+    "id": 6400,
+    "team": "enemy",
+    "role": "interceptor",
+    "position": {
+      "x": -393.1152589133887,
+      "y": 409.3722744207618,
+      "z": -467.7217011905316
+    },
+    "previous": {
+      "x": -391.5864882372032,
+      "y": 410.46182126045164,
+      "z": -467.5375764370596
+    },
+    "quaternion": [
+      -0.24426986351875474,
+      0.625720877372707,
+      0.18113195833164153,
+      0.7183291940798474
+    ],
+    "yaw": 1.4509339188117671,
+    "pitch": -0.6157959425202266,
+    "bank": 0.05572402191988226,
+    "speed": 113.17841877275866,
+    "health": 80,
+    "maxHealth": 80,
+    "mg": 288,
+    "cannon": 96,
+    "reloadTicksRemaining": 0,
+    "generation": "reinforcement",
+    "fireClock": 0.14666666666666672,
+    "cannonClock": 0.8333333333333329,
+    "bombs": 2,
+    "torpedoes": 1,
+    "bombReloadTicks": 0,
+    "torpedoReloadTicks": 0,
+    "payloadCooldown": 0,
+    "aiBomb": false,
+    "loopProgress": 0,
+    "loopCooldown": 0,
+    "mode": "pursue",
+    "age": 10.533333333333436,
+    "targetId": 1,
+    "aiPhase": "attack",
+    "aiPhaseTime": 10.533333333333436,
+    "aiWaypoint": {
+      "x": 698.945226560366,
+      "y": 675.1617589472256,
+      "z": -718.5851189187526
+    },
+    "aiTurn": 0.04851751461287357,
+    "aiClimb": -1,
+    "aiFire": true
+  },
+  "captureCommand": "# Run from an isolated checkout of 6d5fa6b57c0e7bd1fed04f60c883ba82a8152751 with its pinned dependencies.\nnode --import tsx --input-type=module <<'NODE'\nimport {createGame,startGame,stepGame} from './src/simulation.ts';\nimport {createHash} from 'node:crypto';\nimport {readFileSync} from 'node:fs';\nconst bytes=readFileSync('./tests/fixtures/normal-collision-ci38.json');\nconst trace=JSON.parse(bytes.toString('utf8'));\nconst state=createGame(trace.seed,trace.config);startGame(state);\nlet index=0,held={turn:0,climb:0,fire:false,loop:false};\nwhile(state.phase==='playing'&&state.tick<trace.decisionTick){\n while(index<trace.entries.length&&trace.entries[index][0]<=state.tick+1){\n  const row=trace.entries[index++];\n  held=Object.fromEntries(trace.columns.slice(1).map((key,i)=>[key,row[i+1]]));\n }\n stepGame(state,held);\n}\nconst threat=state.enemies.find(enemy=>enemy.id===6400);\nconsole.log(JSON.stringify({sourceHead:trace.sourceHead,sourceRun:trace.sourceRun,\n sourceFixtureSha256:createHash('sha256').update(bytes).digest('hex'),\n decisionTick:trace.decisionTick,steeringTick:trace.steeringTick,dodgeExpiryTick:trace.dodgeExpiryTick,\n elapsed:state.elapsed,player:state.player,threat},null,2));\nNODE",
+  "captureHead": "6d5fa6b57c0e7bd1fed04f60c883ba82a8152751",
+  "captureTree": "c4dc63d4545146657bf00d7a85b1e95925be0285",
+  "captureNote": "sourceHead/sourceRun identify the original CI38 input trace. The pose was captured by replaying it in the byte-verified 181-blob main checkout at captureHead, before the manual-rate change."
+}

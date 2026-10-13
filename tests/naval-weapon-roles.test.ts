@@ -54,6 +54,7 @@ test('invalid torpedo envelope or saturated payload pool consumes no ammunition'
   const state = quiet(); stepGame(state, { ...neutral, torpedo: true });
   assert.equal(state.player.torpedoes, 1); assert.equal(state.ordnance.length, 0);
   assert.equal(state.events.find(event => event.type === 'payload-rejected')?.detail, 'altitude');
+  state.ships[0].position.set(800, 0, -700); state.ships[0].previous.copy(state.ships[0].position);
   state.player.position.y = 40; stepGame(state, neutral); stepGame(state, { ...neutral, torpedo: true });
   assert.equal(state.player.torpedoes, 0); assert.equal(state.ordnance[0].kind, 'torpedo');
   const full = quiet(); full.ordnance = Array.from({ length: MAX_ORDNANCE }, (_, id) => releaseBomb(id + 40000, full.player)!);

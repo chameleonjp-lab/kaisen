@@ -1,0 +1,53 @@
+✔ circle A wins over closer off-circle B in either array order (4.224064ms)
+✔ equal rank has a deterministic ID tie break (0.391185ms)
+✔ 20cm distance inversion does not reverse a held off-circle target (0.506435ms)
+✔ steering owner suppresses target pull even on a small movement or circle promotion (0.232732ms)
+✔ strong reverse manual input remains intact (0.216017ms)
+✔ dead or out-of-view held targets are released, and no-target clears the lock (0.344537ms)
+✔ new target identity never inherits the previous identity (0.153416ms)
+✔ new pull has bounded rates and losing all targets clears stale pull (0.288495ms)
+✔ Normal fire flag does not change steering requests (0.771285ms)
+✔ fire phase revalidates the tick selection without switching to a different ID (0.5573ms)
+✔ real capital-ship solids exclude hidden aircraft without excluding the hostile ship itself (1.708023ms)
+✔ source motion parity across slow/cruise/fast throttle and changing stick traces (10.895759ms)
+✔ five second source loop restores heading and pitch then has two second cooldown (0.983648ms)
+✔ intent revision cancels a loop smoothly and throttle retains source mode semantics (1.212384ms)
+✔ manual pitch and yaw share signed per-second rates across the speed envelope (1.217742ms)
+✔ manual keyboard diagonals share one circular authority budget in actual camera angle (0.189128ms)
+✔ actual camera rate keeps direction, strength, pitch and yaw symmetric in both views (0.894426ms)
+✖ camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplier (5.385692ms)
+✔ bank keeps its established camera offset while no longer steering the optical axis (0.227885ms)
+✔ manual pitch reverses smoothly away from level, neutral return obeys the same rate, and limits hold (1.564762ms)
+✔ three pointer owners preserve micro-steering through fire/lever release and cancel, then clear on recovery (4.210444ms)
+✔ legacy absolute-pitch test commands map to the exact old one-tick delta until the new rate limit binds (0.925251ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 21
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 355.217983
+
+✖ failing tests:
+
+test at tests/flight.test.ts:1:7866
+✖ camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplier (5.385692ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(Math.abs(boostedAngle / visibleAngle - 1.65) < 1e-12)
+  
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/flight.test.ts:161:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

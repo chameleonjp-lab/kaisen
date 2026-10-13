@@ -1,0 +1,32 @@
+{
+  "cameraRate": {
+    "count": 11520,
+    "maxError": 1.2602630527699943e-15,
+    "worst": {
+      "mode": "easy",
+      "speed": 141,
+      "pitch": -0.9,
+      "bank": -0.72,
+      "yaw": 3.14,
+      "stickAngle": 4.71238898038469,
+      "strength": 0.01,
+      "measured": 0.00010823999999873974,
+      "expected": 0.00010824000000000001
+    }
+  },
+  "loopCancellation": {
+    "count": 756,
+    "maxCancelAngle": 0.05891071948458971,
+    "cancelWorst": {
+      "mode": "normal",
+      "startPitch": -0.95,
+      "ticks": 1,
+      "turn": 1,
+      "climb": 0,
+      "beforePitch": -0.9290559861442149,
+      "afterPitch": -0.9153856058937643,
+      "measured": 0.05891071948458971
+    },
+    "maxFirstPitchStep": 0.0143106209253159
+  }
+}

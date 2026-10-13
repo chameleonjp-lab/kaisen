@@ -6,7 +6,7 @@ export default defineConfig({
   workers: 1,
   projects: [
     { name: "webkit-ui", testMatch: /(?:mobile-settings-ui|throttle-lever-ui)\.spec\.ts/, use: { browserName: "webkit", launchOptions: {} } },
-    { name: "chromium", use: { browserName: "chromium" } },
+    { name: "chromium", use: { browserName: "chromium", channel: "chromium" } },
   ],
   retries: 0,
   reporter: [

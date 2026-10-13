@@ -1,0 +1,60 @@
+[WebServer] (node:19) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:32) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:66) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 10:50:09 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✘  1 [chromium] › browser-tests/00-easy-controls.spec.ts:4:1 › Easy touch commands are consumed, payloads consume one round, and pause freezes the mission (13.5s)
+(node:150) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 10:50:23 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/00-normal-controls.spec.ts:4:1 › Normal touch and manual fire are consumed, payloads consume one round, and pause clears inputs (9.0s)
+[WebServer] 10:50:32 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  3 [chromium] › browser-tests/bomb-guide.spec.ts:133:39 › easy bomb cue keeps ammo/reload and pause state legible through actual buttons (10.8s)
+[WebServer] 10:50:43 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  4 [chromium] › browser-tests/bomb-guide.spec.ts:133:39 › normal bomb cue keeps ammo/reload and pause state legible through actual buttons (12.2s)
+[WebServer] 10:50:55 AM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  5 [chromium] › browser-tests/naval-payload.spec.ts:14:1 › payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock (16.3s)
+
+
+  1) [chromium] › browser-tests/00-easy-controls.spec.ts:4:1 › Easy touch commands are consumed, payloads consume one round, and pause freezes the mission 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+       at mission-input-contract.ts:51
+
+      49 |     }
+      50 |     const beforePayload = await read();
+    > 51 |     expect(await releasePayloadAndObserve(page, cdp, origin, 'bomb')).toBe(true);
+         |                                                                       ^
+      52 |     released = await read();
+      53 |     expect(released.player.bombs).toBe(beforePayload.player.bombs - 1);
+      54 |     expect(released.controlsInput.steerPointer).toBe(neutral.steerPointer);
+        at inspectMissionInputContract (/workspace/scratch/ef821c8b71c8/kaisen/browser-tests/mission-input-contract.ts:51:71)
+        at /workspace/scratch/ef821c8b71c8/kaisen/browser-tests/00-easy-controls.spec.ts:5:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../local-browser/00-easy-controls-Easy-touc-381c3-d-pause-freezes-the-mission-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../local-browser/00-easy-controls-Easy-touc-381c3-d-pause-freezes-the-mission-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../local-browser/00-easy-controls-Easy-touc-381c3-d-pause-freezes-the-mission-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../local-browser/00-easy-controls-Easy-touc-381c3-d-pause-freezes-the-mission-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › browser-tests/00-easy-controls.spec.ts:4:1 › Easy touch commands are consumed, payloads consume one round, and pause freezes the mission 
+  4 passed (1.1m)

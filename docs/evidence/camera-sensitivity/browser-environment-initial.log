@@ -1,0 +1,124 @@
+[WebServer] (node:18) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:65) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 8:21:11 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  1 [chromium] › browser-tests/00-00-input-method.spec.ts:5:1 › changing from touch to mouse or back cannot move a pressed home control (5.6s)
+[WebServer] 8:21:17 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  2 [chromium] › browser-tests/easy-ship-tracking.spec.ts:5:1 › Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude (13.5s)
+[WebServer] 8:21:30 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✘  3 [chromium] › browser-tests/game.spec.ts:158:1 › touch steering, two-finger release, loop and explicit resume (5.5s)
+(node:179) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 8:21:36 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  4 [chromium] › browser-tests/modes.spec.ts:41:3 › Normal visible controls and bore sight 393x852 (6.2s)
+[WebServer] 8:21:42 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  5 [chromium] › browser-tests/modes.spec.ts:41:3 › Normal visible controls and bore sight 852x393 (5.6s)
+[WebServer] 8:21:48 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  6 [chromium] › browser-tests/modes.spec.ts:41:3 › Normal visible controls and bore sight 320x568 (5.1s)
+[WebServer] 8:21:53 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  7 [chromium] › browser-tests/modes.spec.ts:41:3 › Normal visible controls and bore sight 568x320 (4.8s)
+[WebServer] 8:21:58 PM [vite] (client) [console.warn] THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+  ✓  8 [chromium] › browser-tests/modes.spec.ts:81:1 › Normal real simultaneous touch steering, fire and throttle release on pause and cancel (7.1s)
+
+
+  1) [chromium] › browser-tests/game.spec.ts:158:1 › touch steering, two-finger release, loop and explicit resume 
+
+    Error: No external rankings, analytics, fonts, or source-game calls
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 55
+
+    - Array []
+    + Array [
+    +   "http://127.0.0.1:4276/",
+    +   "http://127.0.0.1:4276/@vite/client",
+    +   "http://127.0.0.1:4276/src/main.ts",
+    +   "http://127.0.0.1:4276/@fs/workspace/scratch/94ba14497a76/kaisen/node_modules/vite/dist/client/env.mjs",
+    +   "http://127.0.0.1:4276/src/bomb-guide.ts",
+    +   "http://127.0.0.1:4276/src/style.css",
+    +   "http://127.0.0.1:4276/src/control-settings.css",
+    +   "http://127.0.0.1:4276/src/simulation.ts",
+    +   "http://127.0.0.1:4276/src/mission.ts",
+    +   "http://127.0.0.1:4276/src/input.ts",
+    +   "http://127.0.0.1:4276/src/control-settings.ts",
+    +   "http://127.0.0.1:4276/src/keyboard-settings.ts",
+    +   "http://127.0.0.1:4276/src/mission-hud.ts",
+    +   "http://127.0.0.1:4276/src/rules-guide.ts",
+    +   "http://127.0.0.1:4276/src/ally-announcements.ts",
+    +   "http://127.0.0.1:4276/src/aim-indicator.ts",
+    +   "http://127.0.0.1:4276/src/scene.ts",
+    +   "http://127.0.0.1:4276/src/audio.ts",
+    +   "http://127.0.0.1:4276/src/naval.ts",
+    +   "http://127.0.0.1:4276/src/ocean.ts",
+    +   "http://127.0.0.1:4276/src/ordnance.ts",
+    +   "http://127.0.0.1:4276/src/ship-motion.ts",
+    +   "http://127.0.0.1:4276/src/ship-wreck.ts",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three.js?v=1aef74dc",
+    +   "http://127.0.0.1:4276/src/flight.ts",
+    +   "http://127.0.0.1:4276/src/aircraft-damage.ts",
+    +   "http://127.0.0.1:4276/src/flight-target.ts",
+    +   "http://127.0.0.1:4276/src/scoring.ts",
+    +   "http://127.0.0.1:4276/src/ai.ts",
+    +   "http://127.0.0.1:4276/src/flight-assist.ts",
+    +   "http://127.0.0.1:4276/src/ammunition.ts",
+    +   "http://127.0.0.1:4276/src/naval-damage.ts",
+    +   "http://127.0.0.1:4276/src/sea-contact.ts",
+    +   "http://127.0.0.1:4276/src/throttle-control.ts",
+    +   "http://127.0.0.1:4276/src/throttle-lever.ts",
+    +   "http://127.0.0.1:4276/src/settings-storage.ts",
+    +   "http://127.0.0.1:4276/src/flight-view.ts",
+    +   "http://127.0.0.1:4276/src/control-obstacles.ts",
+    +   "http://127.0.0.1:4276/src/dialog-focus.ts",
+    +   "http://127.0.0.1:4276/src/aircraft.ts",
+    +   "http://127.0.0.1:4276/src/gun-sight.ts",
+    +   "http://127.0.0.1:4276/src/aircraft-batch.ts",
+    +   "http://127.0.0.1:4276/src/aircraft-tracers.ts",
+    +   "http://127.0.0.1:4276/src/ships.ts",
+    +   "http://127.0.0.1:4276/src/ordnance-view.ts",
+    +   "http://127.0.0.1:4276/src/bomb-blast.ts",
+    +   "http://127.0.0.1:4276/src/atmosphere.ts",
+    +   "http://127.0.0.1:4276/src/render-queue.ts",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three.module-DgWkXQM7.js?v=1aef74dc",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three_addons_lines_LineSegments2__js.js?v=1aef74dc",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three_addons_lines_LineSegmentsGeometry__js.js?v=1aef74dc",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three_addons_lines_LineMaterial__js.js?v=1aef74dc",
+    +   "http://127.0.0.1:4276/node_modules/.vite/deps/three_addons_utils_BufferGeometryUtils__js.js?v=1aef74dc",
+    + ]
+
+      72 |     (page as any).__external,
+      73 |     "No external rankings, analytics, fonts, or source-game calls",
+    > 74 |   ).toEqual([]);
+         |     ^
+      75 |   expect((page as any).__testErrors, "No runtime or shader errors").toEqual([]);
+      76 | });
+      77 | test.afterAll(async () => {
+        at /workspace/scratch/2a8e882a435f/kaisen/browser-tests/game.spec.ts:74:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/camera-followup/game-touch-steering-two-fi-242bf-se-loop-and-explicit-resume-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/camera-followup/game-touch-steering-two-fi-242bf-se-loop-and-explicit-resume-chromium/error-context.md
+
+    Error Context: test-results/camera-followup/game-touch-steering-two-fi-242bf-se-loop-and-explicit-resume-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/camera-followup/game-touch-steering-two-fi-242bf-se-loop-and-explicit-resume-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/camera-followup/game-touch-steering-two-fi-242bf-se-loop-and-explicit-resume-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › browser-tests/game.spec.ts:158:1 › touch steering, two-finger release, loop and explicit resume 
+  7 passed (55.5s)

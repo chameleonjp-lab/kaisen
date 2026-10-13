@@ -1,0 +1,124 @@
+{
+  "schema": "ci54-driver-candidate-v1",
+  "baseHead": "efadcb17ab2b7ab72504044aefa030fc51b13c01",
+  "baseTree": "5b40ebf9687d103e88b5b3a563ecd9439321c1b8",
+  "sourceHashes": {
+    "browser-tests/00-easy-victory.spec.ts": "aa5ed9f0cee57a933c082d8595a327d777b7c88bf65bc3a784b4bc60948718eb",
+    "browser-tests/00-normal-victory.spec.ts": "e80dfde0447d3cfdac59f611c14ce49247f6db4e45d569992100e90fef8f6a3f",
+    "browser-tests/touch-command.ts": "0377a0ab482bfcf1cdf44069759e4d240fbd92cda1a2f1b4404deda637382008",
+    "browser-tests/naval-payload.spec.ts": "f3ffaac4e16c84429da98d1fd4544de981d6858e99183e43f9048ed0c1f15ce5",
+    "browser-tests/reload.spec.ts": "51b2332e3d25d1d05a34e20565c34e22e64d51d0a3ce858ff3afb8d063c36283"
+  },
+  "scope": "Browser input driver and read-only polling only; product source/assets/dependency/official workflow unchanged from base. Pilot strategy unchanged after rejecting universal neutral steering.",
+  "validation": {
+    "unit": {
+      "pass": 334,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 45646.555866,
+      "exit": 0
+    },
+    "build": {
+      "exit": 0,
+      "existingWarning": "JS chunk >500kB",
+      "assets": [
+        "index-uMwgQIyS.js",
+        "index-CC4z0vjG.css"
+      ]
+    },
+    "shortBrowser": {
+      "pass": 3,
+      "fail": 0,
+      "exit": 0,
+      "cases": [
+        "naval ownership, stale ready skip, torpedo and paused rearm",
+        "read-only clock/input phases and world immutability",
+        "real touch reload ring and pause freeze"
+      ]
+    },
+    "victoryBrowser": {
+      "status": "passed",
+      "cases": [
+        "Easy physical touch victory",
+        "Normal mixed real-input victory"
+      ],
+      "easy": {
+        "status": "passed",
+        "tick": 15441,
+        "elapsed": 257.35,
+        "health": 80,
+        "allShipsCleared": true,
+        "allEnemiesCleared": true,
+        "actualBombs": 9,
+        "staleCueSkips": 1,
+        "errors": []
+      },
+      "pass": 2,
+      "fail": 0,
+      "exit": 0,
+      "normal": {
+        "status": "passed",
+        "tick": 13747,
+        "elapsed": 229.11666666666667,
+        "health": 80,
+        "allShipsCleared": true,
+        "allEnemiesCleared": true,
+        "actualBombs": 10,
+        "staleCueSkips": 2,
+        "errors": [],
+        "renderRecoveries": 0,
+        "auditRows": 1264,
+        "dropped": 0,
+        "stats": {
+          "playerAircraftKills": 6,
+          "playerShipKills": 4,
+          "allyAircraftKills": 15,
+          "allyShipKills": 0,
+          "shots": 778,
+          "hits": 85,
+          "loops": 0,
+          "damageTaken": 63.82400000000014,
+          "friendlyDamage": 0,
+          "friendlyKills": 0,
+          "score": 25869
+        }
+      },
+      "durationMs": 509004.69299999997
+    },
+    "browserList": {
+      "cases": 59,
+      "files": 18,
+      "chromium": 49,
+      "webkit": 10,
+      "exit": 0
+    },
+    "independentReview": "No mandatory findings on frozen five-path driver/polling delta.",
+    "officialAllGate": "not_run_before_commit_creation; required on exact final new head",
+    "productionManifest": "not_run_before_commit_creation; exact real commit SHA required"
+  },
+  "localEnvironment": {
+    "node": "24.19.0",
+    "playwright": "1.61.1",
+    "binary": "Sparticuz Chromium headless_shell 153.0.8010.0",
+    "viewport": "393x852",
+    "dpr": 1,
+    "workers": 1,
+    "retries": 0,
+    "deviceAcceptance": "No physical iPhone acceptance; local Japanese fonts missing. Official CI full Chromium149 differs."
+  },
+  "unchangedConditions": [
+    "600s simulation bound",
+    "all live aircraft and ships cleared",
+    "HP>0",
+    "real controls",
+    "Normal at most one ordinary render recovery",
+    "1s render watchdog",
+    "graphics arguments",
+    "official verify workflow 30 minute budget",
+    "all59browser cases including WebKit10"
+  ],
+  "buildAssetHashes": {
+    "index-uMwgQIyS.js": "929ca61e0f8dd3c968edf7a13d04c108275dc72572c15dce3b9bb097623d4960",
+    "index-CC4z0vjG.css": "27a94f1a79f29ec460e9d2493989b05d0870874621a13186c397a5fe3e0c527a"
+  }
+}

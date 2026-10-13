@@ -1,0 +1,479 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> kaisen@0.1.0 test
+> node --import tsx --test tests/*.test.ts
+
+✔ role assignments spread targets and stay stable until the assigned unit is destroyed (4.17284ms)
+✔ damaged AI extends and re-enters rather than fleeing permanently; ships remain valid after all aircraft die (10.436593ms)
+✔ air and surface targets use the actual shared projection/fire gate (1.599217ms)
+✔ deterministic bounded fleet simulations include actual AI and real projectiles (10553.612154ms)
+✔ approved four-ship mission reaches all-clear through real inputs while idle is not a guaranteed win (7720.72231ms)
+ℹ {"time":144.7,"hp":73.74400000000009,"kills":{"playerAircraftKills":5,"playerShipKills":4,"allyAircraftKills":8,"allyShipKills":0,"shots":240,"hits":78,"loops":0,"damageTaken":78.8319999999998,"friendlyDamage":0,"friendlyKills":0,"score":27913}}
+ℹ idle after 240 seconds: phase=playing, health=33.92000000000004, liveObjectives=4
+✔ surface marker, steering and auto-fire share the above-water point at the circle edge (0.663216ms)
+✔ a nearby ship acquired behind a strike aircraft triggers repositioning instead of a staging orbit (0.267714ms)
+✔ standard mission remains reachable through circular touch conversion with six/seven tick sample jitter (2661.211063ms)
+ℹ {"time":181.13333333333333,"hp":80,"kills":{"playerAircraftKills":9,"playerShipKills":4,"allyAircraftKills":9,"allyShipKills":0,"shots":460,"hits":152,"loops":0,"damageTaken":74.73599999999983,"friendlyDamage":0,"friendlyKills":0,"score":27248}}
+✔ large-fleet tactical replay is identical across the complete authoritative state (13436.703938ms)
+✔ circle uses white/hostile red/friendly blue without mutating the world in both modes (9.309491ms)
+✔ static batching preserves world-space triangles, normals, UVs, material identity and animated subtrees (43.773628ms)
+✔ mixed indexed/non-indexed input, single-material groups and normalized color attributes remain exact (2.737395ms)
+✔ different render flags, material identities, parent groups and attribute layouts never coalesce (4.748268ms)
+✔ multi-material groups, partial draw ranges, invisible and unsupported dynamic meshes stay untouched (3.988769ms)
+✔ replays share a bounded per-detail geometry cache; only the cache owns disposal (30.351706ms)
+✔ changed source transforms or geometries cannot silently reuse stale cached geometry (3.232845ms)
+✔ MG and cannon have separate four-band boundaries and finite input contract (5.297027ms)
+✔ all three aircraft shooter categories apply falloff once at the partial swept impact distance (35.316748ms)
+✔ Normal friendly fire penalties use attenuated actual health loss (1.047023ms)
+✔ range accumulation leaves base projectile power unchanged between non-impact ticks (11.733945ms)
+✔ aircraft tracers share bounded two-pass geometry, keep ally colors and exclude naval rounds (3.886318ms)
+✔ tail never precedes muzzle birth and is capped at 45ms independently of render rate (0.522981ms)
+✔ core and outline stay screen-width, depth-occluded, shader-warmed and released once (1.367916ms)
+✔ ally activity derives the victim and exact shooter from destruction snapshots, not damage or ship hits (2.80861ms)
+✔ simultaneous and sustained ally events coalesce into at most twelve pending groups without losing counts (6.214329ms)
+✔ actual friendly-fire loss, a dead ally remaining round, and respawn retain their four-slot identity (8.256369ms)
+✔ final enemy destroyed by an ally remains in the report even when victory immediately ends the HUD (1.312505ms)
+✔ enemy-owned non-kill effects stay silent while a player death explosion is routed; duplicate IDs do not replay (11.522894ms)
+✔ shot and hit voices respect their separate minimum intervals (0.67855ms)
+✔ enemy hit and explosion keep established pulses; player death uses layered blast and finish tail (8.897303ms)
+✔ effect sources stay bounded, reserve three slots for damage, and rate-limit repeats (3.071837ms)
+✔ mute stops active sounds immediately, while finish lets the final damage decay and cleans up (5.61045ms)
+✔ event dedupe is bounded and a new flight resets the event ID window (3.016415ms)
+✔ propeller-only reduction halves the engine gain while master and hit envelopes remain unchanged (1.382477ms)
+✔ closest hull surface uses the tapered bow and real scaled sloped sides (6.069143ms)
+✔ bounded water blast is weaker than direct damage, with a strict 20m boundary (0.411445ms)
+✔ 1800 direct bombs sink the flagship in three hits and an escort in two in both modes (31.146685ms)
+✔ direct damage tuning preserves player and allied water-blast strength and torpedo damage (1.82938ms)
+✔ armed near misses use water contact once, actual surface distance, and stop outside range (1.55062ms)
+✔ dead hulls are obstacles but receive no blast and can shield another live hull (0.551311ms)
+✔ forecast exactly matches actual fixed-step release against moving and turning ships in both modes (97.385815ms)
+✔ forecast distinguishes water, near-miss, unarmed deck contact, and a sinking wreck (26.400516ms)
+✔ green bomb cue requires a live damage prediction and every release gate (24.991665ms)
+✔ HUD and canvas share a same-tick forecast; next simulation tick cannot reuse stale green (7.085708ms)
+✔ actual stepGame button release matches forecast at the thin blast boundary, not one aircraft tick later (323.875853ms)
+✔ one water explosion damages each nearby ship once and credits one shot hit (1.147947ms)
+✔ Easy fleet pilot clears actual CI26 request/acceptance delays without saturated yaw oscillation (5971.739527ms)
+ℹ {"time":268.71666666666664,"hp":73.7040000000002,"reason":"all-clear","stats":{"playerAircraftKills":7,"playerShipKills":4,"allyAircraftKills":15,"allyShipKills":0,"shots":624,"hits":98,"loops":0,"damageTaken":111.16799999999934,"friendlyDamage":0,"friendlyKills":0,"score":25426},"ships":[0,0,0,0]}
+✔ easy browser pilot clears with recorded uneven sampling plus one-tick delivery lag (4990.234962ms)
+ℹ {"mode":"easy","time":185.21666666666667,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":10,"playerShipKills":4,"allyAircraftKills":6,"allyShipKills":0,"shots":580,"hits":152,"loops":0,"damageTaken":72.15999999999988,"friendlyDamage":0,"friendlyKills":0,"score":27234}}
+✔ normal browser pilot clears with recorded uneven sampling plus one-tick delivery lag (4150.333107ms)
+ℹ {"mode":"normal","time":153.85,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":4,"playerShipKills":4,"allyAircraftKills":9,"allyShipKills":0,"shots":394,"hits":35,"loops":0,"damageTaken":15.55200000000001,"friendlyDamage":0,"friendlyKills":0,"score":28576}}
+✔ Normal fleet-first pilot clears acceptance-relative CI20 cadence with 1-tick delivery lag (2882.137633ms)
+ℹ {"time":148.46666666666667,"hp":80,"stats":{"playerAircraftKills":5,"playerShipKills":4,"allyAircraftKills":8,"allyShipKills":0,"shots":584,"hits":56,"loops":0,"damageTaken":40.09599999999998,"friendlyDamage":0,"friendlyKills":0,"score":28080}}
+✔ Normal fleet-first pilot clears acceptance-relative CI20 cadence with 5-tick delivery lag (2453.206911ms)
+ℹ {"time":151.53333333333333,"hp":80,"stats":{"playerAircraftKills":5,"playerShipKills":4,"allyAircraftKills":9,"allyShipKills":0,"shots":778,"hits":76,"loops":0,"damageTaken":55.12000000000003,"friendlyDamage":0,"friendlyKills":0,"score":28375}}
+✔ Normal recovery pilot clears actual CI21 observed request/acceptance timings (2150.699704ms)
+ℹ {"time":116.43333333333334,"hp":80,"stats":{"playerAircraftKills":3,"playerShipKills":4,"allyAircraftKills":7,"allyShipKills":0,"shots":138,"hits":38,"loops":0,"damageTaken":31.19999999999998,"friendlyDamage":0,"friendlyKills":0,"score":29226}}
+✔ easy clears with CI28 component delivery timing from a fresh mission (6411.091271ms)
+ℹ {"mode":"easy","time":220.33333333333334,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":12,"playerShipKills":4,"allyAircraftKills":11,"allyShipKills":0,"shots":842,"hits":209,"loops":0,"damageTaken":108.22399999999945,"friendlyDamage":0,"friendlyKills":0,"score":25643},"ships":[0,0,0,0]}
+✔ normal clears with CI28 component delivery timing from a fresh mission (3719.678427ms)
+ℹ {"mode":"normal","time":206.51666666666665,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":9,"playerShipKills":4,"allyAircraftKills":14,"allyShipKills":0,"shots":1002,"hits":118,"loops":0,"damageTaken":44.20800000000001,"friendlyDamage":0,"friendlyKills":0,"score":27343},"ships":[0,0,0,0]}
+✔ easy clears with CI29 component delivery timing from a fresh mission (3891.744687ms)
+ℹ {"mode":"easy","time":158.76666666666665,"hp":53.088000000000335,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":4,"playerShipKills":4,"allyAircraftKills":10,"allyShipKills":0,"shots":380,"hits":70,"loops":0,"damageTaken":86.91199999999972,"friendlyDamage":0,"friendlyKills":0,"score":26725},"ships":[0,0,0,0]}
+✔ normal replays historical CI28 input deterministically under the explicit Iowa rules revision (17418.81211ms)
+✔ easy replays historical CI28 input deterministically under the explicit Iowa rules revision (4334.631522ms)
+✔ small desktop preview buttons use readable external labels rather than overflowing or microscopic text (3.550561ms)
+✔ the complete position preview fits its scroll region while preserving the device aspect (0.221055ms)
+✔ only exact legacy payload defaults move to the lower edge without mutating custom saved placements (0.23122ms)
+✔ layout and keyboard persistence roll back together when any write fails (0.580804ms)
+✔ unavailable storage reads cannot cause partial writes (0.168388ms)
+✔ saving from an older tab preserves a future settings format (0.135299ms)
+✔ save applies both drafts only after successful persistence; cancel restores both saved values (0.882948ms)
+✔ save failure leaves controls unchanged until explicit session-only confirmation (0.437163ms)
+✔ reset remains a draft and cancelling capture preserves the previous assignment (4.895448ms)
+✔ default touch controls keep safe edges and payloads separate in portrait and short landscape (0.72827ms)
+✔ an explicit unchanged Save retries pending recovery, and opening/cancelling never writes (0.459796ms)
+✔ modal Tab wraps Close to Save and Save to Close without leaving the document (1.598981ms)
+✔ interior content regions and range controls retain native forward and backward traversal (0.324487ms)
+✔ hidden editor controls, disabled actions and non-tabbable elements cannot become wrap targets (0.228566ms)
+✔ missing or stale modal focus is recovered, and a modal with no controls retains focus (0.154998ms)
+✔ closed dialogs, composition, other keys and browser modifier shortcuts are left alone (0.204761ms)
+✔ positive tabindex controls preserve their browser tab order at the modal boundaries (0.119516ms)
+✔ Easy begins 80m higher with coherent formation poses; Normal retains its entry (9.952333ms)
+✔ only the ship correction is quarter-strength at identical target geometry (4.732593ms)
+✔ manual commands keep authority over ship pull and Normal stays fully manual (3.036449ms)
+✔ mixed target selection respects circle priority while retaining each target tracking strength (0.422852ms)
+✔ air-to-ship switching keeps the existing smooth response and manual climb clears residual pull (16.172588ms)
+✔ the real Easy opening no longer dives steeply into the foreground hull without input (3252.595213ms)
+✔ Kaisen Easy projectile correction is 35 percent capped at .028 radians with original .16 gate (1.755071ms)
+✔ AI retains its original full straight-intercept solution (0.712668ms)
+✔ a fixed manual turn then release produces real hits in an independent airborne encounter (172.667895ms)
+✔ the stronger correction preserves most of the aiming error and never reaches a wide-angle target (0.297077ms)
+✔ a nearby fixed-input airborne pass gains a real hit while an unaligned pass still misses (80.274005ms)
+✔ standard fleet has four Iowa-size ships and preserves the approved HP (12.333174ms)
+✔ Normal friendly fire uses actual lost HP, a single kill penalty, and Easy ignores it (23.648891ms)
+✔ each allied slot returns 40 seconds after its own destruction with fresh identity, never the player (10.322717ms)
+✔ fatal real bullet source identifies enemy aircraft and naval fire (1.043204ms)
+✔ allied AI rounds preserve team protection in both modes and pass on to an enemy (16.446071ms)
+✔ real hull is 270.43m by 32.97m against 12m source wings; broadside approach increases normal-camera projected width (98.504849ms)
+✔ foreground capital ship has a larger visible footprint with unchanged aircraft-relative camera and true meters (0.798784ms)
+ℹ {"before":{"width":177.60675103097392,"top":606.9728247236388,"bottom":658.6883270249178},"after":{"width":360.8519182943527,"top":734.8340883964917,"bottom":894.2922497108505},"oldAltitude":350,"newAltitude":300}
+✔ circle A wins over closer off-circle B in either array order (8.894888ms)
+✔ equal rank has a deterministic ID tie break (0.580304ms)
+✔ 20cm distance inversion does not reverse a held off-circle target (0.53066ms)
+✔ steering owner suppresses target pull even on a small movement or circle promotion (0.417875ms)
+✔ strong reverse manual input remains intact (0.484802ms)
+✔ dead or out-of-view held targets are released, and no-target clears the lock (0.51007ms)
+✔ new target identity never inherits the previous identity (0.226373ms)
+✔ new pull has bounded rates and losing all targets clears stale pull (0.41498ms)
+✔ Normal fire flag does not change steering requests (1.508558ms)
+✔ fire phase revalidates the tick selection without switching to a different ID (0.724656ms)
+✔ real capital-ship solids exclude hidden aircraft without excluding the hostile ship itself (2.415091ms)
+✔ source motion parity across slow/cruise/fast throttle and changing stick traces (20.81252ms)
+✔ five second source loop restores heading and pitch then has two second cooldown (7.644189ms)
+✔ intent revision cancels a loop smoothly and throttle retains source mode semantics (1.641543ms)
+✔ manual pitch and yaw share signed per-second rates across the speed envelope (3.154778ms)
+✔ manual keyboard diagonals share one circular authority budget in actual camera angle (0.261935ms)
+✔ actual camera rate keeps direction, strength, pitch and yaw symmetric in both views (2.676786ms)
+✖ camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplier (11.047513ms)
+✔ bank keeps its established camera offset while no longer steering the optical axis (0.392587ms)
+✔ manual pitch reverses smoothly away from level, neutral return obeys the same rate, and limits hold (5.120369ms)
+✔ three pointer owners preserve micro-steering through fire/lever release and cancel, then clear on recovery (8.189419ms)
+✔ releasing one button finger preserves the other finger and active steering (2.46302ms)
+✔ steering cancellation does not release another control pointer (0.369126ms)
+✔ capture failure plus release on window cannot strand steering; other held fingers survive cancellation (8.361503ms)
+✔ rendered Iowa hull/deck have real 887ft3in by 108ft2in proportions, without a root scale trick (91.051112ms)
+✔ 700 oblique hull rays agree with visible triangles, including the same listed wreck transform (80.200157ms)
+✔ sloped armor collision matches actual rotating gun-house triangles for every mount (61.397829ms)
+✔ quad light-AA preserves sustained damage and the prior per-round strength hierarchy (0.391756ms)
+✔ four-ship controlled AA emission stays within the pre-Iowa 90-second damage budget (1350.074585ms)
+ℹ {"seconds":90,"ships":4,"heavy":3456.0000000000396,"light":12649.59999999726,"emittedDamage":16105.5999999973,"preIowaDamage":16128}
+✔ same-camera projection separates 22.54-to-one physical size from nearby chase-plane perspective (14.938068ms)
+ℹ {"physicalLength":270.43,"wingspan":12,"aircraftPixels":262.5453794712273,"shipPixels":344.7733224723429,"chasePixelRatio":1.3131951633150987,"sameDepthRatio":22.535833333333333,"player":[0,300,240],"ship":[0,0,-220],"shipYaw":1.15,"viewport":[393,852]}
+✔ input presentation cannot move a pressed target before click commits its action (4.175759ms)
+✔ keyboard persistence restores complete distinct keys and rejects invalid or partial records (0.910347ms)
+✔ capture accepts physical letters, punctuation, numpad and shift; reserved chords remain unavailable (0.759565ms)
+✔ input presentation uses capabilities, retaining keyboard on touch laptops and narrow PCs (0.24756ms)
+✔ committed bindings are isolated copies and pause respects reserved chords and key repeats (0.907803ms)
+✔ custom flight keys cover every action, release on remap/blur and never leak from editing or browser chords (6.135416ms)
+✔ held-stick ship pilot descends toward its staging altitude instead of opposing an absent Easy pull (5.459382ms)
+✔ actual aim-PR seed and request/acceptance cadence retain strict all-clear with a physically held stick (6959.154013ms)
+ℹ {"seed":1262569811,"time":276.75,"hp":80,"reason":"all-clear","stats":{"playerAircraftKills":14,"playerShipKills":4,"allyAircraftKills":9,"allyShipKills":0,"shots":872,"hits":233,"loops":0,"damageTaken":146.63999999999905,"friendlyDamage":0,"friendlyKills":0,"score":23765},"ships":[0,0,0,0]}
+✔ Easy collision dodge moves away from an aircraft above when the full dodge has ground clearance (4.646757ms)
+✔ formation kill tallies start at zero and retain prior kills through enemy replenishment (4.081445ms)
+✔ payload readout distinguishes one remaining bomb from an action number and shows reload time (0.221837ms)
+✔ rule guide shows only the active device instructions and current keyboard bindings (0.483241ms)
+✔ torpedo cue follows real ammunition, cooldown, capacity and envelope rejection without mutating state (9.245081ms)
+✔ torpedo cue tracks actual bomb cooldown, launch, six-second reload and pause (98.243414ms)
+✔ notice placement avoids the reported short portrait sight and all measured obstacles (0.928756ms)
+✔ notice placement handles enlarged text, short landscape, and explicitly reports no available slot (0.55092ms)
+✔ CI45 Easy compact report fits both previously unavailable 200-percent viewports (0.778696ms)
+✔ emitted twin volleys exactly consume magazines and start one six-second reload (142.683672ms)
+✔ reload freezes while paused, survives target loss, ends with mission and resets on retry (8.874006ms)
+✔ projectile saturation reserves complete twin volleys without losing ammunition (13.913ms)
+✔ each 40-second boundary tops up only missing enemies, preserves survivors and keeps five bounded slots (18.290861ms)
+✔ all-clear wins immediately before and on a replenishment boundary; ended missions stay ended (1.748182ms)
+✔ only player reinforcement kills heal once, capped at max HP; reinforcement kills award no points (3.477126ms)
+✔ all damage resolves before healing so a same-tick lethal hit cannot be resurrected (2.248277ms)
+✔ naval rounds integrate gravity without homing toward later target positions (7.87738ms)
+✔ an allied last hit clears immediately during reload and freezes the unfinished reload (6.775489ms)
+✔ Normal emits no automatic shots or visible-target steering; Easy keeps both (8.291599ms)
+✔ Normal bullets follow the bore line, while Easy alone predicts a crossing target (5.203425ms)
+✔ Easy target assistance keeps its absolute-pitch command contract (0.746248ms)
+✔ Normal throttle persists after release; Easy ignores fire and throttle away from targets (34.154861ms)
+✖ source offscreen yaw boost ramps gently in both modes without amplifying bank or pitch (8.117112ms)
+✖ Normal sight projects fixed forward convergence plane through the real camera without moving the aircraft (3.416777ms)
+✔ Normal input releases only the ended finger while steering and another action remain held (0.544771ms)
+✔ real FlightControls touch sample reaches fixed-step flight and the rendered camera pose in both modes (4.092592ms)
+✔ Normal sight is independent of target loss, switching and extreme target depth (0.343055ms)
+✔ world audio pans in listener-local horizontal space, including heading changes and overhead sources (7.39415ms)
+✔ world distance reduces gain and bandwidth, stays finite nearby, and culls remote or invalid positions (0.821618ms)
+✔ same-mount salvos group by owner and tick with bounded repeat rate and shared generic-event dedupe (3.369768ms)
+✔ light/heavy gunfire, metal, water, ship and ordnance voices use distinct finite source bands and envelopes (1.392949ms)
+✔ all world voices share the existing ten-source cap and keep three slots and eviction priority for player damage (2.987716ms)
+✔ pass cues require actual approach, track real pan and Doppler through recession, and have finite per-aircraft cooldown (1.758778ms)
+✔ pass tracking excludes dead/self aircraft, limits active voices and state, and removes replaced entities (1.48202ms)
+✔ mute, pause, reset and disposal cancel world/pass sources and old callbacks cannot touch a new flight (1.319862ms)
+✔ rewound time, same-ID respawn and missing pass updates discard old motion without replaying a tail (0.74751ms)
+✔ flight finish stops live passes immediately and lets the final ship blast end within the existing finish tail (0.901456ms)
+✔ a partially built multi-source voice is fully stopped and disconnected on failure (0.612541ms)
+✔ graph creation failures clean up, resumed promises honor mute, and existing engine/master/player envelopes remain fixed (1.65861ms)
+✔ naval flashes follow emitted barrel events only and never replay an event (119.907798ms)
+✔ stale, aircraft and idle events cannot invent naval flashes; fixed pause time freezes them (0.943688ms)
+✔ bounded flash storage shares a fixed particle batch and keeps the newest real events (1.404106ms)
+✔ shot-timed recoil starts at the authoritative muzzle, returns exactly, and pauses without state writes (56.859316ms)
+✔ destroyed mounts retain their geometry but become dark and drooped without another shot or state mutation (32.314603ms)
+✔ foam follows ship-local hull and wake placement, samples physical waves, and vanishes when propulsion stops (37.958753ms)
+✔ localized effects use fixed slots, preserve fire priority, freeze at a fixed time, and expire cleanly (29.886437ms)
+✔ seven ships share immutable resources, isolate damage buffers, and dispose each owned resource once (18.913406ms)
+✔ atmosphere preserves collision waves and one color transform without requiring textures or extra passes (0.314663ms)
+✔ aircraft rounds break an actual exposed AA body once but never perforate armored hull HP (6.672797ms)
+✔ bombs use discrete release edges, six-second rearm, pause freeze, and retry reset (43.931295ms)
+✔ invalid torpedo envelope or saturated payload pool consumes no ammunition (2.574528ms)
+✔ actual armed payload hits apply hull damage once and preserve ally versus player kill attribution (6.098412ms)
+✔ ordinary manual gun rounds suppress a visible AA mount while hull health remains armored (20.763579ms)
+✔ Iowa-inspired capitalships preserve meter scale and explicit game-fit turret/barrel counts (2.839438ms)
+✔ each AA mount selects its own legal outboard target and main guns do not engage aircraft (66.026012ms)
+✔ turret movement, including dispersion and branch-cut crossings, never exceeds mechanical rates (60.224116ms)
+✔ legal AA targets survive near-distance crossings but a target 20% closer wins the next decision (1.207667ms)
+✔ AA retention immediately releases dead, out-of-range and out-of-arc targets (1.729204ms)
+✔ same-tick twin/quad volleys originate at all real barrel ends without phantom grouped rounds (41.191273ms)
+✔ per-barrel rate uses 120rpm bursts, four-round clip gaps, and unchanged 10rpm heavy cycle (334.513582ms)
+✔ finite range, low-altitude light-AA envelope, dead targets and invalid ticks cannot fire (32.994745ms)
+✔ hull and bridge block a barrel/path even independently of firing-arc checks (1.145666ms)
+✔ ballistic flight time accounts for gravity, moving targets and inherited ship velocity (0.451885ms)
+✔ launched shot retains initial trajectory when targets move and later turrets slew (44.028398ms)
+✔ 7-ship full-arc synthetic load is deterministic and remains below conservative live-round bound (229.306934ms)
+✔ render batches preserve 61 independent barrel endpoints and read state without mutation (30.027309ms)
+✔ distinct roots share immutable static geometry but never another ship mount matrices (23.749777ms)
+✔ tapered bow/stern collision matches visible geometry, without an invisible rectangular deck (44.016441ms)
+✔ low-flying aircraft remain engageable by light AA with safe outboard depression (51.349771ms)
+✔ depressed legal forward rays cannot pass through adjacent AA platforms or supports (18.509082ms)
+✔ lateral fallback keeps the low-altitude ascent, safe descent and Easy pilot branches (6.963865ms)
+✖ CI38 consumed inputs preserve the real collision (2759.64807ms)
+✖ CI38 consumed inputs preserve the real collision except the verified lateral dodge (3325.054754ms)
+✔ Normal default fleet clears through manual fire and circular input with six/seven and coarse twelve tick hold (12816.722923ms)
+ℹ {"pattern":[6],"time":197.11666666666667,"hp":76.38400000000004,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":5,"playerShipKills":4,"allyAircraftKills":9,"allyShipKills":0,"shots":642,"hits":70,"loops":0,"damageTaken":57.90400000000003,"friendlyDamage":0,"friendlyKills":0,"score":27446}}
+ℹ {"pattern":[6,7],"time":133.43333333333334,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":6,"playerShipKills":3,"allyAircraftKills":8,"allyShipKills":1,"shots":238,"hits":56,"loops":0,"damageTaken":56.928000000000054,"friendlyDamage":0,"friendlyKills":0,"score":28526}}
+ℹ {"pattern":[12],"time":183.51666666666665,"hp":80,"reason":"all-clear","cause":null,"stats":{"playerAircraftKills":9,"playerShipKills":4,"allyAircraftKills":8,"allyShipKills":0,"shots":676,"hits":115,"loops":0,"damageTaken":71.43999999999986,"friendlyDamage":0,"friendlyKills":0,"score":27633}}
+✖ bombing pilot extends after an overhead pass with payloads still available at high altitude (4.455448ms)
+✔ Easy bombing pilot holds a level physical stick without compensating neutral-only downward assistance (1.572601ms)
+✔ final air engagement retains collision avoidance without fleeing every safe 250m pass in both modes (1.356974ms)
+✔ Normal recovery can engage a safe passing enemy while a distant ship remains alive (0.998607ms)
+✔ Easy chooses a target whose required lead and live firing circle can coexist (1.173005ms)
+✔ Easy completes a begun bombing pass before switching to recovery, then still exits overhead (1.193654ms)
+✔ Easy leads the loaded cannon and keeps repeated observation times finite (1.452335ms)
+✔ release copies the current aircraft pose and velocity without retaining aircraft state (4.738839ms)
+✔ torpedo release permits the source cruise and enforces rack altitude against actual waves (0.68092ms)
+✔ torpedo speed, pitch and bank limits are inclusive; invalid aircraft are rejected (0.492754ms)
+✔ bomb flight is ballistic and agrees across valid step sizes without homing (3.278465ms)
+✔ bombs hit the visible deck before sea contact and cannot apply the same impact twice (1.844008ms)
+✔ bombs hit shared bridge occluders, not an imaginary deck-only hit surface (0.36782ms)
+✔ water is the terminal first contact when a ship would only be encountered afterwards (0.724684ms)
+✔ first ship contact is ordered by swept contact, independent of array order (0.612099ms)
+✔ bomb fuse rejects deck overlap before .25s and arms exactly at that age (1.119954ms)
+✔ torpedoes touching the deck in air are duds even before any possible sea crossing (1.00748ms)
+✔ torpedo water entry consumes remaining fixed-step time and cannot teleport to depth (0.382581ms)
+✔ the remaining water-entry interval still collides with a nearby hull before arming (0.648042ms)
+✔ water run settles below actual waves with constant heading and no target attraction (1.704192ms)
+✔ violent torpedo entry splashes then duds without free hull damage (1.513492ms)
+✔ torpedo arming uses only water distance including exact contact fraction at 80m (0.682462ms)
+✔ underwater torpedo sweeps moving hulls even when both endpoint hull poses miss (0.382251ms)
+✔ moving rotations and scaled hull dimensions use their actual ship transforms (1.182747ms)
+✔ expired rounds, invalid state and invalid dt fail safely without world mutation (0.829449ms)
+✔ dead ships are excluded and caller-selected reduced damage is preserved (0.325518ms)
+✔ bomb impact prediction gives a finite ballistic guide without changing aircraft state (0.586612ms)
+✔ visible AA turret is the first bomb contact before a later platform can arm its fuse (0.790141ms)
+✔ broad phase includes the relocated Iowa AA platform above the armored deck (0.331938ms)
+✔ payload touch release and keyboard edges remain independent of steering, cancel, blur and mode (5.170193ms)
+✔ legacy absolute-pitch test commands map to the exact old one-tick delta until the new rate limit binds (1.194954ms)
+✔ constructor is GL-free; one fenced submission flushes once and polls without blocking (3.047616ms)
+✔ ALREADY_SIGNALED deletes the fence exactly once, permits another frame, and measures observed intervals (0.381561ms)
+✔ CONDITION_SATISFIED deletes the fence exactly once, permits another frame, and measures observed intervals (0.290707ms)
+✔ only pending time beyond 1000ms stalls; the same retained fence can later complete (0.205973ms)
+✔ WAIT_FAILED is sticky, releases once, and cannot spin up a queue before explicit recovery (0.254253ms)
+✔ null fence explicitly fails without repeated allocations or pretending the frame completed (0.288083ms)
+✔ context loss while pending releases the fence and stays failed after restoration until reset (0.551891ms)
+✔ context loss before first render or submission is exposed without allocating a fence (0.273852ms)
+✔ duplicate submission cannot replace a pending fence or enqueue another one (0.446596ms)
+✔ reset releases once and clears measurements; disposal is idempotent and cannot be revived (0.356333ms)
+✔ fenceSync exception is an explicit sticky failure with no duplicate release (0.234114ms)
+✔ flush exception is an explicit sticky failure with no duplicate release (0.123501ms)
+✔ clientWaitSync exception is an explicit sticky failure with no duplicate release (0.916706ms)
+✔ deleteSync exception is an explicit sticky failure with no duplicate release (0.11562ms)
+✔ unexpected wait status fails instead of reporting readiness or silently stalling forever (0.128278ms)
+✔ a replenishment alert survives bounded cosmetic-event saturation without mutating a splash (27.024796ms)
+✔ primary mouse or pen pointers cannot erase a live touch steering owner or held button (4.137055ms)
+✔ easy/touch: score rules explain contribution, clear-only bonuses and rounding (1.312888ms)
+✔ easy/keyboard: score rules explain contribution, clear-only bonuses and rounding (0.209377ms)
+✔ normal/touch: score rules explain contribution, clear-only bonuses and rounding (0.142099ms)
+✔ normal/keyboard: score rules explain contribution, clear-only bonuses and rounding (0.12901ms)
+✔ late shader completion cannot revive a disposed renderer (1.141327ms)
+✔ a queued old view cannot retain event ownership after replay (0.938158ms)
+✔ initial roster budgets total 10500 and do not grow with reinforcements or changed max HP (5.136874ms)
+✔ actual damage, ally finishing blows, repeated reports and overkill preserve a finite contribution (0.548135ms)
+✔ approved contribution examples keep failure points and combine clear, speed and cumulative damage (1.176998ms)
+✔ speed and cumulative damage boundaries clamp only bonuses, and time is not absolute priority (1.022602ms)
+✔ fractions accumulate without per-hit rounding and final negative scores are retained (0.523488ms)
+✔ HP subtraction precision preserves true half-point totals without promoting a below-half score (0.866483ms)
+✔ real shots credit initial aircraft, preserve own damage after ally kill, and cannot duplicate the kill (8.313909ms)
+✔ real bomb hull damage uses each ship initial HP and ally finishing damage cannot consume player credit (8.227973ms)
+✔ reinforcement damage and kill earn no points, while real healing never restores the damage bonus (0.743481ms)
+✔ armed torpedoes and water near misses earn only their actual armored hull fraction (5.450484ms)
+✔ ramming and sea contact give no extra contribution, but earlier weapon damage survives defeat (2.41034ms)
+✔ simultaneous final kill and death retains contribution without awarding victory bonuses (0.48351ms)
+✔ pause, repeated end inputs and replay preserve one frozen result with mode and scoring revision (3.64279ms)
+✔ contact hull reproduces actual hero/enemy geometry; preserved aircraft source is byte-identical (387.975664ms)
+✔ level flight below the old 2.5 m origin threshold is safe; rotating prop contact is fatal (1.894898ms)
+✔ both banked wingtips hit while an equally high level aircraft clears the sea (1.072057ms)
+✔ nose, tail and inverted fin extents participate in pose-aware sea contact (0.935026ms)
+✔ fast descent returns the earliest contact time and exact water-surface point (2.73178ms)
+✔ swept roll catches wing contact even with clear starting and ending poses (1.675555ms)
+✔ swept pitch catches nose contact between two clear poses (3.609171ms)
+✔ contact uses wave height and simulation time, including a safe wave trough (1.156441ms)
+✔ repeat/paused queries are deterministic, side-effect free, and quaternion sign invariant (12.945649ms)
+✔ CPU water and generated GLSL share coefficients and bounded height at negative/large coordinates (1.891834ms)
+✔ near-field mesh agrees with analytic contact surface without increasing triangle count (48.164152ms)
+✔ translation sweep crosses a wave crest even when both endpoint airframes are clear (2.423526ms)
+✔ near-tangent wing sweep distinguishes millimetre penetration from a five-millimetre miss (100.882417ms)
+✔ a live torpedo-altitude flight cannot pass through a visibly sinking bridge (24.655389ms)
+✔ wreck drift, sink and list use one frozen origin and freeze during a combat pause (17.005313ms)
+✔ wrecks stop later gun rounds and armed bombs without another hull kill or damage credit (2.068204ms)
+✔ fixed 5 versus 5 roster, provisional internal fleet counts, easy default, repeatable seed (9.75844ms)
+✔ all-clear waits for both categories and freezes the final tick exactly once (5.292088ms)
+✔ allied final bullet counts toward clear and its own kill attribution (1.465146ms)
+✔ death wins a simultaneous final kill from already airborne shots (0.57041ms)
+✔ swept fast projectile hits first enemy only, ignores its own team, never duplicates kills (2.945204ms)
+✔ aircraft sweep includes relative movement and close misses stay misses (0.334011ms)
+✔ ship local hull and superstructure boxes take a single first impact; near-water misses miss (1.803775ms)
+✔ pause, invalid frame gaps, and ended state do not mutate world or clock (0.983758ms)
+✔ sea collision replaces altitude deadline, and ramming cannot kill a ship (36.299473ms)
+✔ units remain bounded through repeated replenishment and manually dead allies do not acquire phantom death timers (420.17454ms)
+✔ frame subdivision changes neither fixed simulation nor outcome (32.795939ms)
+✔ per-mount AA launches actual ballistic rounds and outside-range targets cause no launch (8.588357ms)
+✔ allied final ship kill is credited once even when multiple bombs arrive (2.068044ms)
+✔ friendly aircraft crossings are harmless while enemy contact ends the player flight (0.639291ms)
+✔ canonical fixture drives actual throttle equations, legacy fallback and neutral release (5.776099ms)
+✔ real adapter owns one lever pointer independently from steering/fire and clears only its owner (2.679152ms)
+✔ focused short commands survive zero-tick frames, consume once, cancel safely, and coexist with pointer (3.390869ms)
+✔ v1 custom migration is pure, preserves peers and uses rectangular safe placement in both orientations (3.210674ms)
+✔ rollback failure retains a bounded raw recovery snapshot, read-only reload and future-write protection (0.614044ms)
+✔ v2 Save leaves v1 bytes unchanged and refuses future legacy or current versions (0.203219ms)
+✔ actual fixed-step recorded input replays one short pulse once across catchup ticks (1.244902ms)
+✔ malformed or future recovery journals cannot restore or read foreign keys (0.28503ms)
+✔ blocked lever rejects focused keys and impossible layout never moves peers (0.834748ms)
+✔ pointer, focused and global key axes sum before one final clamp (0.811044ms)
+✔ focusing the lever transfers global keyboard ownership without releasing independent touch owners (0.614935ms)
+✔ migrated lever avoids actual utility rectangles without moving peers (0.756263ms)
+✔ configured throttle keys reach the real focused lever target but no foreign slider or editor (1.784055ms)
+✔ Save verifies its journal before changing any setting (1.442172ms)
+✔ Save detects a silent settings write and restores the full batch (0.436312ms)
+✔ silent rollback failure preserves recoverable raw and read-only old settings (0.410664ms)
+✔ silent journal cleanup is not success and remains safely reloadable (0.511272ms)
+✔ duplicate Save entries are rejected without overwriting a recovery record (0.14303ms)
+✔ a changed value between journal and write is preserved (0.193144ms)
+✔ focused configured speed keys clear on focusout and Escape without releasing independent touch (3.164897ms)
+✔ zoomed visible handle endpoints produce full continuous throttle (0.852023ms)
+✔ dialog viewport height uses layout units at CSS zoom without double scaling (1.089974ms)
+✔ real circular-stick mapping reaches and completes reload with six/seven tick sample jitter (5090.844491ms)
+✔ browser reload practice engages aircraft and completes real magazines despite uneven input delivery (4244.230611ms)
+ℹ {"pattern":[6,7],"time":60.71666666666667,"hp":78.86400000000002,"reloads":[3283,3643],"shots":384}
+ℹ {"pattern":[6,10,15],"time":63.25,"hp":78.94400000000002,"reloads":[3435,3795],"shots":384}
+ℹ tests 325
+ℹ suites 0
+ℹ pass 319
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34978.799927
+
+✖ failing tests:
+
+test at tests/flight.test.ts:1:7866
+✖ camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplier (11.047513ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(Math.abs(boostedAngle / visibleAngle - 1.65) < 1e-12)
+  
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/flight.test.ts:161:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/modes.test.ts:1:5108
+✖ source offscreen yaw boost ramps gently in both modes without amplifying bank or pitch (8.117112ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(Math.abs(Math.abs(offscreen.player.yaw / visible.player.yaw) - (1 + 2.5 / 60)) < 1e-10)
+  
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/modes.test.ts:110:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/modes.test.ts:1:5722
+✖ Normal sight projects fixed forward convergence plane through the real camera without moving the aircraft (3.416777ms)
+  AssertionError [ERR_ASSERTION]: Normal sight is above center due to the source camera tilt
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/modes.test.ts:139:45)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/normal-collision-regression.test.ts:1:1309
+✖ CI38 consumed inputs preserve the real collision (2759.64807ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  7952 !== 7895
+  
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/normal-collision-regression.test.ts:54:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 7952,
+    expected: 7895,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/normal-collision-regression.test.ts:1:1309
+✖ CI38 consumed inputs preserve the real collision except the verified lateral dodge (3325.054754ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 0.7071067811865475
+  - 1
+  
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/normal-collision-regression.test.ts:33:30)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0.7071067811865475,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/normal-mission.test.ts:1:2586
+✖ bombing pilot extends after an overhead pass with payloads still available at high altitude (4.455448ms)
+  AssertionError [ERR_ASSERTION]: ordinary climbing extension creates another attack run
+      at TestContext.<anonymous> (/workspace/scratch/94ba14497a76/kaisen/tests/normal-mission.test.ts:67:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

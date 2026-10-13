@@ -1,0 +1,152 @@
+{
+  "recordedAt": "2026-10-12T13:44:44.983574+00:00",
+  "repository": "chameleonjp-lab/kaisen",
+  "pr": 17,
+  "sourceHead": "11b83a050deb721abe2e824bc5bd26c2ada9238f",
+  "sourceTree": "b89fa4faf88bcda8e439b9768a1809e4d6702c0a",
+  "baseMain": "6d5fa6b57c0e7bd1fed04f60c883ba82a8152751",
+  "sourceSnapshotVerifiedBlobs": 199,
+  "failedRun": {
+    "id": 38244735823,
+    "runNumber": 50,
+    "conclusion": "failure",
+    "unitPass": 327,
+    "browserPass": 54,
+    "browserFail": 3,
+    "artifact": {
+      "id": 11746226117,
+      "bytes": 20980909,
+      "sha256": "7238480bc56ba3a17a44fe442068d9f78129f1cb2e53b4bc5efeefff3f6593b2"
+    }
+  },
+  "candidateTestFilesSha256": {
+    "browser-tests/naval-payload.spec.ts": "9be3ed443466ddf2699e5b460628d6e565f9a1eb8bda58114de38b3c318b979d",
+    "tests/helpers/mission-browser-pilot.ts": "d6cc9b0047ef6fdfb645e3de79fda2a9d9b55140f114ee039166ab1bf7fea227",
+    "tests/mission-browser-pilot-regression.test.ts": "04905b90d86879e36229d9f41f669ef1e558a1e720449e9b9ce0f27d436ed2fe",
+    "tests/fixtures/browser-input-acceptance-easy-ci50.json": "4313f8ab03bcc89ae76b3ef00da058484ed7dff9df20579404f8e80b840b8a29"
+  },
+  "unchangedRuntimeBuildAndWorkflowBlobs": 61,
+  "environment": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "playwright": "1.61.1",
+    "three": "0.186.1",
+    "localBrowser": "Chromium 153.0.8010.0 / SwiftShader",
+    "localBrowserOverrides": [
+      "local executablePath",
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
+    ],
+    "viewport": {
+      "width": 393,
+      "height": 852,
+      "deviceScaleFactor": 1
+    },
+    "port": 4176,
+    "workers": 1,
+    "retries": 0,
+    "officialWorkflowChanged": false
+  },
+  "localChecks": {
+    "unit": {
+      "command": "npm test",
+      "exitCode": 0,
+      "pass": 329,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 44674.160321
+    },
+    "build": {
+      "command": "npm run build",
+      "exitCode": 0,
+      "existingChunkWarning": true
+    },
+    "browser": {
+      "command": "playwright test --config <scratch-local-config> --project=chromium browser-tests/00-easy-victory.spec.ts browser-tests/00-normal-victory.spec.ts browser-tests/naval-payload.spec.ts",
+      "exitCode": 0,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "note": "Real CDP touch, ordinary keyboard and unmodified product state. Different local browser binary from official CI; not hardware iPhone/Safari or Japanese-font visual acceptance."
+    },
+    "negative": {
+      "sourceHelperBlob": "9db275ecd9326601bf6e4207a061502e78dfa608",
+      "command": "node --import tsx --test --test-name-pattern=\"CI50 Easy cadence regression\" <isolated test with source-head helper>",
+      "exitCode": 1,
+      "expectedFailure": true,
+      "assertion": "the post-release command leaves the original attack approach",
+      "pass": 0,
+      "fail": 1,
+      "note": "Only import paths were relocated in scratch; submitted candidate was not edited. Demonstrates the added local egress assertion detects the old behavior, not exact browser defeat replay.",
+      "observedOldPilot": {
+        "tick": 4534,
+        "result": "defeat",
+        "hp": 0
+      }
+    }
+  },
+  "browserResults": {
+    "easy": {
+      "elapsed": 343.65,
+      "tick": 20619,
+      "health": 80,
+      "outcome": "victory",
+      "renderRecoveries": 0,
+      "evidenceSha256": "280a710a6eb2e38f8e04073d1e5d090bba8224b7c660e48c32683b45e829020d"
+    },
+    "normal": {
+      "elapsed": 213.18333333333334,
+      "tick": 12791,
+      "health": 80,
+      "outcome": "victory",
+      "renderRecoveries": 0,
+      "evidenceSha256": "c4431b13c744254ed412dba5d1c00842d037fd4bc30910bffcbdcebc328499c9"
+    },
+    "naval": {
+      "phase": "playing",
+      "elapsed": 9.883333333333333,
+      "altitude": 76.61247695536758,
+      "pitch": -1.002381382718478e-09,
+      "health": 39.20000000000009,
+      "torpedoes": 0,
+      "bombs": 2,
+      "waterRoundConfirmed": true,
+      "evidenceSha256": "d89831e4420eace23f3ac63538483c228e157a497e303d0d9fa44a010d80776e"
+    }
+  },
+  "normalCause": {
+    "status": "unresolved",
+    "observedCI50FencePendingMs": [
+      1040.4,
+      1128.3
+    ],
+    "glFailure": null,
+    "productionRenderCodeChanged": false,
+    "watchdogMs": 1000,
+    "allowedRecoveryCount": 1,
+    "localSourceHeadReproduction": {
+      "outcome": "victory",
+      "elapsed": 179.78333333333333,
+      "health": 77.44000000000003,
+      "renderRecoveries": 0,
+      "resultSha256": "315ed4b19b91e8df6f08dbb19ad67f17b9770fc9e4cb47e6ec44ad3f3e27639a"
+    },
+    "note": "Non-reproduction does not establish a cause fix. Final full CI remains a separate gate."
+  },
+  "fixtureLimitations": "319 source observations. Exact observed acceptance/cycle and recorded consumed-input timings retained; 25 deduplicated application times inferred, unused source bomb delays and final next-observation delay use explicit placeholders. Cyclic extension tests the new pilot, not full original browser replay.",
+  "evidenceLogsSha256": {
+    "ci50-local-browser-final.log": "38db554273f0996d5f25da52eb12a064d414547f8d9003710966ab080be1d973",
+    "ci50-unit-final.log": "d0eba134ed5eda8f90fa56278d087809917e7bbbf925eab4f7d0f0ec3e94f4b0",
+    "ci50-build-final.log": "6f830c915ebb957a4abb30a7f427c287f9f725d96116c1edc0d99aadcf6ea4a5",
+    "ci50-old-pilot-negative.log": "d999a1487454f0a314d2dba5dddc1c9e001e11d621f88a59d2f687c14fbd1ba8"
+  },
+  "notRun": [
+    "Physical iPhone Safari feel and thermal performance",
+    "Local WebKit (official binaries unavailable)"
+  ],
+  "delivery": "Existing Draft PR only; no merge, auto-merge or publish.",
+  "githubCIAtRecordCreation": {
+    "status": "not_run",
+    "resolution": "Final result is recorded in PR17 body/Checks against its actual submitted head. This file is a pre-CI record, not a mutable status ledger."
+  }
+}

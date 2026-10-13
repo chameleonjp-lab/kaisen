@@ -62,6 +62,22 @@ interface Particle {
   size: number;
   gravity?: number;
 }
+
+interface PausedViewStamp {
+  missionId: number;
+  phase: "paused";
+  tick: number;
+  showHUD: boolean;
+  layoutRevision: number;
+  cssWidth: number;
+  cssHeight: number;
+  bufferWidth: number;
+  bufferHeight: number;
+  overlayBufferWidth: number;
+  overlayBufferHeight: number;
+  submittedCount: number;
+}
+
 export class KaisenScene {
   readonly renderer: WebGLRenderer;
   private renderQueue: RenderQueue;
@@ -122,6 +138,9 @@ export class KaisenScene {
   private ctx: CanvasRenderingContext2D;
   private width = 1;
   private height = 1;
+  private missionId = 0;
+  private layoutRevision = 0;
+  private pausedView: PausedViewStamp | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -200,6 +219,9 @@ export class KaisenScene {
   resize() {
     const r = this.canvas.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) return;
+    if (r.width === this.width && r.height === this.height) return;
+    this.invalidatePausedView();
+    this.layoutRevision++;
     this.width = r.width;
     this.height = r.height;
     this.renderer.setSize(r.width, r.height, false);
@@ -250,7 +272,40 @@ export class KaisenScene {
     return this.prepared ? this.renderQueue.poll(now) : "ready";
   }
   resetRenderQueue() {
+    this.invalidatePausedView();
     this.renderQueue.reset();
+  }
+  invalidatePausedView() {
+    this.pausedView = null;
+  }
+  private pausedViewKey(state: GameState, showHUD: boolean) {
+    if (state.phase !== "paused" || this.current !== state) return null;
+    return {
+      missionId: this.missionId,
+      phase: "paused" as const,
+      tick: state.tick,
+      showHUD,
+      layoutRevision: this.layoutRevision,
+      cssWidth: this.width,
+      cssHeight: this.height,
+      bufferWidth: this.canvas.width,
+      bufferHeight: this.canvas.height,
+      overlayBufferWidth: this.overlay.width,
+      overlayBufferHeight: this.overlay.height,
+    };
+  }
+  private pausedViewMatches(state: GameState, showHUD: boolean) {
+    const stamp = this.pausedView;
+    const key = this.pausedViewKey(state, showHUD);
+    return !!stamp && !!key && Object.keys(key).every(
+      (field) => stamp[field as keyof PausedViewStamp] === key[field as keyof typeof key],
+    );
+  }
+  pausedViewReady(state: GameState, showHUD: boolean, now = performance.now()) {
+    if (!this.pausedViewMatches(state, showHUD)) return false;
+    const queue = this.renderQueue.diagnostics(now);
+    return queue.status === "ready" && queue.failure === null &&
+      queue.completedCount >= this.pausedView!.submittedCount;
   }
   private addPlane(p: Aircraft, player: boolean) {
       const detail = player ? "hero" : "enemy";
@@ -273,6 +328,8 @@ export class KaisenScene {
     return visual;
   }
   private reset(state: GameState) {
+    this.invalidatePausedView();
+    this.missionId++;
     for (const p of this.planes.values()) this.scene.remove(p.root);
     this.planes.clear();
     for (const s of this.fleet.values()) this.scene.remove(s);
@@ -381,7 +438,12 @@ export class KaisenScene {
     // Event IDs and wreck ownership follow the new mission immediately, even
     // when the previous view still has one GPU frame in flight.
     if (this.current !== state) this.reset(state);
+    if (state.phase !== "paused") this.invalidatePausedView();
     if (this.pollRender() !== "ready") return false;
+    // The first paused render submits the final fixed pose. Once that exact
+    // submission completes, keep its canvas until the pose or layout changes.
+    if (state.phase === "paused" && this.pausedViewMatches(state, showHUD) &&
+        this.pausedViewReady(state, showHUD)) return true;
     const dt = Math.max(0, Math.min(0.1, state.elapsed - this.lastTime));
     this.lastTime = state.elapsed;
     if (state.phase === "ended")
@@ -490,7 +552,17 @@ export class KaisenScene {
       a.needsUpdate = true;
     this.renderer.render(this.scene, this.camera);
     this.drawOverlay(state, showHUD);
-    if (this.prepared) this.renderQueue.submit(performance.now());
+    if (this.prepared) {
+      const before = this.renderQueue.diagnostics(performance.now()).submittedCount;
+      this.renderQueue.submit(performance.now());
+      if (state.phase === "paused") {
+        const queue = this.renderQueue.diagnostics(performance.now());
+        const key = this.pausedViewKey(state, showHUD);
+        this.pausedView = key && queue.failure === null && queue.submittedCount > before
+          ? { ...key, submittedCount: queue.submittedCount }
+          : null;
+      }
+    }
     return true;
   }
   private drawOverlay(state: GameState, show: boolean) {
@@ -689,8 +761,33 @@ export class KaisenScene {
     return projectGunSight(state.player, [...state.enemies, ...state.ships], this.width, this.height);
   }
   diagnostics() {
+    const queue = this.renderQueue.diagnostics(performance.now());
+    const pausedView = this.pausedView
+      ? {
+          ...this.pausedView,
+          completedCount: queue.completedCount,
+          ready: this.current !== null &&
+            this.pausedViewReady(this.current, this.pausedView.showHUD),
+        }
+      : {
+          missionId: this.missionId,
+          phase: this.current?.phase ?? null,
+          tick: this.current?.tick ?? null,
+          showHUD: null,
+          layoutRevision: this.layoutRevision,
+          cssWidth: this.width,
+          cssHeight: this.height,
+          bufferWidth: this.canvas.width,
+          bufferHeight: this.canvas.height,
+          overlayBufferWidth: this.overlay.width,
+          overlayBufferHeight: this.overlay.height,
+          submittedCount: null,
+          completedCount: queue.completedCount,
+          ready: false,
+        };
     return {
-      queue: this.renderQueue.diagnostics(performance.now()),
+      queue,
+      pausedView,
       calls: this.renderer.info.render.calls,
       triangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,

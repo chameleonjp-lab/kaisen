@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 test.use({deviceScaleFactor:3});
 test('aircraft tracers keep CSS width at high DPR and orientation changes in actual flight',async({page})=>{
   const errors:string[]=[];
@@ -22,10 +23,10 @@ test('aircraft tracers keep CSS width at high DPR and orientation changes in act
   expect(observation).toEqual({fullHasHistories:true,compactHasHistories:false,sameWorld:true});
   await mkdir('test-results/evidence',{recursive:true});
   const records=[];
+  const paused=await read();
   for(const size of [{width:393,height:852},{width:852,height:393}]) {
     await page.setViewportSize(size);
-    const submitted=(await read()).render.queue.submittedCount;
-    await expect.poll(async()=>(await read()).render.queue.completedCount).toBeGreaterThanOrEqual(submitted+1);
+    await waitForPausedView(page,{tick:paused.tick,cssWidth:size.width,cssHeight:size.height});
     const s=await read(),tracers=s.render.aircraftTracers;
     expect(tracers.segments).toBeGreaterThan(0);expect(tracers.segments).toBeLessThanOrEqual(tracers.capacity);
     expect(tracers.corePx).toBe(1.5);expect(tracers.outlinePx).toBe(2.5);expect(tracers.depthTest).toBe(true);

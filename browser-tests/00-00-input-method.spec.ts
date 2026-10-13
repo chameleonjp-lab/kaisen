@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { waitForPausedView } from './paused-view';
 const read = (page:any) => page.evaluate(() => (window as any).__kaisenReadState(false));
 
 test('changing from touch to mouse or back cannot move a pressed home control', async ({page}) => {
@@ -40,7 +41,10 @@ test.describe('custom desktop input', () => {
     await expect(page.locator('#pause-screen')).toBeVisible(); const frozen=await read(page);
     await page.locator('#pause-rules').click(); await page.keyboard.press('KeyP'); await page.keyboard.press('KeyF');
     expect((await read(page)).tick).toBe(frozen.tick); expect((await read(page)).stats.shots).toBe(frozen.stats.shots);
-    await page.keyboard.press('Escape'); await page.keyboard.press('KeyP');
+    await page.keyboard.press('Escape');
+    const viewport=page.viewportSize();
+    await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+    await page.keyboard.press('KeyP');
     await expect.poll(async()=>(await read(page)).phase).toBe('playing');
     const recoveries:unknown[]=[];
     await page.keyboard.down('Space');
@@ -56,7 +60,9 @@ test.describe('custom desktop input', () => {
           await page.keyboard.up('Space');
           await expect(page.locator('#pause-reason')).toHaveText('描画が復帰しました。操作して再開できます');
           await expect(page.locator('#resume')).toBeEnabled();
-          const tick=(await read(page)).tick; await page.waitForTimeout(100);expect((await read(page)).tick).toBe(tick);
+          const tick=(await read(page)).tick, viewport=page.viewportSize();
+          await waitForPausedView(page,{tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+          await page.waitForTimeout(100);expect((await read(page)).tick).toBe(tick);
           recoveries.push({tick,snapshot}); await page.keyboard.press('KeyP');
           await expect.poll(async()=>(await read(page)).phase).toBe('playing');
           await page.keyboard.down('Space');

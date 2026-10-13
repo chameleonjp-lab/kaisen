@@ -1,0 +1,130 @@
+{
+  "baselineHead": "14190408feb4b09d71d914c986653520d9eeecc4",
+  "baselineTree": "9901ae860fabf6e55c507484de4a59549b8ebceb",
+  "codePaths": [
+    "browser-tests/00-easy-victory.spec.ts",
+    "browser-tests/00-normal-victory.spec.ts",
+    "browser-tests/observation-clock.spec.ts",
+    "browser-tests/touch-command.ts",
+    "index.html",
+    "src/main.ts",
+    "tests/fixtures/browser-bomb-cues-ci53.json",
+    "tests/helpers/mission-browser-pilot.ts",
+    "tests/mission-browser-pilot-regression.test.ts"
+  ],
+  "sha256": {
+    "browser-tests/00-easy-victory.spec.ts": "22c9c7d44dd771402e5a4969bc67de115c411d26e00951bfad6cec3a3903179e",
+    "browser-tests/00-normal-victory.spec.ts": "529caef691d408b0f4a0f7ecbb7667f95df6fbf71ef4bbaa3d2dbd7e12a19fd4",
+    "browser-tests/observation-clock.spec.ts": "bc52b5690f8ab7f68e86a706e52cafc35f1c48582929ed7485cef62fe5f9ee93",
+    "browser-tests/touch-command.ts": "0189fb933b9b76a1691affe4fc8de0b5bd40a25cd10aabcd7a415971736d8325",
+    "index.html": "aa81900d9ff4ac74d3df4e1e489b160356bf6aa7f36bee323c522d8d22526c4a",
+    "src/main.ts": "94d055fe5d1033a31383818e7337e3c43943cef2de7d5af05fd178ef2a02d2ef",
+    "tests/fixtures/browser-bomb-cues-ci53.json": "ab88eb907ff35e82e65a87122a695f0bdf2b5c063e1725adadb8f664a708f5e5",
+    "tests/helpers/mission-browser-pilot.ts": "0181bcfca34b73a7657c74cc7fa3c0cd72ce36a173e9d1d669d8018d8584355b",
+    "tests/mission-browser-pilot-regression.test.ts": "a5a076d83474a9a30d45cfd3ca700fedc3f8ff8c6ed1487008f255987567f348"
+  },
+  "node": "24.19.0",
+  "npm": "11.9.0",
+  "playwright": "1.61.1",
+  "localBrowser": "Sparticuz headless_shell153.0.8010.0",
+  "officialBrowser": "regular Chromium149.0.7827.55",
+  "constraints": "workers1,retries0,DPR1,393x852,1swatchdog,oneNormalRecovery,600sallclearunchanged",
+  "review": "Independent code review no mandatory remaining issue; runtime gates separate",
+  "unit": {
+    "pass": 334,
+    "fail": 0,
+    "skip": 0,
+    "durationMs": 43810.087302
+  },
+  "build": "pass",
+  "localShortBrowser": {
+    "startTime": "2026-10-12T16:48:55.008Z",
+    "duration": 108172.031,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "localVictoryBrowser": {
+    "startTime": "2026-10-12T16:52:09.773Z",
+    "duration": 933687.566,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "routes": {
+    "easy": {
+      "tick": 34374,
+      "elapsed": 572.9,
+      "outcome": "victory",
+      "health": 80,
+      "shipHealth": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemyHealth": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "actualPayloadReleases": 16,
+      "renderRecoveries": 0,
+      "stats": {
+        "playerAircraftKills": 21,
+        "playerShipKills": 4,
+        "allyAircraftKills": 17,
+        "allyShipKills": 0,
+        "shots": 1386,
+        "hits": 349,
+        "loops": 0,
+        "damageTaken": 241.53599999999892,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 17842
+      }
+    },
+    "normal": {
+      "tick": 20048,
+      "elapsed": 334.1333333333333,
+      "outcome": "victory",
+      "health": 77.24800000000005,
+      "shipHealth": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "enemyHealth": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "actualPayloadReleases": 20,
+      "renderRecoveries": 0,
+      "stats": {
+        "playerAircraftKills": 9,
+        "playerShipKills": 4,
+        "allyAircraftKills": 14,
+        "allyShipKills": 0,
+        "shots": 986,
+        "hits": 103,
+        "loops": 0,
+        "damageTaken": 72.79999999999995,
+        "friendlyDamage": 0,
+        "friendlyKills": 0,
+        "score": 23712
+      }
+    }
+  },
+  "localFullBrowser": "not_run; required complete 59-case gate runs on actual submitted head in official CI",
+  "visualLimit": "Local shell153 has missing Japanese glyphs; gameplay/layout inspection is distinct from official CI Japanese image acceptance.",
+  "officialCI": "not_run before branch update",
+  "noMerge": true
+}

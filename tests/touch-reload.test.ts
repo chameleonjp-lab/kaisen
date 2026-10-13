@@ -23,7 +23,7 @@ test('real circular-stick mapping reaches and completes reload with six/seven ti
       stepGame(state, held);
       for (const e of state.events) if (e.type === 'reload-start' || e.type === 'reload-complete') reloads.push(state.tick);
     }
-    assert.ok(state.player.health > 0); // Full all-clear runs are covered in ai.test.ts for both hold patterns.
+    assert.ok(state.player.health > 0); // Full all-clear runs are optional scenarios in pilot-victories.scenario.ts.
     assert.ok(reloads.length >= 2); assert.equal(reloads[1] - reloads[0], 360);
     assert.ok(state.stats.shots >= 384);
   }

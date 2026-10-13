@@ -1,0 +1,28 @@
+✖ CI50 Easy cadence regression clears with strict state transitions and physical bomb releases (1840.007775ms)
+ℹ {"tick":4534,"result":"defeat","hp":0,"bombsReleased":2,"firstBombRequest":{"tick":1434,"health":72.59200000000014,"bombs":2,"position":[1521.1692293668732,874.1841694688345,-321.76891245199397],"ships":[4000,2400,1500,2400],"request":{"turn":-0.012789372524172213,"climb":-0.00011697994749974992,"bomb":true}},"firstBombReleasedAt":1449,"firstBombReleaseDistance":1598.9101331797767,"postReleaseDistance":1432.2616017345504,"firstBombReleaseAltitude":874.6729289475467,"postReleaseAltitude":878.5713697839677,"firstPostReleaseRequest":{"turn":-0.008975856719809909,"climb":-0.0000947829111693769,"bomb":false,"torpedo":false,"fire":false,"loop":false,"accelerate":false,"brake":false},"stats":{"playerAircraftKills":3,"playerShipKills":1,"allyAircraftKills":5,"allyShipKills":0,"shots":180,"hits":53,"loops":0,"damageTaken":124.99999999999947,"friendlyDamage":0,"friendlyKills":0,"score":1250},"ships":[4000,2400,0,2400]}
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2187.713585
+
+✖ failing tests:
+
+test at ../negative-old-pilot.test.mts:1:3120
+✖ CI50 Easy cadence regression clears with strict state transitions and physical bomb releases (1840.007775ms)
+  AssertionError [ERR_ASSERTION]: the post-release command leaves the original attack approach
+      at TestContext.<anonymous> (/workspace/scratch/cd965ebd4c33/negative-old-pilot.test.mts:160:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

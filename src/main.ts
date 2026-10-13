@@ -12,7 +12,7 @@ import { FIXED_DT, LOW_ALTITUDE_WARNING } from "./mission";
 import { FlightControls } from "./input";
 import { ControlSettings } from "./control-settings";
 import { KeyboardSettings, ControlInputPresentation } from "./keyboard-settings";
-import { missionProgress, payloadReadout, torpedoReleaseCue, placeHudNotice, type HudRect } from "./mission-hud";
+import { missionProgress, payloadReadout, payloadRejectionNotice, torpedoReleaseCue, placeHudNotice, type HudRect } from "./mission-hud";
 import { RulesGuide } from "./rules-guide";
 import { AllyAnnouncements } from "./ally-announcements";
 import { aimRadius } from "./aim-indicator";
@@ -237,9 +237,11 @@ function home() {
 }
 function pause(reason: string) {
   if (state.phase !== "playing" && state.phase !== "paused") return;
+  const wasPaused = state.phase === "paused";
   pendingLoop = false; pendingBomb = false; pendingTorpedo = false;
   pauseReasons.add(reason);
   pauseGame(state);
+  if (!wasPaused) scene?.invalidatePausedView();
   el("pause-ally-news").textContent = lastAllyNotice;
   el("pause-ally-report").hidden = !lastAllyNotice;
   updateBombCue();
@@ -255,12 +257,22 @@ function pause(reason: string) {
     : reason === "frame"
       ? "画面の更新が中断されたため停止しました"
       : "タイムの計測も止まっています";
-  el<HTMLButtonElement>("resume").disabled = contextLost || renderStatus === "stalled" || renderStatus === "failed";
+  // A paused canvas must show and finish the exact frozen pose before Resume
+  // can be used. The frame loop enables it after submitting that view.
+  if (!wasPaused || contextLost) el<HTMLButtonElement>("resume").disabled = true;
   el("pause-reload").hidden = renderStatus !== "failed";
   syncAudio();
 }
 function resume() {
-  if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || state.phase !== "paused" || renderStatus === "stalled" || renderStatus === "failed") return;
+  if (settings.isOpen || rules?.isOpen || document.hidden || contextLost || screen !== "paused" || state.phase !== "paused") return;
+  const now = performance.now();
+  renderStatus = scene?.pollRender(now) ?? "failed";
+  if (renderStatus !== "ready" || !scene?.pausedViewReady(state, true, now)) {
+    el<HTMLButtonElement>("resume").disabled = true;
+    el("pause-reload").hidden = renderStatus !== "failed";
+    return;
+  }
+  scene.invalidatePausedView();
   pauseReasons.clear();
   resumeGame(state);
   updateBombCue();
@@ -543,8 +555,7 @@ function frame() {
       if (e.type === "reinforcement") announce(`敵${e.amount ?? 0}機が復活 · 撃破でHP回復`, 4, 3);
       if (e.type === "payload-release" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾投下" : "魚雷投下 · 80m航走で起爆可能", 2, 1);
       if (e.type === "payload-rejected" && e.owner === state.player.id) {
-        const reasons: Record<string, string> = { altitude: "魚雷：高度20〜80mを目安に", speed: "魚雷：450km/h以下に減速", pitch: "魚雷：機首を水平に", bank: "魚雷：翼を水平に", reload: "兵装を再装填中", cooldown: "続けての投下は少し待って", capacity: "飛翔中の兵装が戻るまで待って", invalid: "この姿勢では投下できません" };
-        announce(reasons[e.detail ?? "invalid"], 2, 1);
+        announce(payloadRejectionNotice(e.detail), 2, 1);
       }
       if (e.type === "ordnance-dud" && e.owner === state.player.id) announce(e.weapon === "bomb" ? "爆弾不発 · 投下直後の接触" : "魚雷不発 · 進入条件/航走距離を確認", 3, 1);
       if (e.type === "ordnance-impact" && e.owner === state.player.id) announce(e.detail === "wreck" ? "沈没中の残骸に命中" : `${e.weapon === "bomb" ? "爆弾" : "魚雷"}${e.detail === "blast" ? "至近弾" : "命中"} · 艦体損傷`, 2, 1);
@@ -569,15 +580,23 @@ function frame() {
   if (state.phase !== "playing" && scene && !contextLost) {
     renderStatus = scene.pollRender(now);
     if (screen === "paused") {
-      el<HTMLButtonElement>("resume").disabled = renderStatus === "stalled" || renderStatus === "failed";
+      if (renderStatus !== "ready" || !scene.pausedViewReady(state, true, now))
+        el<HTMLButtonElement>("resume").disabled = true;
       el("pause-reload").hidden = renderStatus !== "failed";
-      if (pauseReasons.has("render") && renderStatus === "ready")
-        el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
     }
   }
   if (scene && !contextLost) {
     scene.render(state, screen === "playing" || screen === "paused", dt);
-    if (screen === "paused") { positionReloadStatus(); positionHudNotices(); }
+    if (screen === "paused") {
+      positionReloadStatus(); positionHudNotices();
+      const pausedViewReady = renderStatus !== "failed" && scene.pausedViewReady(state, true, now);
+      const resumeButton = el<HTMLButtonElement>("resume");
+      resumeButton.disabled = !pausedViewReady;
+      if (pausedViewReady && document.activeElement === document.body)
+        resumeButton.focus({ preventScroll: true });
+      if ((pauseReasons.has("render") || pauseReasons.has("context")) && pausedViewReady)
+        el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
+    }
     if (scene.diagnostics().queue.status === "failed") {
       renderStatus = "failed";
       if (screen === "home") preparationFailed(new Error("GPU frame completion unavailable"));
@@ -627,11 +646,15 @@ canvas.addEventListener("webglcontextrestored", () => {
   contextLost = false;
   scene?.resetRenderQueue();
   renderStatus = "ready";
-  el<HTMLButtonElement>("resume").disabled = false;
-  el("pause-reason").textContent = "描画が復帰しました。操作して再開できます";
+  el<HTMLButtonElement>("resume").disabled = true;
+  el("pause-reason").textContent = "描画が復帰しました。画面の準備を待っています";
 });
-window.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
-window.visualViewport?.addEventListener("resize", () => { scene?.resize(); noticeLayoutDirty = true; });
+function handleResize() {
+  scene?.resize(); noticeLayoutDirty = true;
+  if (screen === "paused") el<HTMLButtonElement>("resume").disabled = true;
+}
+window.addEventListener("resize", handleResize);
+window.visualViewport?.addEventListener("resize", handleResize);
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) pause("restored");
 });
@@ -688,9 +711,13 @@ try {
 // Development-only, deeply copied observation. No mutation or result injection API.
 if (import.meta.env.DEV) {
   Object.defineProperty(window, "__kaisenReadState", {
-    value: (includePerformanceHistory: boolean | 'audit' = true) =>
+    value: (includePerformanceHistory: boolean | 'audit' | 'clock' | 'input' = true) =>
       JSON.parse(
-        JSON.stringify(includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
+        // RAF polling only needs these primitives. Avoid cloning entities,
+        // forecasting ordnance or reading renderer diagnostics on every poll.
+        JSON.stringify(includePerformanceHistory === 'clock' ? {phase:state.phase,tick:state.tick,elapsed:state.elapsed} :
+          includePerformanceHistory === 'input' ? {phase:state.phase,tick:state.tick,controlsInput:controls.peek(),player:{bombs:state.player.bombs,torpedoes:state.player.torpedoes}} :
+          includePerformanceHistory === 'audit' ? {seed:state.seed,config:state.config,entries:inputAudit,dropped:inputAuditDropped} : {
           phase: state.phase,
           mode: state.mode,
           selectedMode,

@@ -1,0 +1,62 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+Listing tests:
+  [webkit-ui] › mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 393x648
+  [webkit-ui] › mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 568x320
+  [webkit-ui] › mobile-settings-ui.spec.ts:63:3 › desktop keyboard editor › keys can be changed, conflicts cancelled, restored after reload and described without phone instructions
+  [webkit-ui] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 320x568
+  [webkit-ui] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 393x852
+  [webkit-ui] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 568x320
+  [webkit-ui] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 852x393
+  [webkit-ui] › throttle-lever-ui.spec.ts:28:1 › native lever pointer capture, focused short keys and independent releases use shared DOM adapter
+  [webkit-ui] › throttle-lever-ui.spec.ts:49:1 › pending rollback is visible after reload and unchanged Save restores it without touching legacy
+  [webkit-ui] › throttle-lever-ui.spec.ts:59:1 › settings footer and close remain reachable at 200 percent CSS zoom
+  [chromium] › 00-00-input-method.spec.ts:6:1 › changing from touch to mouse or back cannot move a pressed home control
+  [chromium] › 00-00-input-method.spec.ts:32:3 › custom desktop input › committed custom keys fire and pause, old keys stop firing, rules own their keys
+  [chromium] › 00-easy-victory.spec.ts:79:1 › physical circular-stick inputs reach the victory screen
+  [chromium] › 00-normal-victory.spec.ts:13:1 › Normal mixed real touch and keyboard inputs reach the victory screen
+  [chromium] › bomb-guide.spec.ts:5:39 › easy bomb cue keeps ammo/reload and pause state legible through actual buttons
+  [chromium] › bomb-guide.spec.ts:5:39 › normal bomb cue keeps ammo/reload and pause state legible through actual buttons
+  [chromium] › easy-ship-tracking.spec.ts:6:1 › Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude
+  [chromium] › feedback-runtime.spec.ts:6:1 › both modes show zero-based tallies, clear payloads and paused rules without resuming
+  [chromium] › feedback-settings.spec.ts:42:2 › control layout settings save cancel and restore across screens 393x852
+  [chromium] › feedback-settings.spec.ts:42:2 › control layout settings save cancel and restore across screens 568x320
+  [chromium] › feedback-settings.spec.ts:75:1 › capture failure and release over another control recover without restarting flight
+  [chromium] › game.spec.ts:125:3 › home and flight 393x852
+  [chromium] › game.spec.ts:125:3 › home and flight 320x568
+  [chromium] › game.spec.ts:125:3 › home and flight 852x393
+  [chromium] › game.spec.ts:163:1 › touch steering, two-finger release, loop and explicit resume
+  [chromium] › game.spec.ts:229:1 › real flight to sea failure, result, replay, and home
+  [chromium] › game.spec.ts:264:1 › ten replays keep renderer resources bounded
+  [chromium] › game.spec.ts:289:1 › 200 percent text remains reachable on a short screen
+  [chromium] › game.spec.ts:312:1 › production build omits the observation hook and includes no remote destination
+  [chromium] › game.spec.ts:328:1 › long interruption pauses explicitly and audio mute releases sources
+  [chromium] › mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 393x648
+  [chromium] › mobile-settings-ui.spec.ts:6:3 › Safari-sized touch settings and rules remain readable 568x320
+  [chromium] › mobile-settings-ui.spec.ts:63:3 › desktop keyboard editor › keys can be changed, conflicts cancelled, restored after reload and described without phone instructions
+  [chromium] › modes.spec.ts:46:3 › Normal visible controls and bore sight 393x852
+  [chromium] › modes.spec.ts:46:3 › Normal visible controls and bore sight 852x393
+  [chromium] › modes.spec.ts:46:3 › Normal visible controls and bore sight 320x568
+  [chromium] › modes.spec.ts:46:3 › Normal visible controls and bore sight 568x320
+  [chromium] › modes.spec.ts:85:1 › Normal real simultaneous touch steering, fire and throttle release on pause and cancel
+  [chromium] › modes.spec.ts:138:1 › Normal real sea failure labels the result and preserves mode across retry and home
+  [chromium] › modes.spec.ts:164:2 › custom legacy lever never covers pause or sound 320x568
+  [chromium] › modes.spec.ts:164:2 › custom legacy lever never covers pause or sound 568x320
+  [chromium] › modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 393x648
+  [chromium] › modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 320x568
+  [chromium] › modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 568x320
+  [chromium] › modes.spec.ts:189:3 › notices avoid sight, radar, HUD and controls with long text 852x393
+  [chromium] › naval-payload.spec.ts:14:1 › payload controls preserve steering, reject unsafe torpedo release, and rearm on the real paused clock
+  [chromium] › observation-clock.spec.ts:5:1 › lightweight clock observation preserves the world and follows real phase transitions
+  [chromium] › paused-render-gate.spec.ts:4:1 › Resume waits for the completed frozen pose and resize renders only once
+  [chromium] › reinforcement.spec.ts:6:1 › repeated 40-second replenishment stays bounded and pause freezes its clock
+  [chromium] › reload.spec.ts:9:1 › real touch flight shows a filling reload ring, freezes it, then refills or clears all targets
+  [chromium] › review-accessibility.spec.ts:4:1 › pause layout settings are reachable by keyboard and modal backward focus stays usable
+  [chromium] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 320x568
+  [chromium] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 393x852
+  [chromium] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 568x320
+  [chromium] › throttle-lever-ui.spec.ts:6:3 › lever settings preserve legacy raw, rectangular preview and repeated saves 852x393
+  [chromium] › throttle-lever-ui.spec.ts:28:1 › native lever pointer capture, focused short keys and independent releases use shared DOM adapter
+  [chromium] › throttle-lever-ui.spec.ts:49:1 › pending rollback is visible after reload and unchanged Save restores it without touching legacy
+  [chromium] › throttle-lever-ui.spec.ts:59:1 › settings footer and close remain reachable at 200 percent CSS zoom
+  [chromium] › tracers.spec.ts:5:1 › aircraft tracers keep CSS width at high DPR and orientation changes in actual flight
+Total: 59 tests in 18 files

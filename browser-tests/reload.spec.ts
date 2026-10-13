@@ -3,6 +3,7 @@ import { steerAndObserve } from './touch-command';
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { waitForPausedView } from './paused-view';
 
 test.use({ trace: 'off' });
 test('real touch flight shows a filling reload ring, freezes it, then refills or clears all targets', async ({page, context}) => {
@@ -11,6 +12,7 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
+  const readPilot = () => page.evaluate(() => (window as any).__kaisenReadState(false));
   const capture = async (name: string) => {
     await mkdir('test-results/evidence', {recursive:true});
     await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({note:'Real clock and CDP touch input, no world/clock injection. Pause menu hidden only for screenshot.', snapshot:await read()},null,2));
@@ -27,9 +29,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   try {
     while (true) {
       if (lastSample >= 0) await page.waitForFunction(next => {
-        const s=(window as any).__kaisenReadState(); return s.phase !== 'playing' || s.tick >= next;
+        const s=(window as any).__kaisenReadState('clock'); return s.phase !== 'playing' || s.tick >= next;
       },lastSample+6,{polling:'raf'});
-      const s = await read();
+      const s = await readPilot();
       if (captured && s.player.reloadTicksRemaining < capturedRemaining) progressAdvanced = true;
       if (captured && s.phase === 'playing' && s.player.reloadTicksRemaining > 0) {
         const shown = Number(await page.locator('#reload-status').getAttribute('data-progress'));
@@ -64,11 +66,8 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         await touchEnd(); await page.locator('#pause').tap();
         const frozen = await read();
         capturedRemaining = frozen.player.reloadTicksRemaining;
-        // Require a completed rendering of this paused state, not a previous
-        // GPU frame whose canvas may predate the reload event.
-        const submittedBefore = frozen.render.queue.submittedCount;
-        await expect.poll(async () => (await read()).render.queue.completedCount)
-          .toBeGreaterThanOrEqual(submittedBefore + 1);
+        const viewport = page.viewportSize();
+        await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
         await expect(page.locator('#reload-status')).toContainText('再装填中 あと');
         const progress = Number(await page.locator('#reload-status').getAttribute('data-progress'));
         expect(progress).toBeGreaterThanOrEqual(0); expect(progress).toBeLessThan(1);
@@ -79,7 +78,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         expect(still.player.reloadTicksRemaining).toBe(frozen.player.reloadTicksRemaining);
         expect(still.player.mg).toBe(0); expect(still.player.cannon).toBe(0);
         expect(Number(await page.locator('#reload-status').getAttribute('data-progress'))).toBe(progress);
-        captured = true; await page.locator('#resume').tap(); await touchStart(); lastSample=-6; continue;
+        captured = true;
+        await waitForPausedView(page,{tick:frozen.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
+        await page.locator('#resume').tap(); await touchStart(); lastSample=-6; continue;
       }
       if (captured && s.player.reloadTicksRemaining === 0) {
         expect(s.player.mg+s.player.cannon).toBeGreaterThan(0);

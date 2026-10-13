@@ -1,0 +1,170 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/scratch/cd965ebd4c33/kaisen/node_modules/.bin/playwright",
+      "test",
+      "--config=/workspace/scratch/cd965ebd4c33/kaisen-ci53-related.config.ts",
+      "browser-tests/00-easy-victory.spec.ts",
+      "browser-tests/00-normal-victory.spec.ts"
+    ],
+    "configFile": "/workspace/scratch/cd965ebd4c33/kaisen-ci53-related.config.ts",
+    "rootDir": "/workspace/scratch/cd965ebd4c33/kaisen/browser-tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/scratch/cd965ebd4c33/kaisen/test-results/ci53-related",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/workspace/scratch/cd965ebd4c33/kaisen/browser-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/workspace/scratch/cd965ebd4c33/ci53/related-browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev -- --port 4176",
+      "url": "http://127.0.0.1:4176",
+      "reuseExistingServer": false,
+      "timeout": 30000,
+      "cwd": "/workspace/scratch/cd965ebd4c33/kaisen"
+    }
+  },
+  "suites": [
+    {
+      "title": "00-easy-victory.spec.ts",
+      "file": "00-easy-victory.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "physical circular-stick inputs reach the victory screen",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 720000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 587019,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T16:52:10.688Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1b5bfb95b5d4eec9a3-2b67eb6803468be64c7a",
+          "file": "00-easy-victory.spec.ts",
+          "line": 79,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "00-normal-victory.spec.ts",
+      "file": "00-normal-victory.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Normal mixed real touch and keyboard inputs reach the victory screen",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 720000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 345445,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T17:01:57.816Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cf3044236c59ab66a16a-39369b662422508651c9",
+          "file": "00-normal-victory.spec.ts",
+          "line": 13,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T16:52:09.773Z",
+    "duration": 933687.566,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

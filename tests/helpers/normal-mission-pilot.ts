@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from 'three';
 import { desiredFlightInput, forwardOf } from '../../src/flight';
 import { targetAimPoint } from '../../src/flight-assist';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
+import { absolutePitchTargetToRateCommand } from './pitch-rate-conversion';
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value));
 const vector = (point: { x: number; y: number; z: number }) => new Vector3(point.x, point.y, point.z);
@@ -97,7 +98,10 @@ export function createNormalMissionPilot() {
     const yawRate = h2 > 1 ? (relative.z * velocity.x - relative.x * velocity.z) / h2 : 0;
     const pitchRate = h > 1 ? (velocity.y * h - relative.y * (relative.x * velocity.x + relative.z * velocity.z) / h) / relative.lengthSq() : 0;
     let turn = clamp(controls.turn * (sampleDt > .118 ? Math.min(12,.85/sampleDt) : 12) - yawRate / .82 + weave * Math.sin(snapshot.elapsed * Math.PI));
-    let climb = clamp(controls.climb * .62 / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
+    const legacyAbsolutePitch = clamp(controls.climb * .62 / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
+    // Preserve the old pilot's one-sample absolute target as a bounded rate
+    // request; sampleDt reflects the interval between the actual observations.
+    let climb = absolutePitchTargetToRateCommand(legacyAbsolutePitch, player.pitch, player.speed, sampleDt);
     const norm = Math.hypot(turn, climb);
     if (norm > 1) { turn /= norm; climb /= norm; }
     const alignment = forwardOf(player).angleTo(aim.clone().sub(player.position));

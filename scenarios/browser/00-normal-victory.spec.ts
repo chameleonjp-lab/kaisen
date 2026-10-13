@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
+import { steerAndObserve, releasePayloadAndObserve } from '../../browser-tests/touch-command';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
-import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
-import { expectScoreResult, inspectScoreResultLayout } from './score-result';
+import { createBrowserMissionPilot, shouldAttemptBomb } from '../../tests/helpers/mission-browser-pilot';
+import { pointerOffsetForControls } from '../../tests/helpers/touch-reload-pilot';
+import { expectScoreResult, inspectScoreResultLayout } from '../../browser-tests/score-result';
+import { waitForPausedView } from '../../browser-tests/paused-view';
 
 // This route verifies mixed real input: CDP touch steering plus the ordinary
 // Space key for manual fire and W/S throttle. Three-finger button ownership has a separate test.
@@ -18,9 +19,11 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   const observePilot = () => page.evaluate(() => {const s=(window as any).__kaisenReadState(false);s.bombButton={ready:document.getElementById('bomb')!.dataset.ready,text:document.getElementById('bomb-hint')!.textContent};return s;});
   const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot();
   const origin = { x: 180, y: 500 };
-  let payloadPresses = 0, bombCueCaptured = false;
+  let payloadPresses = 0, bombCueObserved = false, bombCueEvidence: any = null;
+  const payloadAttempts: unknown[] = [];
   let consumedInputs: any = null;
   let fireHeld = false, accelerateHeld = false, brakeHeld = false, lastSample = -6, sawReload = false, completedReload = false, won = false;
+  let payloadSkips = 0, lastProgressMinute = -1;
   const samples: unknown[] = [];
   const renderRecoveries: unknown[] = [];
   await page.goto('/');
@@ -31,11 +34,17 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
   try {
     while (true) {
       if (lastSample >= 0) await page.waitForFunction(next => {
-        const state = (window as any).__kaisenReadState(false);
+        const state = (window as any).__kaisenReadState('clock');
         return state.phase !== 'playing' || state.tick >= next;
       }, lastSample + 6, { polling: 'raf' });
-      const state = await observePilot();
+      let state = await observePilot();
       expect(state.mode).toBe('normal');
+      const progressMinute=Math.floor(state.elapsed/60);
+      if(progressMinute>lastProgressMinute) {
+        lastProgressMinute=progressMinute;
+        console.log('NORMAL_VICTORY_PROGRESS '+JSON.stringify({phase:state.phase,tick:state.tick,elapsed:Math.round(state.elapsed*10)/10,
+          hp:state.player.health,bombs:state.player.bombs,liveShips:state.ships.filter((ship:any)=>ship.health>0).length,payloadPresses,payloadSkips}));
+      }
       if (state.player.reloadTicksRemaining > 0) sawReload = true;
       else if (sawReload) completedReload = true;
       if (state.phase === 'ended') break;
@@ -55,12 +64,13 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await expect(page.locator('#pause-reason')).toHaveText('描画が復帰しました。操作して再開できます');
         await expect(page.locator('#resume')).toBeEnabled();
+        const viewport = page.viewportSize();
+        await waitForPausedView(page,{tick:state.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
         const frozen = await read();
         const world = (s: any) => ({tick:s.tick,elapsed:s.elapsed,player:s.player,
           allies:s.allies,enemies:s.enemies,ships:s.ships,stats:s.stats,bullets:s.bullets,
           ordnance:s.ordnance,allyRespawnAt:s.allyRespawnAt,result:s.result,deathCause:s.deathCause});
         expect(world(frozen)).toEqual(world(state));
-        expect(frozen.render.queue.completedCount).toBeGreaterThanOrEqual(state.lastInterruption.render.queue.submittedCount);
         await page.waitForTimeout(150);
         const settled = await read();
         expect(settled.phase).toBe('paused');
@@ -77,22 +87,44 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
       expect(state.phase, 'Unrecognized flight phase').toBe('playing');
       expect(state.elapsed, 'Bounded real-input completion window').toBeLessThan(600);
       lastSample = state.tick;
-    if(!bombCueCaptured && state.bombButton.ready==='true') {
+    if(!bombCueObserved && state.bombButton.ready==='true') {
       expect(state.bombGuide.affected.length).toBeGreaterThan(0);expect(['direct','blast']).toContain(state.bombGuide.kind);
       expect(state.player.bombs).toBeGreaterThan(0);expect(state.player.bombReloadTicks).toBe(0);expect(state.player.payloadCooldown).toBe(0);
       expect(['命中見込み','至近弾圏内']).toContain(state.bombButton.text);
-      await mkdir('test-results/evidence',{recursive:true});
-      await page.screenshot({path:'test-results/evidence/bomb-ready-normal.png'});
-      await writeFile('test-results/evidence/bomb-ready-normal.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:state,after:await observePilot()},null,2));
-      bombCueCaptured=true;
+      bombCueEvidence={snapshot:state,button:{ready:state.bombButton.ready,text:state.bombButton.text},tick:state.tick};
+      bombCueObserved=true;
     }
 
-      const input = pilot(state), { dx, dy } = pointerOffsetForControls(input.turn, input.climb);
+      const bombCandidate=shouldAttemptBomb(state)&&pilot.preview(state).bomb;
+      let steeringState=state,payloadAttempt: any = null;
+      if(bombCandidate) {
+        let released: boolean | null = false;
+        let payloadAfter: any = state;
+        try {
+          released=await releasePayloadAndObserve(page,cdp,origin,'bomb',true);
+        } finally {
+          payloadAfter=await observePilot();
+          if(payloadAfter.player.bombs<state.player.bombs)payloadPresses++;
+          payloadAttempt={attempted:released!==null,order:'fresh-cue-and-current-steering-before-next-pilot-command',released,
+            beforeTick:state.tick,afterTick:payloadAfter.tick,
+            bombsBefore:state.player.bombs,bombsAfter:payloadAfter.player.bombs,
+            phaseBefore:state.phase,phaseAfter:payloadAfter.phase};
+          payloadAttempts.push(payloadAttempt);
+        }
+        if(released===null)payloadSkips++;
+        if(payloadAfter.phase==='ended')break;
+        if(payloadAfter.phase==='paused')continue;
+        expect(payloadAfter.phase).toBe('playing');
+        if(released!==null)expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
+        steeringState=payloadAfter;
+      }
+      const input=pilot(steeringState);
+      const { dx, dy } = pointerOffsetForControls(input.turn, input.climb);
       expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(36 + 1e-9);
       const accepted = await steerAndObserve(page,cdp,origin,input.turn,input.climb);
       const acceptedTick = accepted.tick;
       lastSample = acceptedTick;
-      // Do not send Space to the result screen's newly focused retry button.
+      // Do not send controls to the result screen's newly focused retry button.
       if (accepted.phase === 'ended') break;
       if (accepted.phase !== 'playing') continue;
       if (input.fire !== fireHeld) {
@@ -108,8 +140,11 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
         if (input.brake) await page.keyboard.down('s'); else await page.keyboard.up('s');
         brakeHeld = Boolean(input.brake);
       }
-      if(input.bomb) { await releasePayloadAndObserve(page,cdp,origin,input.turn,input.climb,'bomb');payloadPresses++; }
-      samples.push({ tick: state.tick, acceptedTick, requested: input, previousInput: state.controlsInput, player: {position:state.player.position,yaw:state.player.yaw,pitch:state.player.pitch,speed:state.player.speed,health:state.player.health} });
+      samples.push({ tick: state.tick, steeringTick:steeringState.tick, acceptedTick, requested: input, bombCandidate, pilotBomb:input.bomb,
+        previousInput: steeringState.controlsInput, payloadAttempt,
+        guide:state.bombGuide?{kind:state.bombGuide.kind,affected:state.bombGuide.affected}:null,
+        player: {position:steeringState.player.position,yaw:steeringState.player.yaw,pitch:steeringState.player.pitch,speed:steeringState.player.speed,health:steeringState.player.health,bombs:steeringState.player.bombs},
+        ships:steeringState.ships.map((ship:any)=>({id:ship.id,health:ship.health})) });
     }
     await page.keyboard.up('Space'); fireHeld = false; await page.keyboard.up('w'); await page.keyboard.up('s'); accelerateHeld = brakeHeld = false;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
@@ -118,7 +153,7 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     expect(consumedInputs.dropped).toBe(0);
     expect(consumedInputs.entries[0].tick).toBe(1);
     expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
-    expect(bombCueCaptured,"Bomb green cue was inspected during a live approach").toBe(true);
+    expect(bombCueObserved,"Bomb green cue was inspected during a live approach").toBe(true);
     expect(payloadPresses).toBeGreaterThan(0);
     expect(result.result?.outcome).toBe('victory');
     expect(result.enemies.every((target: any) => target.health <= 0)).toBe(true);
@@ -134,11 +169,11 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     await inspectScoreResultLayout(page, result.result, { narrow: true });
     const submitted = result.render.queue.submittedCount;
     await expect.poll(async () => (await read()).render.queue.completedCount).toBeGreaterThanOrEqual(submitted + 1);
-    await mkdir('test-results/evidence', { recursive: true });
-    await page.screenshot({ path: 'test-results/evidence/normal-result-victory.png' });
-    await writeFile('test-results/evidence/normal-result-victory.json', JSON.stringify({
+    await mkdir('scenario-results/evidence', { recursive: true });
+    await page.screenshot({ path: 'scenario-results/evidence/normal-result-victory.png' });
+    await writeFile('scenario-results/evidence/normal-result-victory.json', JSON.stringify({
       note: 'Chromium touch emulation plus ordinary Space-key manual fire, W/S throttle, and simultaneous touch bomb-button input. Read-only snapshots, no world/health/time injection. Not iPhone hardware or human playability evidence.',
-      snapshot: await read(), samples, sawReload, completedReload, payloadPresses, consumedInputs, renderRecoveries,
+      snapshot: await read(), samples, sawReload, completedReload, payloadPresses, payloadAttempts, consumedInputs, renderRecoveries,
     }, null, 2));
     won = true;
     await page.locator('#retry').tap();
@@ -151,11 +186,15 @@ test('Normal mixed real touch and keyboard inputs reach the victory screen', asy
     if (fireHeld) await page.keyboard.up('Space').catch(() => {});
     if (accelerateHeld) await page.keyboard.up('w').catch(() => {});
     if (brakeHeld) await page.keyboard.up('s').catch(() => {});
-    await mkdir('test-results/evidence', { recursive: true });
-    await writeFile('test-results/evidence/normal-victory-route-state.json', JSON.stringify({
-      won, sawReload, completedReload, errors, samples, renderRecoveries, snapshot: await read().catch(() => null),
+    await mkdir('scenario-results/evidence', { recursive: true });
+    await writeFile('scenario-results/evidence/normal-victory-route-state.json', JSON.stringify({
+      won, sawReload, completedReload, errors, samples, payloadAttempts, renderRecoveries, snapshot: await read().catch(() => null),
       consumedInputs: consumedInputs ?? await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null),
     }, null, 2));
-    if (!won) await page.screenshot({ path: 'test-results/evidence/normal-victory-route-failure.png' }).catch(() => {});
+    if (bombCueEvidence) await writeFile('scenario-results/evidence/bomb-cue-victory-normal.json',JSON.stringify({
+      note:'Live unmodified gameplay cue observation from this victory run. Its green PNG is captured with an exact pose snapshot in the separate short bomb-guide route.',
+      ...bombCueEvidence,payloadAttempts,
+    },null,2));
+    if (!won) await page.screenshot({ path: 'scenario-results/evidence/normal-victory-route-failure.png' }).catch(() => {});
   }
 });

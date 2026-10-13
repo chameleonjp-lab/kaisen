@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForPausedView } from './paused-view';
 
 test('pause layout settings are reachable by keyboard and modal backward focus stays usable', async ({ page }) => {
   await page.goto('/');
@@ -6,6 +7,9 @@ test('pause layout settings are reachable by keyboard and modal backward focus s
   await page.locator('#start').tap();
   await page.locator('#pause').tap();
   await expect(page.locator('#pause-screen')).toBeVisible();
+  const paused = await page.evaluate(()=>(window as any).__kaisenReadState());
+  const viewport = page.viewportSize();
+  await waitForPausedView(page,{tick:paused.tick,...(viewport?{cssWidth:viewport.width,cssHeight:viewport.height}:{})});
   await page.locator('#resume').focus();
   await page.keyboard.press('Tab');
   await expect(page.locator('#pause-restart')).toBeFocused();

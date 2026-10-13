@@ -1,0 +1,474 @@
+{
+  "source": {
+    "artifact": "CI54 touch-victory-state.json",
+    "sha256": "7bf4845c29acc74656b92e10bf8089761e670756248e0b473cff1db94f60f95f",
+    "mode": "easy",
+    "seed": 1262569811
+  },
+  "model": {
+    "range": "0–40 simulation ticks after each exact recorded CI54 request state",
+    "engine": "unchanged stepGame + predictBombEffect",
+    "measuredPreviousInput": "Continue the steering consumed at the recorded observation; CI54 has no consumed steering changes before the associated release, and the continuation matches the actual pre-release state.",
+    "syntheticRequestedInput": "Apply helper request at the next simulation tick and hold it. Hypothetical tail, not a recorded browser action.",
+    "syntheticNeutralInput": "Apply turn=0/climb=0 at the next simulation tick and hold it. Hypothetical tail, not a recorded browser action.",
+    "limits": "Cue stability only; no button delivery, changed browser driver, or full-mission candidate outcome is inferred."
+  },
+  "cases": [
+    {
+      "requestTick": 1491,
+      "previousInput": {
+        "turn": 0.5730067182147789,
+        "climb": -0.0009168206693672938
+      },
+      "requestedInput": {
+        "turn": -0.00942,
+        "climb": -0.00036
+      },
+      "initialCue": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 1800
+          }
+        ]
+      },
+      "actualPreRelease": {
+        "eventTick": 1531,
+        "stateTick": 1530,
+        "delayFromRequest": 39,
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null
+      },
+      "measuredSteeringStayedUntilRelease": true,
+      "curves": {
+        "measuredPreviousInput": {
+          "firstNonGreenDelay": 2,
+          "lastGreenDelay": 1,
+          "initialContiguousGreenTicks": 2,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                1
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                2,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticRequestedInput": {
+          "firstNonGreenDelay": null,
+          "lastGreenDelay": 40,
+          "initialContiguousGreenTicks": 41,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                40
+              ],
+              "cue": "green"
+            }
+          ]
+        },
+        "syntheticNeutralInput": {
+          "firstNonGreenDelay": null,
+          "lastGreenDelay": 40,
+          "initialContiguousGreenTicks": 41,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                40
+              ],
+              "cue": "green"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "requestTick": 6633,
+      "previousInput": {
+        "turn": 0.09354574485895216,
+        "climb": 0.0006886079673218773
+      },
+      "requestedInput": {
+        "turn": -0.03732,
+        "climb": -0.0011
+      },
+      "initialCue": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 384.36
+          }
+        ]
+      },
+      "actualPreRelease": {
+        "eventTick": 6656,
+        "stateTick": 6655,
+        "delayFromRequest": 22,
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null
+      },
+      "measuredSteeringStayedUntilRelease": true,
+      "curves": {
+        "measuredPreviousInput": {
+          "firstNonGreenDelay": 5,
+          "lastGreenDelay": 4,
+          "initialContiguousGreenTicks": 5,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                4
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                5,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticRequestedInput": {
+          "firstNonGreenDelay": null,
+          "lastGreenDelay": 40,
+          "initialContiguousGreenTicks": 41,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                40
+              ],
+              "cue": "green"
+            }
+          ]
+        },
+        "syntheticNeutralInput": {
+          "firstNonGreenDelay": null,
+          "lastGreenDelay": 40,
+          "initialContiguousGreenTicks": 41,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                40
+              ],
+              "cue": "green"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "requestTick": 8374,
+      "previousInput": {
+        "turn": -0.35036841000093694,
+        "climb": -0.5026659360227071
+      },
+      "requestedInput": {
+        "turn": -0.00874,
+        "climb": 0.04714
+      },
+      "initialCue": {
+        "kind": "blast",
+        "affected": [
+          {
+            "shipId": 102,
+            "damage": 143.83
+          }
+        ]
+      },
+      "actualPreRelease": {
+        "eventTick": 8399,
+        "stateTick": 8398,
+        "delayFromRequest": 24,
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null
+      },
+      "measuredSteeringStayedUntilRelease": true,
+      "curves": {
+        "measuredPreviousInput": {
+          "firstNonGreenDelay": 2,
+          "lastGreenDelay": 1,
+          "initialContiguousGreenTicks": 2,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                1
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                2,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticRequestedInput": {
+          "firstNonGreenDelay": null,
+          "lastGreenDelay": 40,
+          "initialContiguousGreenTicks": 41,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                40
+              ],
+              "cue": "green"
+            }
+          ]
+        },
+        "syntheticNeutralInput": {
+          "firstNonGreenDelay": 18,
+          "lastGreenDelay": 17,
+          "initialContiguousGreenTicks": 18,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                17
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                18,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "requestTick": 17674,
+      "previousInput": {
+        "turn": 0.25940724270022675,
+        "climb": 0.41985787861241247
+      },
+      "requestedInput": {
+        "turn": 0.40096,
+        "climb": 0.16943
+      },
+      "initialCue": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 100,
+            "damage": 1800
+          }
+        ]
+      },
+      "actualPreRelease": {
+        "eventTick": 17688,
+        "stateTick": 17687,
+        "delayFromRequest": 13,
+        "guide": {
+          "kind": "direct",
+          "affected": [
+            {
+              "shipId": 100,
+              "damage": 1800
+            }
+          ]
+        },
+        "impact": {
+          "tick": 17989,
+          "target": 100,
+          "targetKind": "ship",
+          "damage": 1800,
+          "detail": "direct"
+        }
+      },
+      "measuredSteeringStayedUntilRelease": true,
+      "curves": {
+        "measuredPreviousInput": {
+          "firstNonGreenDelay": 20,
+          "lastGreenDelay": 19,
+          "initialContiguousGreenTicks": 20,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                19
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                20,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticRequestedInput": {
+          "firstNonGreenDelay": 39,
+          "lastGreenDelay": 38,
+          "initialContiguousGreenTicks": 39,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                38
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                39,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticNeutralInput": {
+          "firstNonGreenDelay": 5,
+          "lastGreenDelay": 4,
+          "initialContiguousGreenTicks": 5,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                4
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                5,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "requestTick": 18311,
+      "previousInput": {
+        "turn": -0.9994527843750395,
+        "climb": -0.033077663233380794
+      },
+      "requestedInput": {
+        "turn": -0.99976,
+        "climb": 0.02213
+      },
+      "initialCue": {
+        "kind": "direct",
+        "affected": [
+          {
+            "shipId": 103,
+            "damage": 1800
+          }
+        ]
+      },
+      "actualPreRelease": {
+        "eventTick": 18331,
+        "stateTick": 18330,
+        "delayFromRequest": 19,
+        "guide": {
+          "kind": "water",
+          "affected": []
+        },
+        "impact": null
+      },
+      "measuredSteeringStayedUntilRelease": true,
+      "curves": {
+        "measuredPreviousInput": {
+          "firstNonGreenDelay": 2,
+          "lastGreenDelay": 1,
+          "initialContiguousGreenTicks": 2,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                1
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                2,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticRequestedInput": {
+          "firstNonGreenDelay": 3,
+          "lastGreenDelay": 2,
+          "initialContiguousGreenTicks": 3,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                2
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                3,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        },
+        "syntheticNeutralInput": {
+          "firstNonGreenDelay": 14,
+          "lastGreenDelay": 13,
+          "initialContiguousGreenTicks": 14,
+          "segments": [
+            {
+              "delayRange": [
+                0,
+                13
+              ],
+              "cue": "green"
+            },
+            {
+              "delayRange": [
+                14,
+                40
+              ],
+              "cue": "water"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

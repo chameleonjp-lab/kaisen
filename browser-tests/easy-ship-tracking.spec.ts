@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { steerAndObserve } from './touch-command';
+import { waitForPausedView } from './paused-view';
 
 test('Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude',async({page,context})=>{
  test.setTimeout(60000);await page.setViewportSize({width:393,height:648});
@@ -10,12 +11,14 @@ test('Easy higher opening keeps ship pull gentle and deliberate climb wins; repl
  await page.locator('#start').tap();await expect.poll(async()=>(await read()).phase).toBe('playing');
  await page.locator('#pause').tap();const opening=await read();
  expect(opening.elapsed).toBeLessThan(2);expect(opening.player.position.y).toBeGreaterThan(295);
+ await waitForPausedView(page,{tick:opening.tick,cssWidth:393,cssHeight:648});
  await mkdir('test-results/evidence',{recursive:true});
  await page.screenshot({path:'test-results/evidence/easy-elevated-opening.png',style:'#pause-screen {visibility:hidden!important}'});
  await page.locator('#resume').tap();
  await expect.poll(async()=>{const s=await read();expect(s.phase).toBe('playing');return s.elapsed;},{timeout:15000}).toBeGreaterThanOrEqual(6);
  await page.locator('#pause').tap();const tracked=await read();
  expect(tracked.player.position.y).toBeGreaterThan(250);expect(tracked.player.pitch).toBeGreaterThan(-.22);
+ await waitForPausedView(page,{tick:tracked.tick,cssWidth:393,cssHeight:648});
  await page.screenshot({path:'test-results/evidence/easy-gentle-ship-follow.png',style:'#pause-screen {visibility:hidden!important}'});
  await page.locator('#resume').tap();
  const cdp=await context.newCDPSession(page),origin={x:90,y:500};
