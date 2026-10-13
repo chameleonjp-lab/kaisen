@@ -1,0 +1,16 @@
+✔ CI53 ready blast cues produce a real payload request when direct-center geometry misses (7.310437ms)
+✔ Normal bomb pulse waits for the accepted straight pass and keeps a useful cue through touch delay (214.820372ms)
+✔ live-cue previews do not advance pilot history or unsubmitted controls (4.869708ms)
+✔ Easy escape state advances only after a verified bomb-release acknowledgement (2.038757ms)
+✔ explicit browser payload readiness blocks an otherwise-valid local center estimate (0.728561ms)
+✔ collision avoidance uses TTC beyond 240 m after a delayed observation (1.126947ms)
+✔ held-stick ship pilot descends toward its staging altitude instead of opposing an absent Easy pull (0.546042ms)
+✔ rate-converted manual descent reaches the real torpedo envelope and splashes the released round (300.805105ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 863.158404

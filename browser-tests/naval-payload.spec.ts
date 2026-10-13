@@ -15,6 +15,13 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   test.setTimeout(90000);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
+  await page.evaluate(()=>{
+    (window as any).__payloadPointerEvents=[];
+    for(const type of ['pointerdown','pointerup']) document.addEventListener(type,event=>{
+      const target=event.target as Element|null;
+      if(target?.closest('#bomb')) (window as any).__payloadPointerEvents.push({type,isTrusted:event.isTrusted,pointerId:(event as PointerEvent).pointerId,target:target.closest('#bomb')?.id});
+    },true);
+  });
   await page.locator('input[value="normal"]').check();await page.locator('#start').tap();
   for(const id of ['fire','loop','throttle','bomb','torpedo']) {
     const hit=await page.locator(`#${id}`).evaluate(element=>{const r=element.getBoundingClientRect();return element.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));});
@@ -32,17 +39,38 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   const outsideCue=await read(page);
   expect(outsideCue.bombGuide?.affected??[]).toEqual([]);
   await expect(page.locator('#bomb')).toHaveAttribute('data-ready','false');
-  expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb',true),
+  expect(await releasePayloadAndObserve(page,cdp,origin,'bomb',true),
     'a fresh out-of-range cue skips the physical press').toBeNull();
   const skipped=await read(page);
   expect(skipped.player.bombs).toBe(outsideCue.player.bombs);
   expect(skipped.controlsInput.steerPointer).toBe(outsideCue.controlsInput.steerPointer);
   expect(skipped.controlsInput.heldPointers.bomb).toEqual([]);
   expect((await page.evaluate(()=>(window as any).__kaisenReadState('audit'))).entries.some((entry:any)=>entry.input.bomb)).toBe(false);
-  expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);
+  const nonzero=await steerAndObserve(page,cdp,origin,.2,.1);
+  expect(nonzero.phase).toBe('playing');
+  const beforePulse=await read(page);
+  expect(beforePulse.controlsInput.turn).toBeCloseTo(.2,5);
+  expect(beforePulse.controlsInput.climb).toBeCloseTo(.1,5);
+  const eventStart=await page.evaluate(()=>(window as any).__payloadPointerEvents.length);
+  expect(await releasePayloadAndObserve(page,cdp,origin,'bomb')).toBe(true);
+  const afterPulse=await read(page);
+  expect(afterPulse.controlsInput.steerPointer).toBe(beforePulse.controlsInput.steerPointer);
+  expect(afterPulse.controlsInput.turn).toBeCloseTo(beforePulse.controlsInput.turn,5);
+  expect(afterPulse.controlsInput.climb).toBeCloseTo(beforePulse.controlsInput.climb,5);
+  expect(afterPulse.controlsInput.heldPointers.bomb).toEqual([]);
+  expect(afterPulse.player.bombs).toBe(beforePulse.player.bombs-1);
+  const pulseEvents=await page.evaluate(start=>(window as any).__payloadPointerEvents.slice(start),eventStart);
+  expect(pulseEvents.map((event:any)=>event.type)).toEqual(['pointerdown','pointerup']);
+  expect(pulseEvents.every((event:any)=>event.isTrusted)).toBe(true);
+  expect(pulseEvents[0].pointerId).toBe(pulseEvents[1].pointerId);
+  expect(pulseEvents.every((event:any)=>event.target==='bomb')).toBe(true);
+  const pulseAudit=(await page.evaluate(()=>(window as any).__kaisenReadState('audit'))).entries.filter((entry:any)=>entry.input.bomb);
+  expect(pulseAudit).toHaveLength(1);
+  expect(pulseAudit[0].input.turn).toBeCloseTo(beforePulse.controlsInput.turn,5);
+  expect(pulseAudit[0].input.climb).toBeCloseTo(beforePulse.controlsInput.climb,5);
   await expect(page.locator('#bomb-ammo')).toHaveText('残り1発');
   await page.waitForFunction(()=>{const s=(window as any).__kaisenReadState();return s.player.payloadCooldown<=0;});
-  expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'bomb')).toBe(true);
+  expect(await releasePayloadAndObserve(page,cdp,origin,'bomb')).toBe(true);
   await expect.poll(async()=>(await read(page)).player.bombReloadTicks).toBeGreaterThan(0);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await page.locator('#pause').tap();const paused=await read(page);
@@ -74,8 +102,12 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect(page.locator('#torpedo')).toHaveAttribute('data-ready','true');
   await expect(page.locator('#torpedo-hint')).toHaveText('投下可能');
   await expect(page.locator('#payload-status')).toContainText('投下可能');
-  expect(await releasePayloadAndObserve(page,cdp,origin,0,0,'torpedo')).toBe(true);
+  expect(await releasePayloadAndObserve(page,cdp,origin,'torpedo')).toBe(true);
   const released=await read(page);
+  const guidedRound=released.ordnance.find((round:any)=>round.owner===released.player.id&&round.kind==='torpedo');
+  expect(guidedRound, 'the ordinary button creates a real guided round').toBeDefined();
+  expect(Number.isInteger(guidedRound.targetShipId)).toBe(true);
+  expect(released.ships.some((ship:any)=>ship.id===guidedRound.targetShipId&&ship.health>0)).toBe(true);
   expect(released.player.position.y).toBeGreaterThanOrEqual(20);
   expect(released.player.position.y).toBeLessThan(80);
   expect(Math.abs(released.player.pitch)).toBeLessThan(.2);
@@ -84,6 +116,13 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await expect(page.locator('#payload-status')).toContainText('装填');
   await expect.poll(async()=>(await read(page)).ordnance.some((o:any)=>o.owner===1&&o.kind==='torpedo'&&o.phase==='water'),{timeout:12000}).toBe(true);
   const water=await read(page);
+  expect(water.ordnance.find((round:any)=>round.owner===water.player.id&&round.kind==='torpedo')?.targetShipId).toBe(guidedRound.targetShipId);
+  const afterLaunchTurn=await steerAndObserve(page,cdp,origin,.15,.03);
+  await page.waitForFunction(tick=>(window as any).__kaisenReadState('clock').tick>=tick,afterLaunchTurn.tick+6,{polling:'raf'});
+  const independentlySteered=await read(page);
+  expect(independentlySteered.controlsInput.turn).toBeCloseTo(.15,5);
+  expect(independentlySteered.ordnance.find((round:any)=>round.owner===water.player.id&&round.kind==='torpedo')?.targetShipId,
+    'changing the aircraft steering after launch preserves the captured ship').toBe(guidedRound.targetShipId);
   expect(water.player.health).toBeGreaterThan(0);expect(water.player.bombs).toBe(2);
   expect(water.controlsInput.steerPointer).not.toBeNull();
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.locator('#pause').tap();
@@ -91,7 +130,7 @@ test('payload controls preserve steering, reject unsafe torpedo release, and rea
   await waitForPausedView(page,{tick:pausedWater.tick});
   await mkdir('test-results/evidence',{recursive:true});
   await page.screenshot({path:'test-results/evidence/torpedo-water-flight.png',style:'#pause-screen {visibility:hidden!important}'});
-  await writeFile('test-results/evidence/naval-payload-route.json',JSON.stringify({note:'Actual touch controls and real simulation clock. Screenshot is explicitly paused with only pause menu hidden. No game-state injection.',paused,water},null,2));
+  await writeFile('test-results/evidence/naval-payload-route.json',JSON.stringify({note:'Actual touch controls and real simulation clock. Screenshot is explicitly paused with only pause menu hidden and uses pausedWater. No game-state injection.',paused,water,guidedRound,independentlySteered,pausedWater},null,2));
   await page.locator('#pause-restart').tap();const retry=await read(page);
   expect(retry.player.bombs).toBe(2);expect(retry.player.torpedoes).toBe(1);expect(retry.ordnance).toHaveLength(0);
   expect(errors).toEqual([]);

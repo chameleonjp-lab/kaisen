@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createGame,startGame,stepGame} from '../src/simulation';
-import {createBrowserMissionPilot} from './helpers/mission-browser-pilot';
-import {pointerOffsetForControls} from './helpers/touch-reload-pilot';
-import type {FlightInput} from '../src/types';
-const cadence = JSON.parse(readFileSync(new URL('./fixtures/browser-input-cadence.json',import.meta.url),'utf8'));
+import {createGame,startGame,stepGame} from '../../src/simulation';
+import {createBrowserMissionPilot} from '../../tests/helpers/mission-browser-pilot';
+import {pointerOffsetForControls} from '../../tests/helpers/touch-reload-pilot';
+import type {FlightInput} from '../../src/types';
+const cadence = JSON.parse(readFileSync(new URL('../../tests/fixtures/browser-input-cadence.json',import.meta.url),'utf8'));
 
 test('Easy fleet pilot clears actual CI26 request/acceptance delays without saturated yaw oscillation', context=> {
-  const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci26.json',import.meta.url),'utf8'));
+  const timing=JSON.parse(readFileSync(new URL('../../tests/fixtures/browser-input-acceptance-ci26.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'easy'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
   let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
@@ -56,7 +56,7 @@ for (const mode of ['easy','normal'] as const) test(`${mode} browser pilot clear
 });
 
 for (const lag of [1,5]) test(`Normal fleet-first pilot clears acceptance-relative CI20 cadence with ${lag}-tick delivery lag`, context=> {
-  const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-cadence-ci20.json',import.meta.url),'utf8'));
+  const timing=JSON.parse(readFileSync(new URL('../../tests/fixtures/browser-input-cadence-ci20.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'normal'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
   let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};
@@ -83,7 +83,7 @@ for (const lag of [1,5]) test(`Normal fleet-first pilot clears acceptance-relati
 });
 
 test('Normal recovery pilot clears actual CI21 observed request/acceptance timings', context=> {
-  const timing=JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci21.json',import.meta.url),'utf8'));
+  const timing=JSON.parse(readFileSync(new URL('../../tests/fixtures/browser-input-acceptance-ci21.json',import.meta.url),'utf8'));
   const state=createGame(undefined,'normal'),pilot=createBrowserMissionPilot();startGame(state);
   let next=timing.startTick,index=0;
   let held:FlightInput={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852,steeringActive:true};

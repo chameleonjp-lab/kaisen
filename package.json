@@ -7,7 +7,9 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "test": "node --import tsx --test tests/*.test.ts",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:scenarios:simulation": "node --import tsx --test scenarios/simulation/*.scenario.ts",
+    "test:scenarios:browser": "playwright test --config playwright.scenarios.config.ts"
   },
   "dependencies": {
     "three": "0.186.1"
