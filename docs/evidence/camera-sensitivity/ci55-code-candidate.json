@@ -1,0 +1,171 @@
+{
+  "schema": "kaisen-ci55-followup-tested-candidate-v1",
+  "baseHead": "349ed823b15d7d406e09e69084c0fcd32c88e803",
+  "baseTree": "701788307409c1be49d30354966fe2f3fdfc9c93",
+  "recordedAt": "2026-10-13T01:42:43.798585+00:00",
+  "sourceHashes": {
+    "browser-tests/00-easy-victory.spec.ts": "69afba9469a6531a121f269e40856838fef9a0e566be41c277d3152cefe6e779",
+    "browser-tests/00-normal-victory.spec.ts": "f74dcdbbe1a05d4416e37ac42018d0877159f09026c2258711fa8baa47235229",
+    "browser-tests/bomb-guide.spec.ts": "ca3341042f9384f2e3828d870ab92fbb0b5b676f1a00f776d83daf2aa3c152d6",
+    "browser-tests/naval-payload.spec.ts": "d082f8fa253b31642eff253426edc64b66f2f6bb4ec20e19dec97004ebf18eba",
+    "browser-tests/touch-command.ts": "cbd08d7686a700865cd8ec85cb1e06e57f2bb4834dae026fa1e302b779999cc3",
+    "tests/helpers/mission-browser-pilot.ts": "2ac6b416cbe6b2b4e937f29a495bdfdf900a35a104e1a825ddcc3a86ca768f0e",
+    "tests/mission-browser-pilot-regression.test.ts": "bfe322f6df107f20a85c761b1dfeff5734123d3e821010fa7449aac03b30553f",
+    "tests/fixtures/browser-input-acceptance-ci55-easy-timing.json": "6854f423739e4ae0ed8122986ebff0d41c624f8c19305c308f5476273c052f98",
+    "tests/fixtures/browser-input-acceptance-ci55-normal-timing.json": "88014df86f2444f2e67e117b8dfa7398ce76c3f1819c92daa540710859a9db0d"
+  },
+  "scope": "Test pilot, physical-input sequencing, live image checks, and evidence only. Product src, physics, rules, quality, toolchain, dependencies, and workflows unchanged from baseHead.",
+  "validation": {
+    "unit": {
+      "pass": 338,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 40744.50144,
+      "exit": 0
+    },
+    "build": {
+      "exit": 0,
+      "existingWarning": "JS chunk >500kB",
+      "assets": [
+        "index-uMwgQIyS.js",
+        "index-CC4z0vjG.css"
+      ]
+    },
+    "shortBrowser": {
+      "pass": 3,
+      "fail": 0,
+      "exit": 0,
+      "durationSeconds": 38.4,
+      "cases": [
+        "Easy live green cue, ammo/reload and pause",
+        "Normal live green cue, ammo/reload and pause",
+        "Nonzero steering ownership, trusted native bomb pulse, stale cue skip, actual bomb/torpedo consumption and paused rearm"
+      ]
+    },
+    "victoryBrowser": {
+      "status": "passed",
+      "pass": 2,
+      "fail": 0,
+      "exit": 0,
+      "durationMinutesRounded": 8.8,
+      "easy": {
+        "status": "passed",
+        "tick": 17683,
+        "elapsed": 294.71666666666664,
+        "health": 78.94400000000002,
+        "allShipsCleared": true,
+        "allEnemiesCleared": true,
+        "actualBombs": 6,
+        "staleCueSkips": 0,
+        "auditRows": 1544,
+        "dropped": 0,
+        "renderRecoveries": 0,
+        "stats": {
+          "playerAircraftKills": 11,
+          "playerShipKills": 4,
+          "allyAircraftKills": 17,
+          "allyShipKills": 0,
+          "shots": 644,
+          "hits": 192,
+          "loops": 0,
+          "damageTaken": 109.53599999999938,
+          "friendlyDamage": 0,
+          "friendlyKills": 0,
+          "score": 23706
+        },
+        "errors": []
+      },
+      "normal": {
+        "status": "passed",
+        "tick": 12511,
+        "elapsed": 208.51666666666665,
+        "health": 78.38400000000003,
+        "allShipsCleared": true,
+        "allEnemiesCleared": true,
+        "actualBombs": 8,
+        "staleCueSkips": 0,
+        "auditRows": 1224,
+        "dropped": 0,
+        "renderRecoveries": 0,
+        "stats": {
+          "playerAircraftKills": 7,
+          "playerShipKills": 3,
+          "allyAircraftKills": 12,
+          "allyShipKills": 1,
+          "shots": 624,
+          "hits": 110,
+          "loops": 0,
+          "damageTaken": 47.472000000000016,
+          "friendlyDamage": 0,
+          "friendlyKills": 0,
+          "score": 27083
+        },
+        "errors": []
+      }
+    },
+    "browserList": {
+      "cases": 59,
+      "files": 18,
+      "chromium": 49,
+      "webkit": 10,
+      "exit": 0
+    },
+    "independentReview": "No mandatory findings on the frozen test-only candidate; review is static, not execution proof.",
+    "officialAllGate": "Required on exact new head. Run/head/artifact/result will be recorded in Draft PR17 verification section after completion.",
+    "productionManifest": "Requires exact remote-created commit SHA before branch submission."
+  },
+  "localEnvironment": {
+    "node": "24.19.0",
+    "playwright": "1.61.1",
+    "chromium": "Sparticuz headless_shell153.0.8010.0",
+    "notEquivalentTo": "Formal CI Chromium149 or physical iPhone",
+    "viewport": [
+      393,
+      852
+    ],
+    "deviceScaleFactor": 1
+  },
+  "liveImageEvidence": {
+    "easy": {
+      "beforeTick": 230,
+      "afterTick": 244,
+      "readyBefore": "true",
+      "readyAfter": "true",
+      "lostGreen": false,
+      "worldReadInvariant": [
+        true,
+        true
+      ],
+      "sha256": "405748fdc107274ba03f7151436fabce6d230dee67326020b3533b9a671414fb",
+      "japaneseVisualAcceptance": "not_local; local fonts lack Japanese glyphs; exact official artifact must be inspected"
+    },
+    "normal": {
+      "beforeTick": 298,
+      "afterTick": 312,
+      "readyBefore": "true",
+      "readyAfter": "true",
+      "lostGreen": false,
+      "worldReadInvariant": [
+        true,
+        true
+      ],
+      "sha256": "945475f92d7cc5f5950197073291ee3f6c192b738dffdf327658357eb1394e2d",
+      "japaneseVisualAcceptance": "not_local; local fonts lack Japanese glyphs; exact official artifact must be inspected"
+    }
+  },
+  "causalRegressions": {
+    "easy": "Cyclic cadence and 6–9 tick pulse delay from the local CI55 follow-up shell153 failure; pauses14/353; live product guide/cue;267.0667s victory, HP80,6 real releases. Node causal scenario, not browser acceptance proof.",
+    "normal": "Official CI55 cadence2348 rows plus borrowed local Easy follow-up pulse delays; live product guide/cue and accepted turn/climb/fire/throttle;458.7s victory, HP80,8 releases,7 damaging impacts/8500 damage. Node causal scenario, not exact official rerun."
+  },
+  "unchangedConditions": [
+    "600 game-second strict bound",
+    "real input, actual ammo and complete enemy/fleet clear",
+    "independent 5-second input wait",
+    "1-second render watchdog",
+    "at most one Normal render-stall recovery",
+    "59 cases/18 files, Chromium49/WebKit10",
+    "workers1/retries0",
+    "30-minute formal job timeout",
+    "Draft only, no merge, Ready or deployment"
+  ]
+}

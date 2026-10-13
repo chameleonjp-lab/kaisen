@@ -5,7 +5,8 @@ import { Quaternion, Vector3 } from 'three';
 import { createGame, pauseGame, resumeGame, startGame, stepGame } from '../src/simulation';
 import { updateQuaternion } from '../src/flight';
 import { predictBombImpact } from '../src/ordnance';
-import { createBrowserMissionPilot } from './helpers/mission-browser-pilot';
+import { bombReleaseCue, currentBombGuide } from '../src/bomb-guide';
+import { createBrowserMissionPilot, shouldAttemptBomb } from './helpers/mission-browser-pilot';
 import { absolutePitchTargetToRateCommand } from './helpers/pitch-rate-conversion';
 import { pointerOffsetForControls } from './helpers/touch-reload-pilot';
 import type { FlightInput } from '../src/types';
@@ -45,6 +46,89 @@ test('CI53 ready blast cues produce a real payload request when direct-center ge
     assert.equal(createBrowserMissionPilot()(blocked).bomb, false,
       'an affected forecast alone is not enough when the actual payload button is not ready');
   }
+});
+
+test('live-cue previews do not advance pilot history or unsubmitted controls', () => {
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/browser-bomb-cues-ci53.json', import.meta.url), 'utf8'));
+  for (const mode of ['easy', 'normal'] as const) {
+    const cue = structuredClone(fixture.routes[mode].snapshot);
+    const before = JSON.stringify(cue);
+    const prior = structuredClone(cue);
+    prior.tick -= 6;
+    prior.elapsed -= 6 / 60;
+    prior.bombButton.ready = 'false';
+
+    const baseline = createBrowserMissionPilot();
+    const once = createBrowserMissionPilot();
+    const repeated = createBrowserMissionPilot();
+    // Initialize each stateful pilot with the same preceding accepted sample.
+    const baselinePrior = baseline(prior);
+    assert.deepEqual(once(prior), baselinePrior);
+    assert.deepEqual(repeated(prior), baselinePrior);
+
+    const onePreview = once.preview(cue);
+    assert.equal(onePreview.bomb, true, `${mode} preview follows the live cue`);
+    assert.deepEqual(repeated.preview(cue), onePreview);
+    assert.deepEqual(repeated.preview(cue), onePreview);
+    assert.deepEqual(repeated.preview(cue), onePreview);
+    assert.equal(JSON.stringify(cue), before, 'preview leaves the observed cue snapshot untouched');
+
+    // Model the next real read after the physical release, with the actual rack decrement.
+    const afterRelease = structuredClone(cue);
+    afterRelease.tick += 1;
+    afterRelease.elapsed += 1 / 60;
+    afterRelease.player.bombs -= 1;
+    afterRelease.player.bombReloadTicks = 180;
+    afterRelease.player.payloadCooldown = 180;
+    afterRelease.bombButton.ready = 'false';
+    afterRelease.bombGuide = null;
+    assert.ok(afterRelease.player.bombs < cue.player.bombs, 'the physical-release model consumes one round');
+
+    const withoutPreview = baseline(afterRelease);
+    assert.deepEqual(once(afterRelease), withoutPreview,
+      `${mode} one preview does not add an unsubmitted trim or alter the next command`);
+    assert.deepEqual(repeated(afterRelease), withoutPreview,
+      `${mode} repeated previews preserve cadence, target history and the next command`);
+
+    const next = structuredClone(afterRelease);
+    next.tick += 6;
+    next.elapsed += 6 / 60;
+    const baselineNext = baseline(next);
+    assert.deepEqual(once(next), baselineNext, `${mode} state progression remains identical after the next real sample`);
+    assert.deepEqual(repeated(next), baselineNext, `${mode} repeated previews do not perturb later history`);
+  }
+});
+
+test('Easy escape state advances only after a verified bomb-release acknowledgement', () => {
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/browser-bomb-cues-ci53.json', import.meta.url), 'utf8'));
+  const cue = structuredClone(fixture.routes.easy.snapshot);
+  const prior = structuredClone(cue);
+  prior.tick -= 6;
+  prior.elapsed -= 6 / 60;
+  prior.bombButton.ready = 'false';
+
+  const unacknowledged = createBrowserMissionPilot();
+  const acknowledged = createBrowserMissionPilot();
+  unacknowledged(prior);
+  acknowledged(prior);
+  assert.equal(acknowledged.preview(cue).bomb, true);
+
+  const afterRelease = structuredClone(cue);
+  afterRelease.tick += 1;
+  afterRelease.elapsed += 1 / 60;
+  afterRelease.player.bombs -= 1;
+  afterRelease.player.bombReloadTicks = 180;
+  afterRelease.player.payloadCooldown = 180;
+  afterRelease.bombButton.ready = 'false';
+  afterRelease.bombGuide = null;
+  assert.ok(afterRelease.player.bombs < cue.player.bombs, 'the acknowledgement follows a real rack decrement');
+
+  acknowledged.recordBombRelease(cue.player.bombs);
+  const exitCommand = acknowledged(afterRelease);
+  const attackCommand = unacknowledged(afterRelease);
+  assert.notDeepEqual(exitCommand, attackCommand,
+    'only the post-release acknowledgement commits the Easy exit leg');
+  assert.equal(exitCommand.bomb, false);
 });
 
 test('explicit browser payload readiness blocks an otherwise-valid local center estimate', () => {
@@ -278,6 +362,216 @@ test('CI50 Easy cadence regression clears with strict state transitions and phys
   assert.ok(state.player.health > 0);
   assert.ok(bombsReleased > 0, 'the route releases actual ordnance through stepGame');
   assert.ok(state.stats.playerShipKills > 0);
+  assert.ok([...state.enemies, ...state.ships].every(target => target.health <= 0));
+});
+
+test('CI55 local shell153 Easy timing uses live damage cues and clears the real mission', context => {
+  const timing = JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci55-easy-timing.json', import.meta.url), 'utf8'));
+  const state = createGame(timing.source.seed, timing.source.config), pilot = createBrowserMissionPilot();
+  startGame(state);
+  const pauseTicks = new Set([14, 353]);
+  let cycleIndex = 0, payloadIndex = 0, nextSample = 15;
+  let held: FlightInput = { turn: 0, climb: 0, fire: false, loop: false, bomb: false, torpedo: false,
+    steeringActive: true, steeringRevision: 0, viewAspect: 393 / 852, accelerate: false, brake: false };
+  let pending: { tick: number; turn: number; climb: number } | null = null;
+  let pulseAt: number | null = null, postPulseCycle: readonly number[] | null = null;
+  let bombsReleased = 0, directCues = 0, lethalBlastCues = 0, attempts = 0;
+  let cueExpiries = 0;
+
+  const observe = () => {
+    const guide = state.player.bombs > 0 && state.player.bombReloadTicks === 0 ? currentBombGuide(state) : null;
+    const cue = bombReleaseCue(state, guide);
+    return { ...state, bombGuide: guide, bombButton: { ready: String(cue.ready) },
+      controlsInput: { turn: held.turn, climb: held.climb } } as typeof state & {
+        bombGuide: typeof guide; bombButton: { ready: string }; controlsInput: { turn: number; climb: number };
+      };
+  };
+
+  const requestSteering = (request: FlightInput, delivery: number, cycle: number) => {
+    const { dx, dy } = pointerOffsetForControls(request.turn, request.climb);
+    const radius = Math.hypot(dx, dy);
+    assert.ok(radius <= 36 + 1e-9, 'live-feedback route stays inside the unchanged physical stick circle');
+    const response = radius / 36 <= .08 ? 0 : (radius / 36 - .08) / .92;
+    const turn = radius ? dx / radius * response : 0;
+    const climb = radius ? -dy / radius * response : 0;
+    assert.ok(Math.abs(turn - request.turn) < 1e-9 && Math.abs(climb - request.climb) < 1e-9);
+    pending = { tick: state.tick + Math.max(1, delivery), turn, climb };
+    nextSample = state.tick + Math.max(1, delivery) + Math.max(1, cycle);
+  };
+
+  for (let tick = 0; tick < 60 * 600 && state.phase === 'playing'; tick++) {
+    const nextTick = state.tick + 1;
+    if (pauseTicks.has(state.tick)) { pauseGame(state); resumeGame(state); }
+
+    if (state.tick === nextSample && pulseAt === null) {
+      const snapshot = observe();
+      const row = timing.cycles[cycleIndex++ % timing.cycles.length] as [number, number];
+      if (shouldAttemptBomb(snapshot) && pilot.preview(snapshot).bomb) {
+        attempts++;
+        const affected = snapshot.bombGuide!.affected
+          .map(hit => ({ hit, ship: state.ships.find(candidate => candidate.id === hit.shipId) }))
+          .find(({ hit, ship }) => ship && ship.health > 0 && hit.damage > 0 &&
+            (snapshot.bombGuide!.kind === 'direct' || hit.damage + 1e-6 >= ship.health));
+        assert.ok(affected?.ship, 'a driver-approved pulse has a live affected target');
+        if (snapshot.bombGuide!.kind === 'direct') directCues++;
+        else lethalBlastCues++;
+        postPulseCycle = row;
+        pulseAt = state.tick + timing.payloadDelayTicks[payloadIndex++ % timing.payloadDelayTicks.length];
+      } else {
+        requestSteering(pilot(snapshot), row[0], row[1]);
+      }
+    }
+
+    if (pending?.tick === nextTick) {
+      held = { ...held, turn: pending.turn, climb: pending.climb, steeringActive: true,
+        steeringRevision: held.steeringRevision! + Number(Math.hypot(pending.turn - held.turn, pending.climb - held.climb) > 1e-4) };
+      pending = null;
+    }
+    const beforeBombs = state.player.bombs;
+    const pulse = pulseAt === nextTick;
+    stepGame(state, { ...held, bomb: pulse });
+    if (state.player.bombs < beforeBombs) {
+      bombsReleased += beforeBombs - state.player.bombs;
+      assert.equal(pulse, true, 'only an actual one-tick touch pulse consumes a bomb');
+      assert.ok(state.events.findLast(event => event.type === 'payload-release' && event.owner === state.player.id && event.tick === state.tick),
+        'the release is recorded by the real mission simulation');
+      pilot.recordBombRelease(beforeBombs);
+      pulseAt = null;
+      const [delivery, cycle] = postPulseCycle!;
+      requestSteering(pilot(observe()), delivery, cycle);
+      postPulseCycle = null;
+    } else if (pulse) {
+      cueExpiries++;
+      pulseAt = null;
+      const [delivery, cycle] = postPulseCycle!;
+      requestSteering(pilot(observe()), delivery, cycle);
+      postPulseCycle = null;
+    }
+  }
+
+  context.diagnostic(JSON.stringify({ source: timing.source.note, evidence: 'Node causal replay, not browser input-acceptance evidence',
+    tick: state.tick, elapsed: state.elapsed, result: state.result?.outcome,
+    hp: state.player.health, bombsReleased, attempts, directCues, lethalBlastCues, cueExpiries,
+    stats: state.stats, ships: state.ships.map(ship => ship.health) }));
+  assert.ok(attempts > 0 && directCues > 0, 'the actual live guide supplies useful direct cues');
+  assert.ok(bombsReleased > 0, 'live-guided requests become real bomb releases');
+  assert.equal(state.endReason, 'all-clear');
+  assert.equal(state.result?.outcome, 'victory');
+  assert.ok(state.elapsed < 600, 'the existing 600-second bound remains strict');
+  assert.ok(state.player.health > 0);
+  assert.ok(state.stats.playerAircraftKills > 0 && state.stats.playerShipKills > 0);
+  assert.ok([...state.enemies, ...state.ships].every(target => target.health <= 0));
+});
+
+test('CI55 Normal recorded cadence releases on the current accepted pose and clears with live damage', context => {
+  const timing = JSON.parse(readFileSync(new URL('./fixtures/browser-input-acceptance-ci55-normal-timing.json', import.meta.url), 'utf8'));
+  const state = createGame(timing.source.seed, timing.source.config), pilot = createBrowserMissionPilot();
+  startGame(state);
+  let cycleIndex = 0, payloadIndex = 0, nextSample = timing.source.startTick;
+  let held: FlightInput = { turn: 0, climb: 0, fire: false, loop: false, bomb: false, torpedo: false,
+    steeringActive: false, steeringRevision: 0, viewAspect: 393 / 852, accelerate: false, brake: false };
+  let pending: { tick: number; input: FlightInput } | null = null;
+  let pulseAt: number | null = null, postPulseCycle: readonly number[] | null = null;
+  let pendingCue: { readTick: number; kind: string; affected: Array<{ shipId: number; damage: number; health: number }> } | null = null;
+  let bombsReleased = 0, usefulCandidates = 0, directCues = 0, lethalBlastCues = 0;
+  let bombImpactEvents = 0, actualBombDamage = 0, cueExpiries = 0;
+  const bombDamagedShips = new Set<number>();
+  const releaseAudit: unknown[] = [];
+
+  const observe = () => {
+    const guide = state.player.bombs > 0 && state.player.bombReloadTicks === 0 ? currentBombGuide(state) : null;
+    const cue = bombReleaseCue(state, guide);
+    return { ...state, bombGuide: guide, bombButton: { ready: String(cue.ready) },
+      controlsInput: { turn: held.turn, climb: held.climb } } as typeof state & {
+        bombGuide: typeof guide; bombButton: { ready: string }; controlsInput: { turn: number; climb: number };
+      };
+  };
+
+  const queueInput = (request: FlightInput, row: readonly number[]) => {
+    const { dx, dy } = pointerOffsetForControls(request.turn, request.climb);
+    const radius = Math.hypot(dx, dy);
+    assert.ok(radius <= 36 + 1e-9, 'Normal steering stays inside the unchanged physical stick circle');
+    const response = radius / 36 <= .08 ? 0 : (radius / 36 - .08) / .92;
+    const turn = radius ? dx / radius * response : 0;
+    const climb = radius ? -dy / radius * response : 0;
+    assert.ok(Math.abs(turn - request.turn) < 1e-9 && Math.abs(climb - request.climb) < 1e-9);
+    const delivery = Math.max(1, row[0]), cycle = Math.max(1, row[1]);
+    pending = { tick: state.tick + delivery, input: { ...request, turn, climb, steeringActive: true } };
+    nextSample = state.tick + delivery + cycle;
+  };
+
+  for (let tick = 0; tick < 60 * 600 && state.phase === 'playing'; tick++) {
+    const nextTick = state.tick + 1;
+    if (state.tick === nextSample && pulseAt === null) {
+      const snapshot = observe();
+      const row = timing.cycles[cycleIndex++ % timing.cycles.length] as [number, number];
+      if (shouldAttemptBomb(snapshot) && pilot.preview(snapshot).bomb) {
+        usefulCandidates++;
+        const guide = snapshot.bombGuide!;
+        if (guide.kind === 'direct') directCues++;
+        else lethalBlastCues++;
+        pendingCue = { readTick: state.tick, kind: guide.kind, affected: guide.affected.map(hit => ({
+          shipId: hit.shipId, damage: hit.damage,
+          health: state.ships.find(ship => ship.id === hit.shipId)?.health ?? 0,
+        })) };
+        postPulseCycle = row;
+        pulseAt = state.tick + timing.payloadDelayTicks[payloadIndex++ % timing.payloadDelayTicks.length];
+      } else {
+        queueInput(pilot(snapshot), row);
+      }
+    }
+
+    if (pending?.tick === nextTick) {
+      const request = pending.input;
+      held = { ...held, turn: request.turn, climb: request.climb, fire: Boolean(request.fire),
+        accelerate: Boolean(request.accelerate), brake: Boolean(request.brake), steeringActive: true,
+        steeringRevision: held.steeringRevision! + Number(Math.hypot(request.turn - held.turn, request.climb - held.climb) > 1e-4) };
+      pending = null;
+    }
+    const beforeBombs = state.player.bombs;
+    const pulse = pulseAt === nextTick;
+    stepGame(state, { ...held, bomb: pulse });
+    const impactEvents = state.events.filter(event => event.tick === state.tick && event.type === 'ordnance-impact'
+      && event.owner === state.player.id && event.weapon === 'bomb' && (event.amount ?? 0) > 0);
+    for (const event of impactEvents) {
+      bombImpactEvents++;
+      actualBombDamage += event.amount ?? 0;
+      if (event.target !== undefined) bombDamagedShips.add(event.target);
+    }
+    if (state.player.bombs < beforeBombs) {
+      bombsReleased += beforeBombs - state.player.bombs;
+      assert.equal(pulse, true, 'only an actual one-tick touch pulse consumes a bomb');
+      assert.ok(pendingCue, 'a real bomb follows a current useful cue');
+      assert.ok(state.events.findLast(event => event.type === 'payload-release' && event.owner === state.player.id && event.tick === state.tick),
+        'the release is recorded by the real mission simulation');
+      releaseAudit.push({ ...pendingCue, releaseTick: state.tick, bombsAfter: state.player.bombs });
+      pilot.recordBombRelease(beforeBombs);
+      pulseAt = null; pendingCue = null;
+      queueInput(pilot(observe()), postPulseCycle!);
+      postPulseCycle = null;
+    } else if (pulse) {
+      cueExpiries++;
+      pulseAt = null; pendingCue = null;
+      queueInput(pilot(observe()), postPulseCycle!);
+      postPulseCycle = null;
+    }
+  }
+
+  context.diagnostic(JSON.stringify({ source: timing.source.note, evidence: 'Node causal replay, not browser input-acceptance evidence',
+    tick: state.tick, elapsed: state.elapsed, result: state.result?.outcome, hp: state.player.health,
+    bombsReleased, usefulCandidates, directCues, lethalBlastCues, bombImpactEvents, actualBombDamage,
+    bombDamagedShips: [...bombDamagedShips], cueExpiries, releaseAudit, stats: state.stats,
+    ships: state.ships.map(ship => ship.health) }));
+  assert.ok(usefulCandidates > 0 && directCues > 0, 'fresh live direct cues are available from the recorded Normal cadence');
+  assert.equal(cueExpiries, 0, 'the live cue request reaches the actual payload input');
+  assert.equal(bombsReleased, usefulCandidates, 'every approved Normal cue produces a real release');
+  assert.ok(bombImpactEvents > 0 && actualBombDamage > 0, 'released bombs cause recorded hull damage in stepGame');
+  assert.ok(bombDamagedShips.size > 0, 'the live-guided payloads damage at least one real ship');
+  assert.equal(state.endReason, 'all-clear');
+  assert.equal(state.result?.outcome, 'victory');
+  assert.ok(state.elapsed < 600, 'the existing 600-second bound remains strict');
+  assert.ok(state.player.health > 0);
+  assert.ok(state.stats.playerAircraftKills > 0 && state.stats.playerShipKills > 0);
   assert.ok([...state.enemies, ...state.ships].every(target => target.health <= 0));
 });
 

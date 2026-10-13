@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from 'three';
 import { forwardOf, updateQuaternion } from '../../src/flight';
-import { EASY_AUTO_FIRE_RANGE, getFlightAssist } from '../../src/flight-assist';
-import { projectFlightTarget } from '../../src/flight-view';
+import { EASY_AUTO_FIRE_RANGE, PLAYER_MAX_PITCH, getFlightAssist } from '../../src/flight-assist';
+import { EASY_CAMERA_LOOK_ANGLE, NORMAL_CAMERA_LOOK_ANGLE, projectFlightTarget } from '../../src/flight-view';
 import { MAX_ORDNANCE } from '../../src/mission';
 import { predictBombImpact } from '../../src/ordnance';
 import type { Aircraft, FlightInput, GameState } from '../../src/types';
@@ -19,7 +19,47 @@ function plane(aircraft: Aircraft): Aircraft {
 type BrowserPilotSnapshot = GameState & {
   bombGuide?: { kind: string; affected: { shipId: number; damage: number }[] } | null;
   bombButton?: { ready?: string } | null;
+  controlsInput?: { turn?: number; climb?: number; steerPointer?: number | null } | null;
 };
+
+/** Test-driver policy: keep the helper's blast request capability, but avoid
+ * spending a finite bomb when its live blast forecast cannot finish a ship. */
+export function isUsefulBombCue(snapshot: {
+  bombButton?: { ready?: string } | null;
+  bombGuide?: { kind: string; affected: { shipId: number; damage: number }[] } | null;
+  ships: Array<{ id: number; health: number }>;
+}): boolean {
+  if (snapshot.bombButton?.ready !== 'true' || !snapshot.bombGuide) return false;
+  const guide = snapshot.bombGuide;
+  if (guide.kind !== 'direct' && guide.kind !== 'blast') return false;
+  return guide.affected.some(hit => {
+    const ship = snapshot.ships.find(candidate => candidate.id === hit.shipId && candidate.health > 0);
+    return !!ship && hit.damage > 0 && (guide.kind === 'direct' || hit.damage + 1e-6 >= ship.health);
+  });
+}
+
+/** Easy uses a pre-established straight pass; Normal fires from the current
+ * accepted pose because its driver pulses before submitting the next turn. */
+export function hasAcceptedBombSteering(snapshot: {
+  mode?: 'easy' | 'normal';
+  controlsInput?: { turn?: number; climb?: number } | null;
+}): boolean {
+  const controls = snapshot.controlsInput;
+  if (!controls || typeof controls.turn !== 'number' || !Number.isFinite(controls.turn)
+    || typeof controls.climb !== 'number' || !Number.isFinite(controls.climb)) return false;
+  return snapshot.mode === 'normal' ||
+    (Math.abs(controls.turn) <= .01 && Math.abs(Math.abs(controls.climb) - .02) <= .01);
+}
+
+export function shouldAttemptBomb(snapshot: {
+  bombButton?: { ready?: string } | null;
+  bombGuide?: { kind: string; affected: { shipId: number; damage: number }[] } | null;
+  mode?: 'easy' | 'normal';
+  ships: Array<{ id: number; health: number }>;
+  controlsInput?: { turn?: number; climb?: number } | null;
+}): boolean {
+  return isUsefulBombCue(snapshot) && hasAcceptedBombSteering(snapshot);
+}
 
 /** Browser-test pilot: legal circular-stick, manual fire and throttle commands.
  * Uses the normal mission's actual targets, hull axis, speed, ammo and clock.
@@ -33,12 +73,30 @@ export function createBrowserMissionPilot(preferAircraft = false) {
   let recovering = false, targetProgressAt = 0, observedTargetHealth = Infinity;
   let targetId: number | null = null, extensionUntil = 0, escapeUntil = 0;
   let shipPhase: 'stage' | 'attack' | 'escape' = 'stage';
+  let attackLockShipId: number | null = null, attackLockUntil = 0, attackLockClimb = .02, attackLockBlocked = false;
   let pendingBombCount: number | null = null;
   let waypoint = new Vector3();
   let history = new Map<number, {yaw:number,pitch:number,t:number}>();
   let slowInput = false;
   let lastTime = 0, yawResponse = 1, estimatedTrim = 110, trimDirection = 0, fastChase = false, dodgeUntil = 0, dodgeClimb = 1, dodgeTurn = 0;
-  return (snapshot: BrowserPilotSnapshot): FlightInput => {
+  const captureMemory = () => ({
+    previousLead:previousLead?{...previousLead,point:previousLead.point.clone()}:null,
+    recovering,targetProgressAt,observedTargetHealth,targetId,extensionUntil,escapeUntil,shipPhase,
+    attackLockShipId,attackLockUntil,attackLockClimb,attackLockBlocked,pendingBombCount,
+    waypoint:waypoint.clone(),history:new Map([...history].map(([id,entry])=>[id,{...entry}] as const)),
+    slowInput,lastTime,yawResponse,estimatedTrim,trimDirection,fastChase,dodgeUntil,dodgeClimb,dodgeTurn,
+  });
+  const restoreMemory = (memory: ReturnType<typeof captureMemory>) => {
+    previousLead=memory.previousLead;
+    recovering=memory.recovering;targetProgressAt=memory.targetProgressAt;observedTargetHealth=memory.observedTargetHealth;
+    targetId=memory.targetId;extensionUntil=memory.extensionUntil;escapeUntil=memory.escapeUntil;shipPhase=memory.shipPhase;
+    attackLockShipId=memory.attackLockShipId;attackLockUntil=memory.attackLockUntil;attackLockClimb=memory.attackLockClimb;
+    attackLockBlocked=memory.attackLockBlocked;
+    pendingBombCount=memory.pendingBombCount;waypoint=memory.waypoint;history=memory.history;
+    slowInput=memory.slowInput;lastTime=memory.lastTime;yawResponse=memory.yawResponse;estimatedTrim=memory.estimatedTrim;
+    trimDirection=memory.trimDirection;fastChase=memory.fastChase;dodgeUntil=memory.dodgeUntil;dodgeClimb=memory.dodgeClimb;dodgeTurn=memory.dodgeTurn;
+  };
+  const run = (snapshot: BrowserPilotSnapshot): FlightInput => {
     const sampleDt = Math.max(1/60, snapshot.elapsed - lastTime); lastTime = snapshot.elapsed;
     // Once delayed delivery is observed, retain the damped response. Alternating
     // fast/slow gains at each jittered sample creates another source of oscillation.
@@ -50,6 +108,7 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     // observation confirms the game consumed the bomb.
     if (snapshot.mode === 'easy' && pendingBombCount !== null && player.bombs < pendingBombCount) {
       pendingBombCount = null;
+      attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
       shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
       waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
       waypoint.y = Math.max(900, player.position.y + 220);
@@ -171,7 +230,10 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       }
     }
     if (!target) return { turn: 0, climb: 0, fire: false, loop: false, bomb:false,torpedo:false,accelerate:false,brake:false };
-    if (targetId !== target.id) { shipPhase = 'stage'; targetProgressAt = snapshot.elapsed; }
+    if (targetId !== target.id) {
+      shipPhase = 'stage'; targetProgressAt = snapshot.elapsed;
+      attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
+    }
     targetId = target.id; observedTargetHealth = target.health;
     let aim = target.position.clone(), evasive = false, bomb = false;
     const distance = player.position.distanceTo(aim);
@@ -213,10 +275,14 @@ export function createBrowserMissionPilot(preferAircraft = false) {
       const stage = target.position.clone().addScaledVector(stern, 1800); stage.y = 900;
       if (snapshot.tick < escapeUntil) { aim = waypoint; evasive = true; }
       else {
-        if (shipPhase === 'escape') shipPhase = 'stage';
+        if (shipPhase === 'escape') {
+          shipPhase = 'stage';
+          attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
+        }
         if (shipPhase === 'stage' && player.position.distanceTo(stage) < 180) shipPhase = 'attack';
         if (shipPhase === 'attack' && (Math.hypot(player.position.x-target.position.x,player.position.z-target.position.z) < 240 || player.position.y < 100 || player.bombs === 0)) {
           shipPhase = 'escape'; escapeUntil = snapshot.tick + 360;
+          attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
           waypoint = player.position.clone().addScaledVector(forwardOf(player), 800);
           waypoint.y = Math.max(900, player.position.y + 220); aim = waypoint; evasive = true;
         } else if (shipPhase === 'stage') { aim = stage; evasive = true; }
@@ -224,6 +290,39 @@ export function createBrowserMissionPilot(preferAircraft = false) {
           const prediction = predictBombImpact(player, target.position.y + 9);
           aim = target.position.clone().addScaledVector(target.velocity, prediction?.time ?? 7);
           aim.y = 900;
+          // The straight lock is a browser-driver response to the live UI
+          // cue and delayed CDP path. Pure simulation fixtures without that
+          // readback retain the ordinary local predictor strategy.
+          const liveAttackRack = snapshot.bombButton !== undefined && player.bombs > 0
+            && player.bombReloadTicks === 0 && player.payloadCooldown <= 0
+            && snapshot.ordnance.length < MAX_ORDNANCE;
+          if (!liveAttackRack || !prediction || Math.abs(player.position.y - 900) > 120 || player.pitch > 1.12 || player.pitch < -1.12) {
+            attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
+          } else {
+            const q = target.quaternion as any;
+            const rotation = Array.isArray(q) ? new Quaternion().fromArray(q) : new Quaternion(q.x ?? q._x, q.y ?? q._y, q.z ?? q._z, q.w ?? q._w);
+            const futureShip = target.position.clone().addScaledVector(target.velocity, prediction.time);
+            const offset = prediction.position.clone().sub(futureShip).applyQuaternion(rotation.invert());
+            const withinHullLine = Math.abs(offset.x) <= target.width * .5 && Math.abs(offset.z) <= target.length * .5;
+            if (!withinHullLine) {
+              attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = false;
+            } else if (attackLockShipId === target.id && snapshot.tick <= attackLockUntil) {
+              // Keep one straight, slightly climbing pass through the measured
+              // hull corridor. A neutral pitch command invokes the game's
+              // automatic levelling, which made otherwise aligned payloads
+              // leave their green window during delayed touch delivery.
+              aim = player.position.clone().addScaledVector(forwardOf(player), 1200);
+              evasive = true;
+            } else if (attackLockShipId === target.id && snapshot.tick > attackLockUntil) {
+              attackLockShipId = null; attackLockUntil = 0; attackLockBlocked = true;
+            } else if (!attackLockBlocked) {
+              attackLockShipId = target.id; attackLockUntil = snapshot.tick + 60;
+              attackLockClimb = Math.abs(player.pitch) < .02 || Math.abs(player.pitch) > 1.12
+                ? .02 : Math.sign(player.pitch) * .02;
+              aim = player.position.clone().addScaledVector(forwardOf(player), 1200);
+              evasive = true;
+            }
+          }
           if (prediction && player.bombs > 0 && player.payloadCooldown <= 0) {
             const q = target.quaternion as any;
             const rotation = Array.isArray(q) ? new Quaternion().fromArray(q) : new Quaternion(q.x ?? q._x, q.y ?? q._y, q.z ?? q._z, q.w ?? q._w);
@@ -279,11 +378,26 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     // run. Use the same authority-aware damped heading controller as Normal.
     const headingGain = snapshot.mode === 'easy' && !slowInput ? Math.max(3.5,Math.min(8*.82/.7,.75/sampleDt)) : 3.5;
     let turn = clamp(-(yawRate + error * headingGain) / yawAuthority + weave * Math.sin(snapshot.elapsed * Math.PI));
+    const cameraLookAngle = snapshot.mode === 'easy' ? EASY_CAMERA_LOOK_ANGLE : NORMAL_CAMERA_LOOK_ANGLE;
+    // Preserve the external pilot's existing Euler maximum command before
+    // converting it to the camera's pitched horizontal rate. This keeps the
+    // automated route inside its established saturation envelope.
+    const yawCameraCos = snapshot.controlsInput !== undefined && Math.abs(player.pitch) <= PLAYER_MAX_PITCH
+      ? Math.cos(player.pitch + cameraLookAngle) : 1;
+    // Convert the already bounded Euler request for the active manual-stick
+    // path; the simulation-only fallback keeps its archived fixture behavior.
+    turn = clamp(turn * yawCameraCos);
     const legacyAbsolutePitch = clamp(Math.atan2(relative.y, Math.max(1e-8, h)) / .95 + pitchRate / (4.2 * .95) + weave * .6 * Math.cos(snapshot.elapsed * Math.PI));
     // This pilot historically emitted a normalized absolute-pitch target.
     // Convert that target into the new manual-rate contract using the observed
     // sample interval; the adapter saturates at the product's legal stick rate.
     let climb = absolutePitchTargetToRateCommand(legacyAbsolutePitch, player.pitch, player.speed, sampleDt);
+    if (snapshot.mode === 'easy' && attackLockShipId === target.id && snapshot.tick <= attackLockUntil
+      && target.kind === 'ship' && shipPhase === 'attack') {
+      turn = 0;
+      climb = attackLockClimb;
+      fastChase = false;
+    }
     // A held physical stick now owns turn/pitch, including small corrections.
     // Do not bias naval approaches upward to oppose the old Easy nose-down
     // assist: that assist is absent while this real-input pilot holds its stick.
@@ -301,4 +415,17 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     return {turn,climb,bomb,torpedo:false,fire:!evasive && alignment < .1 && distance < 1150,loop:false,accelerate:trimDirection>0,brake:trimDirection<0};
 
   };
+  return Object.assign(
+    (snapshot: BrowserPilotSnapshot) => run(snapshot),
+    {
+      /** Evaluate a candidate without advancing cadence, target or control history. */
+      preview(snapshot: BrowserPilotSnapshot): FlightInput {
+        const memory=captureMemory();
+        try { return run(snapshot); }
+        finally { restoreMemory(memory); }
+      },
+      /** Record only a verified real ammo decrement so Easy can enter its exit leg. */
+      recordBombRelease(beforeCount: number) { pendingBombCount=beforeCount; },
+    },
+  );
 }

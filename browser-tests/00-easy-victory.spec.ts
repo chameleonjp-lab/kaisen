@@ -1,5 +1,5 @@
 import { steerAndObserve, releasePayloadAndObserve } from './touch-command';
-import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
+import { createBrowserMissionPilot, shouldAttemptBomb } from '../tests/helpers/mission-browser-pilot';
 import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -46,8 +46,9 @@ async function capture(page: Page, name: string, inspectPausedScene = false) {
 const errors: string[] = [];
 const samples: unknown[] = [];
 const payloadAttempts: unknown[] = [];
+let bombCueEvidence: any = null;
 test.beforeEach(async ({ page }) => {
-  errors.length = 0; samples.length = 0; payloadAttempts.length = 0;
+  errors.length = 0; samples.length = 0; payloadAttempts.length = 0; bombCueEvidence = null;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
@@ -70,6 +71,10 @@ test.afterEach(async ({ page }, info) => {
     JSON.stringify({ status: info.status, errors, snapshot, samples, payloadAttempts,
       consumedInputs:await page.evaluate(()=>(window as any).__kaisenReadState('audit')).catch(()=>null) }, null, 2),
   );
+  if (bombCueEvidence) await writeFile('test-results/evidence/bomb-cue-victory-easy.json',JSON.stringify({
+    note:'Live unmodified gameplay cue observation from this victory run. Its green PNG is captured with an exact pose snapshot in the separate short bomb-guide route.',
+    ...bombCueEvidence,payloadAttempts,
+  },null,2));
   if (info.status !== "passed")
     await page
       .screenshot({ path: "test-results/evidence/touch-victory-failure.png" })
@@ -89,8 +94,8 @@ test("physical circular-stick inputs reach the victory screen", async ({
     type: "touchStart",
     touchPoints: [{ ...origin, id: 1 }],
   });
-  let activityCaptured = false, bombCueCaptured = false;
-  let fleetCaptured = false, lastSample = -6, payloadPresses = 0;
+  let activityCaptured = false, bombCueObserved = false;
+  let fleetCaptured = false, lastSample = -6, payloadPresses = 0, payloadSkips = 0, lastProgressMinute = -1;
   const pilot = createBrowserMissionPilot();
   while (true) {
     if (lastSample >= 0) await page.waitForFunction(next => {
@@ -103,17 +108,19 @@ test("physical circular-stick inputs reach the victory screen", async ({
       "playing",
     );
     expect(s.elapsed, "Bounded mission reachability window").toBeLessThan(600);
+    const progressMinute=Math.floor(s.elapsed/60);
+    if(progressMinute>lastProgressMinute) {
+      lastProgressMinute=progressMinute;
+      console.log('EASY_VICTORY_PROGRESS '+JSON.stringify({phase:s.phase,tick:s.tick,elapsed:Math.round(s.elapsed*10)/10,
+        hp:s.player.health,bombs:s.player.bombs,liveShips:s.ships.filter((ship:any)=>ship.health>0).length,payloadPresses,payloadSkips}));
+    }
     lastSample = s.tick;
-    if(!bombCueCaptured && s.bombButton.ready==='true') {
+    if(!bombCueObserved && s.bombButton.ready==='true') {
       expect(s.bombGuide.affected.length).toBeGreaterThan(0);expect(['direct','blast']).toContain(s.bombGuide.kind);
       expect(s.player.bombs).toBeGreaterThan(0);expect(s.player.bombReloadTicks).toBe(0);expect(s.player.payloadCooldown).toBe(0);
       expect(['命中見込み','至近弾圏内']).toContain(s.bombButton.text);
-      await mkdir('test-results/evidence',{recursive:true});
-      await page.screenshot({path:'test-results/evidence/bomb-ready-easy.png'});
-      await writeFile('test-results/evidence/bomb-ready-easy.json',JSON.stringify({note:'Live, unmodified real-input gameplay; green cue sampled just before screenshot. No pause or world injection.',snapshot:s,after:await pilotState(page)},null,2));
-      bombCueCaptured=true;
-      s=await pilotState(page);
-      if(s.phase!=='playing')continue;
+      bombCueEvidence={snapshot:s,button:{ready:s.bombButton.ready,text:s.bombButton.text},tick:s.tick};
+      bombCueObserved=true;
     }
 
     const player = s.player,
@@ -150,37 +157,41 @@ test("physical circular-stick inputs reach the victory screen", async ({
       await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
       lastSample=-6;continue;
     }
-    const request = pilot(s), {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
+    const bombCandidate=shouldAttemptBomb(s)&&pilot.preview(s).bomb;
+    let steeringState=s,payloadAttempt: any = null;
+    if(bombCandidate) {
+      let released: boolean | null = false;
+      let payloadAfter: any = s;
+      try {
+        released=await releasePayloadAndObserve(page,cdp,origin,'bomb',true);
+      } finally {
+        payloadAfter=await pilotState(page);
+        if(payloadAfter.player.bombs<s.player.bombs)payloadPresses++;
+        payloadAttempt={attempted:released!==null,order:'fresh-cue-and-current-steering-before-next-pilot-command',released,
+          beforeTick:s.tick,afterTick:payloadAfter.tick,
+          bombsBefore:s.player.bombs,bombsAfter:payloadAfter.player.bombs,
+          phaseBefore:s.phase,phaseAfter:payloadAfter.phase};
+        payloadAttempts.push(payloadAttempt);
+      }
+      if(released===null)payloadSkips++;
+      if(released===true&&payloadAfter.player.bombs<s.player.bombs)pilot.recordBombRelease(s.player.bombs);
+      if(payloadAfter.phase==='ended')break;
+      if(payloadAfter.phase==='paused')continue;
+      expect(payloadAfter.phase).toBe('playing');
+      if(released!==null)expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
+      steeringState=payloadAfter;
+    }
+    const request=pilot(steeringState);
+    const {dx:stickX,dy:stickY} = pointerOffsetForControls(request.turn,request.climb);
     expect(Math.hypot(stickX,stickY)).toBeLessThanOrEqual(36+1e-9);
     const accepted=await steerAndObserve(page,cdp,origin,request.turn,request.climb);
     lastSample=accepted.tick;
     if(accepted.phase==='ended')break;
     if(accepted.phase!=='playing')continue;
-    let payloadAttempt: any = null;
-    if(request.bomb) {
-      const payloadBefore=await pilotState(page);
-      if(payloadBefore.phase==='ended')break;
-      if(payloadBefore.phase==='paused')continue;
-      expect(payloadBefore.phase).toBe('playing');
-      let released: boolean | null = false;
-      let payloadAfter: any = payloadBefore;
-      try {
-        released=await releasePayloadAndObserve(page,cdp,origin,request.turn,request.climb,'bomb',true);
-      } finally {
-        payloadAfter=await pilotState(page);
-        if(payloadAfter.player.bombs<payloadBefore.player.bombs)payloadPresses++;
-        payloadAttempt={attempted:released!==null,order:'accepted-steering-before-fresh-payload-cue',released,
-          beforeTick:payloadBefore.tick,afterTick:payloadAfter.tick,
-          bombsBefore:payloadBefore.player.bombs,bombsAfter:payloadAfter.player.bombs,
-          phaseBefore:payloadBefore.phase,phaseAfter:payloadAfter.phase};
-        payloadAttempts.push(payloadAttempt);
-      }
-      if(payloadAfter.phase==='ended')break;
-      if(payloadAfter.phase==='paused')continue;
-      expect(payloadAfter.phase).toBe('playing');
-      if(released!==null)expect(released,'Bomb release lost the existing steering finger while flight remained active').toBe(true);
-    }
-    samples.push({tick:s.tick,acceptedTick:accepted.tick,requested:request,previousInput:s.controlsInput,payloadAttempt,player:{position:s.player.position,yaw:s.player.yaw,pitch:s.player.pitch,speed:s.player.speed,health:s.player.health,bombs:s.player.bombs},ships:s.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
+    samples.push({tick:s.tick,steeringTick:steeringState.tick,acceptedTick:accepted.tick,requested:request,bombCandidate,pilotBomb:request.bomb,previousInput:steeringState.controlsInput,payloadAttempt,
+      guide:s.bombGuide?{kind:s.bombGuide.kind,affected:s.bombGuide.affected}:null,
+      player:{position:steeringState.player.position,yaw:steeringState.player.yaw,pitch:steeringState.player.pitch,speed:steeringState.player.speed,health:steeringState.player.health,bombs:steeringState.player.bombs},
+      ships:steeringState.ships.map((ship:any)=>({id:ship.id,health:ship.health,position:ship.position}))});
     if(accepted.phase!=='playing')break;
 
   }
@@ -192,7 +203,7 @@ test("physical circular-stick inputs reach the victory screen", async ({
   const consumedInputs = await page.evaluate(()=>(window as any).__kaisenReadState('audit'));
   expect(consumedInputs.dropped).toBe(0);expect(consumedInputs.entries[0].tick).toBe(1);
   expect(consumedInputs.entries.every((e:any,i:number,a:any[])=>e.tick<=result.tick&&(!i||e.tick>a[i-1].tick))).toBe(true);
-  expect(bombCueCaptured,"Bomb green cue was inspected during a live approach").toBe(true);
+  expect(bombCueObserved,"Bomb green cue was inspected during a live approach").toBe(true);
   expect(fleetCaptured, "A real approach to a live fleet target was inspected").toBe(true);
   expect(payloadPresses, "Actual touch buttons launch the anti-ship payloads").toBeGreaterThan(0);
   expect(result.result?.outcome).toBe("victory");

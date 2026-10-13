@@ -1,0 +1,197 @@
+{
+  "sourceHead": "349ed823b15d7d406e09e69084c0fcd32c88e803",
+  "candidateDiffSha256": "e0805fd798a803547b78287229a96702942fc9655f89c9a05833465b239b3eb5",
+  "evidenceSha256": "5f00634697eaad78a38bc9aed49c723034610835dd0a52fa899d8f03c6b02c94",
+  "environment": "Local Sparticuz headless shell153 / Playwright1.61.1; not formal CI or iPhone hardware",
+  "result": "fail",
+  "tick": 36016,
+  "elapsed": 600.2666666666667,
+  "phase": "playing",
+  "hp": 73.95200000000008,
+  "ships": [
+    {
+      "id": 100,
+      "health": 972.9660293981262
+    },
+    {
+      "id": 101,
+      "health": 0
+    },
+    {
+      "id": 102,
+      "health": 0
+    },
+    {
+      "id": 103,
+      "health": 0
+    }
+  ],
+  "stats": {
+    "playerAircraftKills": 13,
+    "playerShipKills": 3,
+    "allyAircraftKills": 15,
+    "allyShipKills": 0,
+    "shots": 968,
+    "hits": 250,
+    "loops": 0,
+    "damageTaken": 189.24799999999894,
+    "friendlyDamage": 0,
+    "friendlyKills": 0,
+    "score": 6313.5169853009365
+  },
+  "actualDrops": 20,
+  "attempts": 22,
+  "skipped": 2,
+  "replay": {
+    "pauseTicks": [
+      14,
+      353
+    ],
+    "maxNumericDifference": 3.15e-10,
+    "sourceUnchanged": true
+  },
+  "dropDamagePrecision": "Damage values in drops are rounded to four decimal places; final ship health is preserved at recorded precision.",
+  "drops": [
+    {
+      "tick": 1331,
+      "kind": "direct",
+      "shipId": 102,
+      "damage": 1500
+    },
+    {
+      "tick": 1495,
+      "kind": "direct",
+      "shipId": 103,
+      "damage": 1800
+    },
+    {
+      "tick": 2507,
+      "kind": "direct",
+      "shipId": 103,
+      "damage": 600
+    },
+    {
+      "tick": 3021,
+      "kind": "water",
+      "shipId": null,
+      "damage": 0
+    },
+    {
+      "tick": 6377,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 250.4927
+    },
+    {
+      "tick": 7554,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 250.2678
+    },
+    {
+      "tick": 8736,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 437.7422
+    },
+    {
+      "tick": 11345,
+      "kind": "water",
+      "shipId": null,
+      "damage": 0
+    },
+    {
+      "tick": 12872,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 250.3823
+    },
+    {
+      "tick": 14376,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 25.2327
+    },
+    {
+      "tick": 15672,
+      "kind": "water",
+      "shipId": null,
+      "damage": 0
+    },
+    {
+      "tick": 16260,
+      "kind": "water",
+      "shipId": null,
+      "damage": 0
+    },
+    {
+      "tick": 17932,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 472.5865
+    },
+    {
+      "tick": 19050,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 270.4715
+    },
+    {
+      "tick": 20244,
+      "kind": "blast",
+      "shipId": 101,
+      "damage": 232.6352
+    },
+    {
+      "tick": 21395,
+      "kind": "direct",
+      "shipId": 101,
+      "damage": 210.1892
+    },
+    {
+      "tick": 23413,
+      "kind": "water",
+      "shipId": null,
+      "damage": 0
+    },
+    {
+      "tick": 27396,
+      "kind": "direct",
+      "shipId": 100,
+      "damage": 1800
+    },
+    {
+      "tick": 34535,
+      "kind": "blast",
+      "shipId": 100,
+      "damage": 327.034
+    },
+    {
+      "tick": 35651,
+      "kind": "blast-unresolved",
+      "shipId": 100,
+      "damage": null
+    }
+  ],
+  "counterfactual": {
+    "atTick": 11338,
+    "releaseTick": 11345,
+    "observed": {
+      "turn": 0.7071067811865475,
+      "climb": 0.7071067811865475,
+      "kindAtRelease": "water",
+      "damage": 0
+    },
+    "smallClimbStraight": {
+      "turn": 0,
+      "climb": [
+        0.02,
+        -0.02
+      ],
+      "kindAtRelease": "direct",
+      "shipId": 100,
+      "damage": 1800
+    },
+    "limitation": "One isolated Node branch using unchanged product stepGame, not a full-route or browser success. Both steering dimensions differ."
+  }
+}
