@@ -67,15 +67,48 @@ test('actual armed payload hits apply hull damage once and preserve ally versus 
   for (const allied of [false, true]) {
     const state = quiet(), ship = state.ships[0]; ship.position.set(0, 0, 0); ship.previous.copy(ship.position); ship.velocity.set(0, 0, 0); ship.yaw = 0; ship.quaternion.identity(); ship.previousQuaternion.identity();
     state.player.position.set(10000, 1000, 10000); state.player.previous.copy(state.player.position);
+    ship.guns.forEach(gun => { gun.health = 0; });
+    ship.guns.find(gun => gun.mountId === 'main-aft')!.health = 1;
+    ship.guns.find(gun => gun.mountId === 'main-fore-1')!.health = 100;
     ship.health = 1400;
     const bomb = releaseBomb(40000, allied ? state.allies[2] : state.player)!;
     bomb.age = 1; bomb.position.set(0, 15, 110); bomb.previous.copy(bomb.position); bomb.velocity.set(0, -600, 0);
     state.ordnance.push(bomb); stepGame(state, neutral);
     assert.equal(ship.health, 0); assert.equal(state.result?.outcome, 'victory'); assert.equal(state.ordnance.length, 0);
     assert.equal(state.stats.playerShipKills, allied ? 0 : 1); assert.equal(state.stats.allyShipKills, allied ? 1 : 0);
+    assert.equal(state.result?.scoreBreakdown.shipKillBonus, allied ? 0 : 200);
+    assert.equal(state.result?.scoreBreakdown.mountDestroyBonus, allied ? 0 : 25);
+    assert.equal(ship.guns.find(gun => gun.mountId === 'main-aft')?.health, 0);
+    assert.ok(ship.guns.find(gun => gun.mountId === 'main-fore-1')!.health > 0,
+      'the remote bow mount remains intact after the aft bomb blast and hull sinking');
     assert.equal(state.events.filter(event => event.type === 'ordnance-impact').length, 1);
     const frozen = JSON.stringify(state); stepGame(state, neutral); assert.equal(JSON.stringify(state), frozen);
   }
+});
+
+test('payload blasts award a mount only on its first player-owned destruction',()=>{
+  const state=quiet(),ship=state.ships[0];ship.position.set(0,0,0);ship.previous.copy(ship.position);
+  ship.velocity.set(0,0,0);ship.yaw=0;ship.quaternion.identity();ship.previousQuaternion.identity();
+  state.player.position.set(10000,1000,10000);state.player.previous.copy(state.player.position);
+  ship.guns.forEach(gun=>{gun.health=0;});ship.guns.find(gun=>gun.mountId==='main-aft')!.health=1;
+  const bomb=(id:number,owner:typeof state.player)=>{
+    const round=releaseBomb(id,owner)!;round.damage=1000;round.age=1;
+    round.position.set(0,15,110);round.previous.copy(round.position);round.velocity.set(0,-600,0);return round;
+  };
+  state.ordnance.push(bomb(41000,state.player),bomb(41001,state.player));stepGame(state,neutral);
+  assert.equal(ship.health,ship.maxHealth-2000,'the duplicate blast still applies its normal hull damage');
+  assert.equal(ship.guns.find(gun=>gun.mountId==='main-aft')?.health,0);
+  assert.equal(state.scoring.mountDestroyBonus,25);
+  assert.equal(state.events.filter(event=>event.type==='mount-destroyed'&&event.mountId==='main-aft').length,1);
+
+  const allyState=quiet(),allyShip=allyState.ships[0];allyShip.position.set(0,0,0);allyShip.previous.copy(allyShip.position);
+  allyShip.velocity.set(0,0,0);allyShip.yaw=0;allyShip.quaternion.identity();allyShip.previousQuaternion.identity();
+  allyState.player.position.set(10000,1000,10000);allyState.player.previous.copy(allyState.player.position);
+  allyShip.guns.forEach(gun=>{gun.health=0;});allyShip.guns.find(gun=>gun.mountId==='main-aft')!.health=1;
+  allyState.ordnance.push(bomb(41002,allyState.allies[0]));
+  stepGame(allyState,neutral);
+  assert.equal(allyShip.guns.find(gun=>gun.mountId==='main-aft')?.health,0);
+  assert.equal(allyState.scoring.mountDestroyBonus,0,'ally-owned blast destruction has no player mount award');
 });
 
 
@@ -96,5 +129,22 @@ test('ordinary manual gun rounds suppress a visible AA mount while hull health r
   assert.equal(ship.guns[index].health,0);assert.equal(destroyed,1);
   assert.ok(state.stats.shots>0&&state.stats.hits>0);assert.equal(ship.health,hull);
   assert.ok(state.player.health>0,'suppression happens before entering the hull');
-  assert.equal(state.stats.score,0,'exposed mounts do not award hull contribution points');
+  assert.equal(state.scoring.mountDestroyBonus,25,'one player-owned mount destruction awards its fixed bonus');
+  assert.equal(state.stats.score,25,'exposed mounts award only the mount bonus, not hull contribution points');
+
+  let id=42000;
+  const aimed=(mountIndex:number,owner:number)=>{
+    const center=new Vector3(...NAVAL_MOUNTS[mountIndex].pivot).add(new Vector3(0,-1,0)).applyQuaternion(ship.quaternion).add(ship.position);
+    const down=new Vector3(0,-1,0).applyQuaternion(ship.quaternion);
+    const position=center.clone().addScaledVector(down,-10);
+    return {id:id++,owner,team:'friendly' as const,kind:'cannon' as const,position,previous:position.clone(),
+      velocity:down.clone().multiplyScalar(1200),life:1,damage:1000};
+  };
+  state.bullets.push(aimed(index,state.player.id));stepGame(state,neutral);
+  assert.equal(ship.guns[index].health,0,'a repeat hit remains on the already destroyed mount');
+  assert.equal(state.scoring.mountDestroyBonus,25,'the repeated player hit earns no duplicate award');
+  const allyIndex=NAVAL_MOUNTS.findIndex(m=>m.id==='light-starboard-4');ship.guns[allyIndex].health=1;
+  state.bullets.push(aimed(allyIndex,state.allies[0].id));stepGame(state,neutral);
+  assert.equal(ship.guns[allyIndex].health,0,'the ally round reaches a fresh mount through the same bullet path');
+  assert.equal(state.scoring.mountDestroyBonus,25,'an allied mount destruction does not add a player award');
 });

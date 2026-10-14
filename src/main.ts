@@ -309,9 +309,9 @@ function finish() {
   // Result values are committed by the simulation. Formatting never recalculates them.
   el("result-mode").textContent = modeName(r.mode);
   el("result-score").textContent = String(r.score);
-  el("result-score-version").textContent = "得点ルール1 · 貢献スコア";
+  el("result-score-version").textContent = "得点ルール2 · ダメージと撃破のスコア";
   el("result-score-version").dataset.scoreRulesVersion = r.scoreRulesVersion;
-  for (const key of ["aircraft", "ships", "clear", "speed", "damageAvoidance", "friendlyDamagePenalty", "friendlyKillPenalty"] as const) {
+  for (const key of ["aircraft", "ships", "aircraftKillBonus", "shipKillBonus", "mountDestroyBonus", "clear", "speed", "damageAvoidance", "friendlyDamagePenalty", "friendlyKillPenalty"] as const) {
     const value = r.scoreBreakdown[key];
     el(`result-score-${key}`).textContent = scoreComponentFormat.format(value === 0 ? 0 : value);
   }

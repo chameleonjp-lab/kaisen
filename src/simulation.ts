@@ -1,6 +1,6 @@
 import { clearFlightAssistance, smoothFlightAssistance } from './flight-target';
 import { advanceShipMotion } from './ship-motion';
-import { createScoreLedger, recordTargetDamage, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from './scoring';
+import { createScoreLedger, recordTargetDamage, recordPlayerWeaponKillBonus, recordPlayerMountDestroyBonus, registerAircraftForScoring, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from './scoring';
 import { RULES_VERSION } from './mission';
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
@@ -103,8 +103,8 @@ function finish(state: GameState, reason: EndReason): void {
     alliesSurvived: state.allies.filter(item => item.health > 0).length, score: state.stats.score, friendlyDamage: state.stats.friendlyDamage, friendlyKills: state.stats.friendlyKills });
   emit(state, 'end', state.player.position, state.player.id);
 }
-function registerDestruction(state: GameState, target: CombatTarget, owner: number, team?: Team): void {
-  recordTargetDamage(state.scoring, target, 0, false);
+function registerDestruction(state: GameState, target: CombatTarget, owner: number, team?: Team, weaponKill = false): void {
+  recordTargetDamage(state.scoring, target, 0, false, state.stats.playerAircraftKills);
   if (target.kind === 'ship') beginShipWreck(target, state.elapsed);
   emit(state, 'kill', target.position, owner, target, team);
   if (target.kind === 'aircraft' && target.team === 'friendly' && target !== state.player) {
@@ -120,6 +120,7 @@ function registerDestruction(state: GameState, target: CombatTarget, owner: numb
       state.stats.playerAircraftKills += 1;
       if (target.generation === 'reinforcement') metaFor(state).pendingHeal += REINFORCEMENT_HEAL;
     }
+    if (weaponKill) recordPlayerWeaponKillBonus(state.scoring, target, state.stats.playerAircraftKills);
   } else {
     if (target.kind === 'ship') state.stats.allyShipKills += 1;
     else state.stats.allyAircraftKills += 1;
@@ -333,7 +334,7 @@ function updatePayloads(state: GameState): void {
       const ship = 'shipId' in outcome ? state.ships.find(item => item.id === outcome.shipId) : undefined;
       if (outcome.type === 'impact' && ship && ship.health > 0 && round.team !== ship.team) {
         const actual = Math.min(ship.health, outcome.damage); ship.health -= actual;
-        recordTargetDamage(state.scoring, ship, actual, round.owner === state.player.id && round.team === 'friendly');
+        recordTargetDamage(state.scoring, ship, actual, round.owner === state.player.id && round.team === 'friendly', state.stats.playerAircraftKills);
         if (round.owner === state.player.id && !hitCredited) { state.stats.hits++; hitCredited = true; }
         // Local blast damages nearby exposed mounts; hull damage is counted only once.
         const local = outcome.position.clone().sub(ship.position).applyQuaternion(ship.quaternion.clone().invert());
@@ -344,13 +345,14 @@ function updatePayloads(state: GameState): void {
           const damage = outcome.damage * .15 * Math.max(0, 1 - distance / 38);
           const previous = gun.health; gun.health = Math.max(0, previous - damage);
           if (previous > 0 && gun.health <= 0) {
+            if (round.owner === state.player.id && round.team === 'friendly') recordPlayerMountDestroyBonus(state.scoring, ship, gun.mountId);
             const event = emit(state, 'mount-destroyed', outcome.position, round.owner, ship, round.team);
             if (event) event.mountId = gun.mountId;
           }
         }
         const event = emit(state, 'ordnance-impact', outcome.position, round.owner, ship, round.team);
         if (event) { event.weapon = round.kind; event.amount = actual; if (outcome.blast) event.detail = 'blast'; }
-        if (ship.health <= 0) registerDestruction(state, ship, round.owner, round.team);
+        if (ship.health <= 0) registerDestruction(state, ship, round.owner, round.team, true);
       } else if (outcome.type === 'impact' && ship) {
         const event = emit(state, 'ordnance-impact', outcome.position, round.owner, ship, round.team);
         if (event) { event.weapon = round.kind; event.amount = 0; event.detail = 'wreck'; }
@@ -389,6 +391,7 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
     const hit = emit(state, 'hit', position, bullet.owner, target, bullet.team);
     if (hit) { hit.amount = result.partDamage; hit.armor = result.armor; hit.weapon = bullet.kind; }
     if (result.mountDestroyed && mountIndex !== null) {
+      if (bullet.owner === state.player.id && bullet.team === 'friendly') recordPlayerMountDestroyBonus(state.scoring, target, target.guns[mountIndex].mountId);
       const event = emit(state, 'mount-destroyed', position, bullet.owner, target, bullet.team);
       if (event) event.mountId = target.guns[mountIndex].mountId;
     }
@@ -396,7 +399,7 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
   }
   const requestedDamage = bullet.damage * multiplier;
   const damage = requestedDamage >= target.health - EPSILON ? target.health : requestedDamage; target.health -= damage;
-  recordTargetDamage(state.scoring, target, damage, bullet.owner === state.player.id && bullet.team === 'friendly');
+  recordTargetDamage(state.scoring, target, damage, bullet.owner === state.player.id && bullet.team === 'friendly', state.stats.playerAircraftKills);
   if (target === state.player) state.stats.damageTaken += damage;
   if (bullet.owner === state.player.id && target.team !== bullet.team) state.stats.hits += 1;
   if (state.mode === 'normal' && bullet.owner === state.player.id && target.team === 'friendly') {
@@ -409,7 +412,7 @@ function damageTarget(state: GameState, target: CombatTarget, bullet: Bullet, po
   if (hit) { hit.amount = damage; hit.weapon = bullet.kind; }
   const damaged = emit(state, 'damage', position, target.id, target, target.team);
   if (damaged) { damaged.amount = damage; damaged.weapon = bullet.kind; }
-  if (target.health <= 0) registerDestruction(state, target, bullet.owner, bullet.team);
+  if (target.health <= 0) registerDestruction(state, target, bullet.owner, bullet.team, true);
 }
 function updateBullets(state: GameState): void {
   const survivors: Bullet[] = [];
@@ -473,6 +476,7 @@ function spawnReinforcements(state: GameState): void {
     const yaw = Math.atan2(position.x - state.player.position.x, position.z - state.player.position.z);
     const enemy = makeAircraft(metaFor(state).nextEntityId++, 'enemy', position, yaw);
     enemy.generation = 'reinforcement';
+    registerAircraftForScoring(state.scoring, enemy);
     const slot = state.enemies.indexOf(missing[index]);
     metaFor(state).previousOrientations.delete(missing[index].id);
     state.enemies[slot] = enemy;

@@ -20,8 +20,21 @@ for (const viewport of [{ width: 393, height: 648 }, { width: 568, height: 320 }
     await page.keyboard.press('Tab'); await expect(page.locator('#rules-close')).toBeFocused();
     const text = await page.locator('#rules-content').innerText();
     expect(text).toContain('スマートフォンの操作'); expect(text).not.toContain('PCの操作'); expect(text).not.toContain('キーボード：');
-    expect(text).toContain('初期敵機のHPを自機が半分削ると250点');
-    expect(text).toContain('敗北しても貢献点と減点は残ります');
+    expect(text).toContain('敵機のHPを自機が半分削ると250点');
+    expect(text).toContain('初期・増援を区別せず');
+    expect(text).toContain('自機の先着5機まで');
+    expect(text).toContain('合計2,500点まで');
+    expect(text).toContain('敵機撃墜は1機100点');
+    expect(text).toContain('砲台破壊は1基25点');
+    expect(text).toContain('敗北してもダメージ点・撃破ボーナスと減点は残ります');
+    for (const [name, phrase] of [['five-aircraft', '敵機は初期・増援を区別せず'], ['destruction-bonuses', '自機の武器による敵機撃墜']] as const) {
+      const rule = page.locator('#rules-content p').filter({ hasText: phrase });
+      await expect(rule).toHaveCount(1);
+      await rule.scrollIntoViewIfNeeded(); await expect(rule).toBeInViewport();
+      const widths = await rule.evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth }));
+      expect(widths.scroll).toBeLessThanOrEqual(widths.client + 1);
+      await page.screenshot({ path: `test-results/evidence/score-rules-${name}-${browserName}-${viewport.width}x${viewport.height}.png` });
+    }
     const speedRule = page.locator('#rules-content p').filter({ hasText: '速いクリアが必ず高得点になるわけではありません' });
     await speedRule.scrollIntoViewIfNeeded(); await expect(speedRule).toBeInViewport();
     await page.screenshot({ path: `test-results/evidence/score-rules-${browserName}-${viewport.width}x${viewport.height}.png` });

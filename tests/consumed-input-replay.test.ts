@@ -33,11 +33,21 @@ for(const scenario of evidence.cases) test(`${scenario.mode} replays historical 
   }
   if(state.result?.outcome==='victory') assert.ok([...state.enemies,...state.ships].every(target=>target.health===0));
   if(state.result?.outcome==='defeat') assert.equal(state.player.health,0);
-  const contribution=state.scoring.targets.reduce((sum,t)=>sum+t.maximumPoints*t.playerDamage/t.initialHealth,0);
-  const raw=contribution-state.stats.friendlyDamage*10-state.stats.friendlyKills*1500;
-  if(state.phase!=='ended')assert.ok(Math.abs(state.stats.score-raw)<1e-7);
-  else {
-    assert.equal(state.result?.scoreRulesVersion,'kaisen-contribution-1');
+  const shipContribution=state.scoring.targets.filter(t=>t.kind==='ship').reduce((sum,t)=>sum+t.maximumPoints*t.playerDamage/t.initialHealth,0);
+  const contribution=state.scoring.aircraftDamagePoints+shipContribution;
+  const bonuses=state.scoring.aircraftKillBonus+state.scoring.shipKillBonus+state.scoring.mountDestroyBonus;
+  const raw=contribution+bonuses-state.stats.friendlyDamage*10-state.stats.friendlyKills*1500;
+  const breakdown=state.result?.scoreBreakdown;
+  if(breakdown) {
+    assert.equal(breakdown.aircraft,state.scoring.aircraftDamagePoints);
+    assert.ok(Math.abs(breakdown.ships-shipContribution)<1e-7);
+    assert.equal(breakdown.aircraftKillBonus,state.scoring.aircraftKillBonus);
+    assert.equal(breakdown.shipKillBonus,state.scoring.shipKillBonus);
+    assert.equal(breakdown.mountDestroyBonus,state.scoring.mountDestroyBonus);
+    if(state.result?.outcome==='defeat')assert.ok(Math.abs(breakdown.totalBeforeRounding-raw)<1e-7,'defeat score is independently rebuilt from capped damage, weapon awards, and penalties');
+  } else assert.ok(Math.abs(state.stats.score-raw)<1e-7);
+  if(state.result) {
+    assert.equal(state.result?.scoreRulesVersion,'kaisen-contribution-2');
     assert.equal(state.result?.score,Math.round(state.result!.scoreBreakdown.totalBeforeRounding));
   }
 });

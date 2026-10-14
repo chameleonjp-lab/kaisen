@@ -143,9 +143,9 @@ test('a released guided torpedo collides with the moving hull and credits damage
   assert.ok(impacts[0].position.distanceTo(target.position) < 150, 'impact occurs at the moving hull');
   assert.ok(round.waterDistance >= 80); assert.equal(round.life, 0); assert.equal(state.ordnance.length, 0);
   assert.equal(state.stats.hits, 1); assert.equal(state.stats.playerShipKills, 1);
-  close(state.stats.score, 1000); assert.equal(state.scoring.targets.find(item => item.id === target.id)?.playerDamage, 2000);
+  close(state.stats.score, 1200); assert.equal(state.scoring.targets.find(item => item.id === target.id)?.playerDamage, 2000);
   for (let tick = 0; tick < 120; tick++) stepGame(state, neutral);
-  assert.equal(state.stats.hits, 1); assert.equal(state.stats.playerShipKills, 1); close(state.stats.score, 1000);
+  assert.equal(state.stats.hits, 1); assert.equal(state.stats.playerShipKills, 1); close(state.stats.score, 1200);
   assert.deepEqual(stepOrdnance(round, [target], state.elapsed, FIXED_DT).outcomes, []);
 });
 
