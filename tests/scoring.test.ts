@@ -182,3 +182,91 @@ test('pause, repeated end inputs and replay preserve one frozen result with mode
     const replay=createGame(73,mode);assert.equal(replay.stats.score,0);assert.equal(replay.result,null);assert.ok(replay.scoring.targets.every(t=>t.playerDamage===0));
   }
 });
+
+test('approved clear examples commit through the fixed-step result path in both modes',()=>{
+  const cases=[
+    {mode:'easy' as const,friendlyDamage:0,friendlyKills:0,expected:27050},
+    {mode:'normal' as const,friendlyDamage:0,friendlyKills:0,expected:27050},
+    {mode:'normal' as const,friendlyDamage:20,friendlyKills:1,expected:25350},
+  ];
+  for(const example of cases){
+    const state=quiet(example.mode);
+    for(const target of [...state.enemies,...state.ships])target.health=target.maxHealth;
+    credit(state,'aircraft',0,1);credit(state,'aircraft',1,1);credit(state,'aircraft',2,.8);
+    credit(state,'ship',0,1);credit(state,'ship',1,1);credit(state,'ship',2,.5);
+    state.stats.damageTaken=40;state.stats.friendlyDamage=example.friendlyDamage;state.stats.friendlyKills=example.friendlyKills;
+    for(const target of [...state.enemies,...state.ships])target.health=0;
+    state.tick=180*60-1;state.elapsed=state.tick*FIXED_DT;
+    stepGame(state,neutral,FIXED_DT);
+    assert.equal(state.endReason,'all-clear');assert.equal(state.result?.outcome,'victory');assert.equal(state.result?.time,180);
+    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:1400,ships:5000,clear:12000,speed:8400,damageAvoidance:250,
+      friendlyDamagePenalty:-example.friendlyDamage*10,friendlyKillPenalty:-example.friendlyKills*1500,
+      totalBeforeRounding:example.expected});
+    assert.equal(state.stats.score,example.expected);assert.equal(state.result?.score,example.expected);
+    assert.ok(Object.isFrozen(state.result)&&Object.isFrozen(state.result?.scoreBreakdown));
+  }
+});
+
+test('a surviving mission remains active with its score at 599.9833, 600, and 600.0167 seconds',()=>{
+  const state=quiet('normal');
+  const target=targetPlane(state);
+  target.position.set(30000,1200,-30000);target.previous.copy(target.position);target.speed=0;target.aiFire=false;
+  for(const [index,enemy]of state.enemies.entries()){
+    if(enemy===target)continue;
+    enemy.health=enemy.maxHealth;enemy.position.set(32000+index*1000,1200,-32000);enemy.previous.copy(enemy.position);enemy.speed=0;enemy.aiFire=false;
+  }
+  credit(state,'aircraft',0,.25);
+  state.tick=35998;state.elapsed=state.tick*FIXED_DT;
+  for(const [expectedTick,expectedTime]of [[35999,599.9833333333333],[36000,600],[36001,600.0166666666667]] as const){
+    stepGame(state,neutral,FIXED_DT);
+    assert.equal(state.tick,expectedTick);close(state.elapsed,expectedTime);
+    assert.equal(state.phase,'playing');assert.equal(state.endReason,null);assert.equal(state.result,null);
+    assert.ok(state.enemies.some(enemy=>enemy.health>0),'the mission still has living enemy aircraft');
+    close(state.stats.score,125);
+  }
+});
+
+test('all-clear still commits at and beyond 600 seconds with the fixed no-speed-bonus total',()=>{
+  const cases=[
+    {mode:'easy' as const,startTick:35999,expectedTime:600},
+    {mode:'normal' as const,startTick:36000,expectedTime:600+FIXED_DT},
+  ];
+  for(const example of cases){
+    const state=quiet(example.mode);
+    for(const target of [...state.enemies,...state.ships])target.health=target.maxHealth;
+    credit(state,'aircraft',0,.5);credit(state,'ship',0,.25);state.stats.damageTaken=20;
+    for(const target of [...state.enemies,...state.ships])target.health=0;
+    state.tick=example.startTick;state.elapsed=state.tick*FIXED_DT;
+    stepGame(state,neutral,FIXED_DT);
+    assert.equal(state.endReason,'all-clear');assert.equal(state.result?.outcome,'victory');close(state.result!.time,example.expectedTime);
+    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:250,ships:500,clear:12000,speed:0,damageAvoidance:375,
+      friendlyDamagePenalty:-0,friendlyKillPenalty:-0,totalBeforeRounding:13125});
+    assert.equal(state.result?.score,13125);assert.equal(state.stats.score,13125);
+  }
+});
+
+test('a lethal enemy round does not cancel final-tick damage or friendly kill before freezing a Normal defeat score',()=>{
+  const state=quiet('normal'),enemy=targetPlane(state),ally=state.allies[0];
+  enemy.position.set(0,1000,0);enemy.previous.copy(enemy.position);enemy.aiFire=false;
+  credit(state,'aircraft',0,.0005); // 0.04 HP = 0.25 points before the terminal tick.
+  ally.health=.2;ally.position.set(10000,1000,10000);ally.previous.copy(ally.position);
+  const ownShot=shot(state.player.id,'friendly',enemy.position.clone().add(new Vector3(0,0,60)),.04,'mg');ownShot.id=91001;
+  const friendlyShot=shot(state.player.id,'friendly',ally.position.clone().add(new Vector3(0,0,60)),.2,'mg');friendlyShot.id=91002;
+  const lethalRound=shot(90000,'enemy',state.player.position.clone().add(new Vector3(0,0,60)),100,'mg');lethalRound.id=91003;
+  const pendingRound=shot(state.player.id,'friendly',new Vector3(90000,1000,90000),.1,'mg');pendingRound.id=91004;
+  pendingRound.velocity.set(0,0,0);pendingRound.life=1;
+  state.bullets.push(lethalRound,ownShot,friendlyShot,pendingRound);
+  state.player.health=1;
+  stepGame(state,neutral,FIXED_DT);
+
+  assert.equal(state.endReason,'shot-down');assert.equal(state.deathCause,'enemy-aircraft');assert.equal(state.result?.outcome,'defeat');
+  assert.equal(state.stats.friendlyDamage,.2);assert.equal(state.stats.friendlyKills,1);
+  assert.equal(state.result?.scoreBreakdown.aircraft,.5);assert.equal(state.result?.scoreBreakdown.clear,0);
+  assert.equal(state.result?.scoreBreakdown.speed,0);assert.equal(state.result?.scoreBreakdown.damageAvoidance,0);
+  assert.equal(state.result?.scoreBreakdown.friendlyDamagePenalty,-2);assert.equal(state.result?.scoreBreakdown.friendlyKillPenalty,-1500);
+  close(state.result!.scoreBreakdown.totalBeforeRounding,-1501.5);assert.equal(state.result?.score,-1501);assert.equal(state.stats.score,-1501);
+  assert.equal(state.bullets.length,1,'the other fired round survives the terminal tick');assert.equal(state.bullets[0].id,91004);
+  const result=state.result,ended=JSON.stringify(state),remainingLife=state.bullets[0].life;
+  stepGame(state,{...neutral,fire:true},FIXED_DT);
+  assert.equal(state.result,result);assert.equal(state.bullets[0].life,remainingLife);assert.equal(JSON.stringify(state),ended);
+});
