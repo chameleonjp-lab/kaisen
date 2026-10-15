@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Vector3 } from 'three';
 import { createGame, startGame, stepGame, pauseGame, resumeGame } from '../src/simulation';
-import { recordTargetDamage, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from '../src/scoring';
-import { RULES_VERSION, FIXED_DT } from '../src/mission';
+import { recordTargetDamage, registerAircraftForScoring, scoreBreakdown, finalScore, SCORE_RULES_VERSION } from '../src/scoring';
+import { RULES_VERSION, FIXED_DT, REINFORCEMENT_TICK } from '../src/mission';
 import { releaseBomb } from '../src/ordnance';
 import { CAPITAL_SHIP } from '../src/naval';
 import { oceanHeight } from '../src/ocean';
@@ -53,6 +53,12 @@ test('actual damage, ally finishing blows, repeated reports and overkill preserv
   target.health=0;recordTargetDamage(state.scoring,target,80,true);close(scoreBreakdown(state).aircraft,125);
   for(const invalid of [-1,NaN,Infinity])recordTargetDamage(state.scoring,state.enemies[1],invalid,true);
   close(scoreBreakdown(state).aircraft,125);
+
+  const allyFirst=createGame(),shared=allyFirst.enemies[0];
+  shared.health=40;recordTargetDamage(allyFirst.scoring,shared,40,false);
+  shared.health=20;recordTargetDamage(allyFirst.scoring,shared,20,true);
+  shared.health=0;recordTargetDamage(allyFirst.scoring,shared,20,false);
+  close(scoreBreakdown(allyFirst).aircraft,125,'player damage after an ally has already reduced HP uses the original airframe HP');
 });
 
 test('approved contribution examples keep failure points and combine clear, speed and cumulative damage',()=>{
@@ -61,7 +67,8 @@ test('approved contribution examples keep failure points and combine clear, spee
   const state=createGame();credit(state,'aircraft',0,1);credit(state,'aircraft',1,1);credit(state,'aircraft',2,.8);
   credit(state,'ship',0,1);credit(state,'ship',1,1);credit(state,'ship',2,.5);
   state.elapsed=180;state.stats.damageTaken=40;
-  assert.deepEqual(scoreBreakdown(state,true),{aircraft:1400,ships:5000,clear:12000,speed:8400,damageAvoidance:250,friendlyDamagePenalty:-0,friendlyKillPenalty:-0,totalBeforeRounding:27050});
+  assert.deepEqual(scoreBreakdown(state,true),{aircraft:1400,ships:5000,aircraftKillBonus:0,shipKillBonus:0,mountDestroyBonus:0,
+    clear:12000,speed:8400,damageAvoidance:250,friendlyDamagePenalty:-0,friendlyKillPenalty:-0,totalBeforeRounding:27050});
   state.stats.friendlyDamage=20;state.stats.friendlyKills=1;assert.equal(finalScore(scoreBreakdown(state,true)),25350);
   state.stats.friendlyDamage=state.stats.friendlyKills=0;state.elapsed=600;assert.equal(finalScore(scoreBreakdown(state,true)),18650);
 });
@@ -122,14 +129,21 @@ test('real bomb hull damage uses each ship initial HP and ally finishing damage 
   }
 });
 
-test('reinforcement damage and kill earn no points, while real healing never restores the damage bonus',()=>{
+test('spawned reinforcement damage and weapon kill score once, while healing never restores damage avoidance',()=>{
   const state=quiet();state.player.position.set(1000,1000,1000);state.player.previous.copy(state.player.position);
   state.bullets.push(shot(44,'enemy',state.player.position.clone().add(new Vector3(0,0,60)),40));stepGame(state,neutral);
   close(state.stats.damageTaken,40);close(state.player.health,40);
-  const enemy=targetPlane(state);enemy.id=8888;enemy.generation='reinforcement';hitPlane(state,10000);
-  assert.equal(state.player.health,55);close(state.stats.damageTaken,40);assert.equal(state.stats.score,0);
+  state.tick=REINFORCEMENT_TICK-1;state.elapsed=state.tick*FIXED_DT;stepGame(state,neutral);
+  const enemy=state.enemies[0];assert.equal(enemy.generation,'reinforcement');
+  enemy.health=enemy.maxHealth;enemy.position.set(0,1000,0);enemy.previous.copy(enemy.position);
+  hitPlane(state,20);close(enemy.health,60);close(state.stats.score,125);
+  hitPlane(state,10000);assert.equal(enemy.health,0);assert.equal(state.stats.playerAircraftKills,1);close(state.stats.score,600);
+  assert.equal(state.player.health,55);close(state.stats.damageTaken,40);
   assert.ok(state.events.some(e=>e.type==='heal'&&e.amount===15));state.ships[0].health=0;stepGame(state,neutral);
-  assert.equal(state.result!.scoreBreakdown.damageAvoidance,250);assert.equal(state.result!.scoreBreakdown.aircraft,0);
+  for(const target of state.enemies)target.health=0;
+  stepGame(state,neutral);
+  assert.equal(state.result!.scoreBreakdown.damageAvoidance,250);assert.equal(state.result!.scoreBreakdown.aircraft,500);
+  assert.equal(state.result!.scoreBreakdown.aircraftKillBonus,100);
 });
 
 test('armed torpedoes and water near misses earn only their actual armored hull fraction',()=>{
@@ -158,28 +172,34 @@ test('ramming and sea contact give no extra contribution, but earlier weapon dam
   assert.equal(state.result?.outcome,'defeat');assert.equal(state.stats.playerAircraftKills,1);assert.equal(state.result?.score,125);
   assert.equal(state.result?.scoreBreakdown.clear,0);
   const sea=quiet();targetPlane(sea);hitPlane(sea,80);sea.player.position.y=0;sea.player.previous.copy(sea.player.position);stepGame(sea,neutral);
-  assert.equal(sea.deathCause,'sea');assert.equal(sea.result?.score,500);
+  assert.equal(sea.deathCause,'sea');assert.equal(sea.result?.score,600);assert.equal(sea.result?.scoreBreakdown.aircraftKillBonus,100);
 });
 
-test('simultaneous final kill and death retains contribution without awarding victory bonuses',()=>{
+test('a lethal round resolved first still preserves the later fired aircraft kill bonus on defeat',()=>{
   const state=quiet(),enemy=targetPlane(state);state.ships[0].health=0;
-  state.bullets.push(shot(1,'friendly',new Vector3(0,1000,60),10000));
   state.bullets.push(shot(enemy.id,'enemy',state.player.position.clone().add(new Vector3(0,0,60)),10000,'aa'));
-  stepGame(state,neutral);assert.equal(state.result?.outcome,'defeat');assert.equal(state.result?.score,500);
+  // The lethal enemy round resolves first; the player's already-fired shot still resolves afterward.
+  state.bullets.push(shot(1,'friendly',new Vector3(0,1000,60),10000));
+  stepGame(state,neutral);assert.equal(state.result?.outcome,'defeat');assert.equal(state.result?.score,600);
+  assert.equal(state.result?.scoreBreakdown.aircraftKillBonus,100);
   assert.equal(state.result?.scoreBreakdown.clear,0);assert.equal(state.result?.scoreBreakdown.speed,0);assert.equal(state.result?.scoreBreakdown.damageAvoidance,0);
   assert.equal(state.deathCause,'naval-fire');close(state.stats.damageTaken,80);
+  const frozen=JSON.stringify(state);stepGame(state,neutral);assert.equal(JSON.stringify(state),frozen,'the terminal score and bonus remain frozen after a simultaneous defeat');
 });
 
 test('pause, repeated end inputs and replay preserve one frozen result with mode and scoring revision',()=>{
   for(const mode of ['easy','normal'] as const){
-    const state=quiet(mode);targetPlane(state);hitPlane(state,20);pauseGame(state);
+    const state=quiet(mode);targetPlane(state);hitPlane(state,10000);pauseGame(state);
     const paused=JSON.stringify(state);stepGame(state,{...neutral,fire:true},.25);assert.equal(JSON.stringify(state),paused);resumeGame(state);
     state.player.position.y=0;state.player.previous.copy(state.player.position);stepGame(state,neutral);
     const result=state.result!;assert.equal(result.mode,mode);assert.equal(result.rulesVersion,RULES_VERSION);assert.equal(result.scoreRulesVersion,SCORE_RULES_VERSION);
     assert.ok(Object.isFrozen(result)&&Object.isFrozen(result.scoreBreakdown));
     const ended=JSON.stringify(state);for(let n=0;n<3;n++){startGame(state);resumeGame(state);stepGame(state,{...neutral,fire:true},FIXED_DT);}
-    assert.equal(JSON.stringify(state),ended);assert.equal(state.result,result);assert.equal(result.score,125);
-    const replay=createGame(73,mode);assert.equal(replay.stats.score,0);assert.equal(replay.result,null);assert.ok(replay.scoring.targets.every(t=>t.playerDamage===0));
+    assert.equal(JSON.stringify(state),ended);assert.equal(state.result,result);assert.equal(result.score,600);
+    assert.equal(result.scoreBreakdown.aircraftKillBonus,100);
+    const replay=createGame(73,mode);assert.equal(replay.stats.score,0);assert.equal(replay.result,null);
+    assert.equal(replay.scoring.aircraftKillBonus,0);assert.equal(replay.scoring.shipKillBonus,0);assert.equal(replay.scoring.mountDestroyBonus,0);
+    assert.ok(replay.scoring.targets.every(t=>t.playerDamage===0));
   }
 });
 
@@ -199,7 +219,7 @@ test('approved clear examples commit through the fixed-step result path in both 
     state.tick=180*60-1;state.elapsed=state.tick*FIXED_DT;
     stepGame(state,neutral,FIXED_DT);
     assert.equal(state.endReason,'all-clear');assert.equal(state.result?.outcome,'victory');assert.equal(state.result?.time,180);
-    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:1400,ships:5000,clear:12000,speed:8400,damageAvoidance:250,
+    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:1400,ships:5000,aircraftKillBonus:0,shipKillBonus:0,mountDestroyBonus:0,clear:12000,speed:8400,damageAvoidance:250,
       friendlyDamagePenalty:-example.friendlyDamage*10,friendlyKillPenalty:-example.friendlyKills*1500,
       totalBeforeRounding:example.expected});
     assert.equal(state.stats.score,example.expected);assert.equal(state.result?.score,example.expected);
@@ -239,7 +259,7 @@ test('all-clear still commits at and beyond 600 seconds with the fixed no-speed-
     state.tick=example.startTick;state.elapsed=state.tick*FIXED_DT;
     stepGame(state,neutral,FIXED_DT);
     assert.equal(state.endReason,'all-clear');assert.equal(state.result?.outcome,'victory');close(state.result!.time,example.expectedTime);
-    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:250,ships:500,clear:12000,speed:0,damageAvoidance:375,
+    assert.deepEqual(state.result?.scoreBreakdown,{aircraft:250,ships:500,aircraftKillBonus:0,shipKillBonus:0,mountDestroyBonus:0,clear:12000,speed:0,damageAvoidance:375,
       friendlyDamagePenalty:-0,friendlyKillPenalty:-0,totalBeforeRounding:13125});
     assert.equal(state.result?.score,13125);assert.equal(state.stats.score,13125);
   }
@@ -269,4 +289,106 @@ test('a lethal enemy round does not cancel final-tick damage or friendly kill be
   const result=state.result,ended=JSON.stringify(state),remainingLife=state.bullets[0].life;
   stepGame(state,{...neutral,fire:true},FIXED_DT);
   assert.equal(state.result,result);assert.equal(state.bullets[0].life,remainingLife);assert.equal(JSON.stringify(state),ended);
+});
+
+test('the fifth own kill scores across the initial/reinforcement boundary, then blocks a sixth in the same tick',()=>{
+  const state=quiet(),fifth=targetPlane(state);
+  for(const enemy of state.enemies.slice(1)){enemy.health=0;enemy.aiFire=false;}
+  fifth.aiFire=false;
+  state.tick=REINFORCEMENT_TICK-1;state.elapsed=state.tick*FIXED_DT;
+  stepGame(state,neutral);
+  const sixth=state.enemies[1];assert.equal(fifth.generation,'initial');assert.equal(sixth.generation,'reinforcement');
+  for(const enemy of state.enemies.slice(2))enemy.health=0;
+  fifth.health=80;fifth.position.set(0,1000,0);fifth.previous.copy(fifth.position);
+  sixth.health=80;sixth.position.set(500,1000,0);sixth.previous.copy(sixth.position);
+  state.stats.playerAircraftKills=4;
+  const aimed=(target:typeof fifth,damage:number,id:number)=>{const b=shot(state.player.id,'friendly',target.position.clone().add(new Vector3(0,0,60)),damage,'mg');b.id=id;return b;};
+  state.bullets.push(aimed(fifth,20,92001),aimed(fifth,60,92002),aimed(sixth,80,92003));
+  stepGame(state,neutral);
+  assert.equal(state.stats.playerAircraftKills,6);
+  assert.equal(state.scoring.aircraftDamagePoints,500);
+  assert.equal(state.result,null);
+  assert.equal(scoreBreakdown(state).aircraft,500);assert.equal(scoreBreakdown(state).aircraftKillBonus,100);
+  assert.equal(state.scoring.aircraftKillBonus,100,'the fifth kill gets the award; the sixth does not');
+});
+
+test('reinforcement healing continues after the fifth kill even when its damage and kill bonus are capped',()=>{
+  const state=quiet();state.player.health=50;state.stats.playerAircraftKills=5;
+  for(const enemy of state.enemies)enemy.health=0;
+  state.tick=REINFORCEMENT_TICK-1;state.elapsed=state.tick*FIXED_DT;stepGame(state,neutral);
+  const reinforcement=state.enemies[0];assert.equal(reinforcement.generation,'reinforcement');
+  reinforcement.position.set(0,1000,0);reinforcement.previous.copy(reinforcement.position);reinforcement.aiFire=false;
+  hitPlane(state,10000);
+  assert.equal(state.stats.playerAircraftKills,6);assert.equal(state.player.health,65);
+  assert.equal(state.events.filter(event=>event.type==='heal'&&event.amount===15).length,1);
+  assert.equal(state.scoring.aircraftDamagePoints,0);assert.equal(state.scoring.aircraftKillBonus,0);
+});
+
+test('a collision still consumes a player aircraft kill but grants no weapon kill bonus',()=>{
+  const state=quiet(),enemy=targetPlane(state);
+  state.player.speed=0;enemy.speed=0;enemy.aiFire=false;
+  state.player.position.copy(enemy.position);state.player.previous.copy(enemy.previous);
+  stepGame(state,neutral);
+  assert.equal(state.stats.playerAircraftKills,1);assert.equal(enemy.health,0);assert.equal(state.player.health,0);
+  assert.equal(state.scoring.aircraftDamagePoints,0);assert.equal(state.scoring.aircraftKillBonus,0);
+  assert.equal(state.result?.scoreBreakdown.aircraftKillBonus,0);
+});
+
+test('aircraft damage has one 2500-point cap across initial and registered reinforcement targets',()=>{
+  const state=createGame();
+  for(const target of state.enemies){target.health=0;recordTargetDamage(state.scoring,target,target.maxHealth,true,state.stats.playerAircraftKills);}
+  assert.equal(state.scoring.aircraftDamagePoints,2500);
+  const reinforcement={...state.enemies[0],id:9999,generation:'reinforcement' as const,health:80};
+  registerAircraftForScoring(state.scoring,reinforcement);
+  reinforcement.health=0;recordTargetDamage(state.scoring,reinforcement,80,true,state.stats.playerAircraftKills);
+  assert.equal(state.scoring.aircraftDamagePoints,2500);
+  assert.equal(scoreBreakdown(state).aircraft,2500);
+  assert.equal(state.scoring.targets.length,9,'generated aircraft do not extend the fixed initial target ledger');
+});
+
+test('partial damage survives allied finishes across a replenishment wave but cannot farm past 2500',()=>{
+  const state=quiet();
+  const aimed=(target:typeof state.enemies[number],damage:number,id:number,owner=state.player.id)=>{
+    const b=shot(owner,'friendly',target.position.clone().add(new Vector3(0,0,60)),damage,'mg');b.id=id;return b;
+  };
+  for(const [index,target]of state.enemies.entries()){
+    target.health=80;target.position.set(index*1000,1000,0);target.previous.copy(target.position);
+  }
+  state.bullets.push(...state.enemies.map((target,index)=>aimed(target,79.99,94000+index)));
+  stepGame(state,neutral);
+  assert.ok(state.scoring.aircraftDamagePoints>2499.6&&state.scoring.aircraftDamagePoints<2500);
+  state.tick=REINFORCEMENT_TICK-1;state.elapsed=state.tick*FIXED_DT;
+  state.bullets.push(...state.enemies.map((target,index)=>aimed(target,10000,94100+index,state.allies[index%state.allies.length].id)));
+  stepGame(state,neutral);
+  assert.equal(state.stats.playerAircraftKills,0);assert.equal(state.stats.allyAircraftKills,5);
+  close(state.scoring.targets.filter(target=>target.kind==='aircraft').reduce((sum,target)=>sum+target.playerDamage,0),399.95);
+  assert.equal(state.enemies.filter(target=>target.generation==='reinforcement').length,5);
+
+  for(const [index,target]of state.enemies.entries()){
+    target.position.set(index*1000,1000,0);target.previous.copy(target.position);target.aiFire=false;
+  }
+  state.bullets.push(aimed(state.enemies[0],.05,94200),aimed(state.enemies[1],79.999,94201));
+  state.bullets.push(aimed(state.enemies[0],10000,94202,state.allies[0].id),aimed(state.enemies[1],10000,94203,state.allies[1].id));
+  stepGame(state,neutral);
+  assert.equal(state.stats.playerAircraftKills,0);assert.equal(state.stats.allyAircraftKills,7);
+  assert.equal(state.scoring.aircraftDamagePoints,2500);assert.equal(scoreBreakdown(state).aircraft,2500);
+  close(state.scoring.aircraftCredits.get(state.enemies[0])!.playerDamage,.05);
+  assert.equal(state.scoring.aircraftCredits.get(state.enemies[1])!.playerDamage,0,'damage after the shared cap earns no contribution');
+  assert.equal(state.scoring.aircraftKillBonus,0);
+});
+
+test('new kill bonus rows freeze into the result and fresh replays start at zero',()=>{
+  const state=quiet(),enemy=targetPlane(state);hitPlane(state,10000);
+  assert.equal(state.scoring.aircraftKillBonus,100);
+  for(const target of [...state.enemies,...state.ships])target.health=0;
+  stepGame(state,neutral);
+  const result=state.result!;
+  assert.equal(result.scoreBreakdown.aircraftKillBonus,100);
+  assert.equal(result.scoreBreakdown.shipKillBonus,0);assert.equal(result.scoreBreakdown.mountDestroyBonus,0);
+  assert.ok(Object.isFrozen(result.scoreBreakdown));
+  const replay=createGame(73);
+  assert.equal(replay.scoring.aircraftDamagePoints,0);assert.equal(replay.scoring.aircraftKillBonus,0);
+  assert.equal(replay.scoring.shipKillBonus,0);assert.equal(replay.scoring.mountDestroyBonus,0);
+  assert.ok(replay.scoring.targets.every(entry=>entry.playerDamage===0));
+  assert.equal(enemy.health,0);
 });

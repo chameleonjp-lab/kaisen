@@ -19,7 +19,11 @@ function shot(owner: number, team: Bullet['team'], position: Vector3, velocity: 
   return { id: 99999, owner, team, position, previous: position.clone(), velocity, life: 1, damage: 200, kind: 'cannon' };
 }
 function killable(state: GameState, generation: 'initial' | 'reinforcement', owner = state.player.id) {
-  const enemy = state.enemies[0]; enemy.health = 1; enemy.generation = generation;
+  if (generation === 'reinforcement') {
+    state.tick = REINFORCEMENT_TICK - 1; state.elapsed = state.tick * FIXED_DT;
+    stepGame(state, neutral);
+  }
+  const enemy = state.enemies[0]; enemy.health = 1;
   enemy.position.set(0, 500, -60); enemy.previous.copy(enemy.position);
   state.bullets.push(shot(owner, 'friendly', new Vector3(0, 500, 0), new Vector3(0, 0, -12000)));
   return enemy;
@@ -90,7 +94,7 @@ test('all-clear wins immediately before and on a replenishment boundary; ended m
   }
   assert.equal(createGame().reinforcementsSpawned, false);
 });
-test('only player reinforcement kills heal once, capped at max HP; reinforcement kills award no points', () => {
+test('only player reinforcement kills heal once, capped at max HP; own weapon kills get the fixed awards', () => {
   for (const [generation, owner, hp, expected] of [['reinforcement', 1, 50, 65], ['reinforcement', 1, 75, 80], ['initial', 1, 50, 50], ['reinforcement', 2, 50, 50]] as const) {
     const s = isolated(); s.player.health = hp; killable(s, generation, owner);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
@@ -98,7 +102,7 @@ test('only player reinforcement kills heal once, capped at max HP; reinforcement
     assert.equal(events.length, expected > hp ? 1 : 0);
     if (events.length) assert.equal(events[0].amount, expected - hp);
     stepGame(s, neutral); assert.equal(s.player.health, expected);
-    assert.equal(s.stats.score, generation === 'initial' && owner === 1 ? 500 / 80 : 0);
+    assert.equal(s.stats.score, owner === 1 ? 100 + 500 / 80 : 0);
   }
 });
 test('all damage resolves before healing so a same-tick lethal hit cannot be resurrected', () => {

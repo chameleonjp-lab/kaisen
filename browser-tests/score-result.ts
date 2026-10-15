@@ -3,8 +3,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import type { GameMode, GameResult } from '../src/types';
 
 const components = [
-  ['aircraft', '初期敵機への貢献'],
-  ['ships', '初期敵艦への貢献'],
+  ['aircraft', '敵機へのダメージ点'],
+  ['ships', '敵艦へのダメージ点'],
+  ['aircraftKillBonus', '敵機の撃墜ボーナス'],
+  ['shipKillBonus', '敵艦の撃沈ボーナス'],
+  ['mountDestroyBonus', '砲台の破壊ボーナス'],
   ['clear', 'クリアボーナス'],
   ['speed', '速さボーナス'],
   ['damageAvoidance', '損傷回避ボーナス'],
@@ -16,7 +19,7 @@ const components = [
 export async function expectScoreResult(page: Page, result: GameResult, mode: GameMode, outcome: GameResult['outcome']) {
   expect(result.mode).toBe(mode);
   expect(result.outcome).toBe(outcome);
-  expect(result.scoreRulesVersion).toBe('kaisen-contribution-1');
+  expect(result.scoreRulesVersion).toBe('kaisen-contribution-2');
   expect(Number.isInteger(result.score)).toBe(true);
   const breakdown = result.scoreBreakdown;
   const total = components.reduce((sum, [key]) => sum + breakdown[key], 0);
@@ -26,11 +29,19 @@ export async function expectScoreResult(page: Page, result: GameResult, mode: Ga
   expect(breakdown.aircraft).toBeLessThanOrEqual(2500);
   expect(breakdown.ships).toBeGreaterThanOrEqual(0);
   expect(breakdown.ships).toBeLessThanOrEqual(8000);
+  for (const [key, maximum, increment] of [
+    ['aircraftKillBonus', 500, 100],
+    ['shipKillBonus', 800, 200],
+    ['mountDestroyBonus', 2100, 25],
+  ] as const) {
+    expect(Number.isFinite(breakdown[key])).toBe(true);
+    expect(breakdown[key]).toBeGreaterThanOrEqual(0);
+    expect(breakdown[key]).toBeLessThanOrEqual(maximum);
+    expect(breakdown[key] % increment).toBe(0);
+  }
   expect(breakdown.friendlyDamagePenalty).toBeLessThanOrEqual(0);
   expect(breakdown.friendlyKillPenalty).toBeLessThanOrEqual(0);
   if (outcome === 'victory') {
-    expect(result.score).toBeGreaterThan(0);
-    expect(breakdown.aircraft + breakdown.ships).toBeGreaterThan(0);
     expect(breakdown.clear).toBe(12000);
     expect(breakdown.speed).toBeCloseTo(Math.max(0, 12000 - 20 * result.time), 8);
     expect(breakdown.damageAvoidance).toBeGreaterThanOrEqual(0);
@@ -42,12 +53,15 @@ export async function expectScoreResult(page: Page, result: GameResult, mode: Ga
   }
   await expect(page.locator('#result-mode')).toHaveText(mode === 'normal' ? 'ノーマル' : 'イージー');
   await expect(page.locator('#result-score')).toHaveText(String(result.score));
-  await expect(page.locator('#result-score-version')).toHaveText('得点ルール1 · 貢献スコア');
+  await expect(page.locator('#result-score-version')).toHaveText('得点ルール2 · ダメージと撃破のスコア');
   await expect(page.locator('#result-score-version')).toHaveAttribute('data-score-rules-version', result.scoreRulesVersion);
   await expect(page.locator('#score-rounding-note')).toContainText('丸める前の値を合計');
   await expect(page.locator('#score-rounding-note')).toContainText('最後に一度だけ');
   await expect(page.locator('#score-scope-note')).toContainText('撃破数には増援を含みます');
-  await expect(page.locator('#score-scope-note')).toContainText('増援の撃墜はHP回復のみ');
+  await expect(page.locator('#score-scope-note')).toContainText('初期・増援を区別せず');
+  await expect(page.locator('#score-scope-note')).toContainText('自機の先着5機まで');
+  await expect(page.locator('#score-scope-note')).toContainText('合計2,500点まで');
+  await expect(page.locator('#score-scope-note')).toContainText('僚機の撃墜は自機の枠を減らしません');
   await expect(page.locator('#score-breakdown > div')).toHaveCount(components.length);
   for (const [key, label] of components) {
     const row = page.locator(`#result-score-${key}`);
@@ -90,7 +104,7 @@ export async function inspectScoreResultLayout(page: Page, result: GameResult, o
         expect(box!.height).toBeGreaterThanOrEqual(44);
         expect(box!.width).toBeGreaterThanOrEqual(44);
       }
-      if (id === 'result-time' || id === 'result-score-aircraft' || id === 'result-score-damageAvoidance' || id === 'score-rounding-note') {
+      if (id === 'result-time' || id === 'result-score-aircraft' || id === 'result-score-mountDestroyBonus' || id === 'result-score-damageAvoidance' || id === 'score-rounding-note') {
         await page.screenshot({ path: `test-results/evidence/${name}-${id}.png` });
       }
     }

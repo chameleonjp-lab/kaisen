@@ -163,15 +163,18 @@
           <section class="score-breakdown" aria-labelledby="score-breakdown-title">
             <h3 id="score-breakdown-title">スコアの内訳</h3>
             <dl id="score-breakdown">
-              <div><dt>初期敵機への貢献</dt><dd id="result-score-aircraft">0</dd></div>
-              <div><dt>初期敵艦への貢献</dt><dd id="result-score-ships">0</dd></div>
+              <div><dt>敵機へのダメージ点</dt><dd id="result-score-aircraft">0</dd></div>
+              <div><dt>敵艦へのダメージ点</dt><dd id="result-score-ships">0</dd></div>
+              <div><dt>敵機の撃墜ボーナス</dt><dd id="result-score-aircraftKillBonus">0</dd></div>
+              <div><dt>敵艦の撃沈ボーナス</dt><dd id="result-score-shipKillBonus">0</dd></div>
+              <div><dt>砲台の破壊ボーナス</dt><dd id="result-score-mountDestroyBonus">0</dd></div>
               <div><dt>クリアボーナス</dt><dd id="result-score-clear">0</dd></div>
               <div><dt>速さボーナス</dt><dd id="result-score-speed">0</dd></div>
               <div><dt>損傷回避ボーナス</dt><dd id="result-score-damageAvoidance">0</dd></div>
               <div><dt>味方への損傷減点</dt><dd id="result-score-friendlyDamagePenalty">0</dd></div>
               <div><dt>味方撃墜の減点</dt><dd id="result-score-friendlyKillPenalty">0</dd></div>
             </dl>
-            <p id="score-scope-note">撃破数には増援を含みます。加点は初期敵機と艦の船体へ、自機が与えた損傷に応じます。増援の撃墜はHP回復のみです。</p>
+            <p id="score-scope-note">撃破数には増援を含みます。敵機は初期・増援を区別せず、自機の先着5機までダメージ点と撃墜ボーナスが付きます。敵機のダメージ点は合計2,500点まで。僚機の撃墜は自機の枠を減らしません。敵艦の船体ダメージ、敵艦撃沈、砲台破壊にも得点が付きます。</p>
             <p id="score-rounding-note">内訳は小数第2位まで表示します。最終スコアは丸める前の値を合計し、最後に一度だけ整数に丸めます。表示した内訳の合計とは差が出ることがあります。</p>
             <p id="result-score-version"></p>
           </section>
