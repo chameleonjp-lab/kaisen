@@ -4,7 +4,7 @@ import { createScoreLedger, recordTargetDamage, recordPlayerWeaponKillBonus, rec
 import { RULES_VERSION } from './mission';
 import { Quaternion, Vector3 } from 'three';
 import { assignTargets, targetFor, updateAI } from './ai';
-import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, predictedShotDirection, targetAimPoint } from './flight-assist';
+import { applyEasyShotCorrection, autoFireTarget, getFlightAssist, PLAYER_MAX_PITCH, predictedShotDirection, targetAimPoint } from './flight-assist';
 import { advanceThrottle, clamp, createFlightController, forwardOf, MAX_SPEED, updateAircraftMotion, updatePlayerLoop } from './flight';
 import type { FlightController } from './flight';
 import { FIXED_DT, makeAircraft, makeFleet, MAX_BULLETS, MAX_EVENTS_PER_STEP, REINFORCEMENT_HEAL, REINFORCEMENT_TICK, ALLY_RESPAWN_TICKS, PLAYER_BOMB_CAPACITY, PLAYER_TORPEDO_CAPACITY, PAYLOAD_RELOAD_TICKS, MAX_ORDNANCE, INITIAL_FLIGHT_ALTITUDE, EASY_INITIAL_FLIGHT_ALTITUDE, resolveMissionConfig } from './mission';
@@ -525,7 +525,10 @@ function fixedStep(state: GameState, input: FlightInput): void {
   const unobstructed = (target: CombatTarget) => flightTargetLineOfSight(state, target);
   const assist = getFlightAssist(player, targets, input, state.mode, meta.flight.targetLock, unobstructed);
   const flight = meta.flight;
-  const adjusted = { ...input, ...smoothFlightAssistance(flight, input, assist, FIXED_DT) };
+  const automaticPitch = state.mode === 'easy' && !input.steeringActive
+    && Math.max(Math.abs(input.turn), Math.abs(input.climb)) <= EPSILON;
+  const pitchOrigin = automaticPitch ? Math.max(-1, Math.min(1, player.pitch / PLAYER_MAX_PITCH)) : undefined;
+  const adjusted = { ...input, ...smoothFlightAssistance(flight, input, assist, FIXED_DT, pitchOrigin) };
   const loopPressed = input.loop && !flight.loopHeld; flight.loopHeld = input.loop;
   const completed = updatePlayerLoop(player, flight, adjusted, input, loopPressed, FIXED_DT, advanceThrottle(flight, input, state.mode, FIXED_DT), MAX_SPEED, flight.responseMultiplier, state.mode);
   if (completed) { state.stats.loops += 1; emit(state, 'loop', player.position, player.id); }
