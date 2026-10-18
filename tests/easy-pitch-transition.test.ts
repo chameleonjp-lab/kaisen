@@ -5,7 +5,7 @@ import { makeAircraft } from '../src/mission';
 import { createFlightController, updatePlayerLoop, updateQuaternion } from '../src/flight';
 import { getFlightAssist, PLAYER_MAX_PITCH } from '../src/flight-assist';
 import { FLIGHT_FOV, getFlightCameraPose } from '../src/flight-view';
-import { smoothFlightAssistance } from '../src/flight-target';
+import { clearFlightAssistance, smoothFlightAssistance } from '../src/flight-target';
 import { createGame, startGame, stepGame } from '../src/simulation';
 
 const neutral = { turn: 0, climb: 0, fire: false, loop: false, viewAspect: 393 / 852 };
@@ -88,4 +88,24 @@ test('optional steering flag does not turn a small manual rate into an absolute 
   Object.assign(state.player, player); state.enemies = [target]; state.allies = []; state.ships = [];
   startGame(state); stepGame(state, manual);
   assert.ok(state.player.pitch - .6 <= .125 * .82 / 60 + 1e-12, 'actual simulation keeps the small manual rate');
+});
+
+test('inactive assistance preserves the original enumerable state schema', () => {
+  const makeState = () => ({ assistTurn: 0, assistClimb: 0, responseMultiplier: 1,
+    targetLock: { key: null, manual: false, changed: false } });
+  const expected = Object.keys(makeState()).sort();
+  for (const transition of ['clear', 'changed', 'inactive'] as const) {
+    const state = makeState();
+    const active = { turn: 0, climb: .5, responseMultiplier: 1, hasVisibleTarget: true };
+    smoothFlightAssistance(state, neutral, active, 1 / 60, .3);
+    assert.ok(Object.hasOwn(state, 'assistClimbMode'));
+    if (transition === 'clear') clearFlightAssistance(state);
+    else {
+      state.targetLock.changed = transition === 'changed';
+      smoothFlightAssistance(state, neutral,
+        { turn: 0, climb: 0, responseMultiplier: 1, hasVisibleTarget: false }, 1 / 60);
+    }
+    assert.deepEqual(Object.keys(state).sort(), expected, transition);
+    assert.equal(Object.hasOwn(state, 'assistClimbMode'), false, transition);
+  }
 });

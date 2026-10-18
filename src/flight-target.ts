@@ -32,14 +32,14 @@ export function revalidateProjectedTarget<T>(candidates: readonly ProjectedTarge
 export interface FlightAssistanceState { assistTurn: number; assistClimb: number; assistClimbMode?: 'absolute' | 'relative'; responseMultiplier: number; targetLock: FlightTargetLock }
 export function clearFlightAssistance(state: FlightAssistanceState): void {
   state.targetLock.key = null; state.targetLock.manual = false; state.targetLock.changed = false;
-  state.assistTurn = 0; state.assistClimb = 0; state.assistClimbMode = undefined; state.responseMultiplier = 1;
+  state.assistTurn = 0; state.assistClimb = 0; delete state.assistClimbMode; state.responseMultiplier = 1;
 }
 /** New pull is bounded; release/invalid target/neutral aim cancels stale pull. */
 export function smoothFlightAssistance(state: FlightAssistanceState, input: { turn: number; climb: number },
   assist: { turn: number; climb: number; responseMultiplier: number; hasVisibleTarget: boolean }, dt: number, pitchOrigin?: number) {
   const slew = (current: number, target: number, rate: number) => current + Math.max(-rate * dt, Math.min(rate * dt, target - current));
   const manual = Math.max(Math.abs(input.turn), Math.abs(input.climb)) >= .35;
-  if (state.targetLock.changed) { state.assistTurn = 0; state.assistClimb = 0; state.assistClimbMode = undefined; state.targetLock.changed = false; }
+  if (state.targetLock.changed) { state.assistTurn = 0; state.assistClimb = 0; delete state.assistClimbMode; state.targetLock.changed = false; }
   const turn = assist.turn - input.turn, climb = assist.climb - input.climb;
   state.assistTurn = manual || !assist.hasVisibleTarget || Math.abs(turn) < 1e-12 || turn * input.turn < 0
     ? 0 : slew(state.assistTurn, turn, 2.5);
@@ -50,7 +50,8 @@ export function smoothFlightAssistance(state: FlightAssistanceState, input: { tu
   // from a new target. Inactive/neutral assistance still clears immediately.
   state.assistClimb = climbActive
     ? slew(state.assistClimbMode === climbMode ? state.assistClimb : (pitchOrigin ?? 0), climb, 1.5) : 0;
-  state.assistClimbMode = climbActive ? climbMode : undefined;
+  if (climbActive) state.assistClimbMode = climbMode;
+  else delete state.assistClimbMode;
   // Do not carry a previous opposite-direction pull into a new selection.
   if (state.assistTurn * input.turn < 0) state.assistTurn = 0;
   if (state.assistClimb * input.climb < 0) state.assistClimb = 0;
