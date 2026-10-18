@@ -747,3 +747,12 @@ FFの次CIではレバーとpauseが非重複のまま、拡大された宙返�
 開始後の固定200ms待ちだけでは準備rAFの位相で本体tickが1回ずれることをCIで検出しました。実UIから開始し、既存の読取専用観測を使って中立入力のまま論理tick12へ揃えて比較します。tick超過・準備失敗・state不一致は引き続き失敗とし、ゲーム状態の注入や差分の許容で通しません。時計step数と正確なtickを条件JSONへ残します。
 
 比較ハーネスをfull browser suiteより先に実行し、対象tick等の前提失敗を早期に検出します。全unit/type/build/成果物/ブラウザgateは維持し、比較PNG/conditionsは別のcomparison-resultsへ保存して後のPlaywright出力初期化で失わないようにします。
+
+
+## 2026-10-18 Easy補助解除後の状態キー互換性
+
+PR #20 の統合済み main `b654bf37607d0cc20615dc7c7e607b5eb17e58a0` を基点に、補助解除時の optional な `assistClimbMode` を `undefined` 代入で列挙可能なまま残さず削除する。明示clear・標的切替・非アクティブの3経路に限定し、数値計算・ゲーム仕様・入力・描画・workflowは変更しない。
+
+既存 `tests/easy-pitch-transition.test.ts` に Object.keys / Object.hasOwn 回帰を追加。旧実装で余分なキーを検出して失敗し、候補は関連7/7成功。全 `npm test` は352/352成功（fail/skip/cancel 0）、`npm run build` は型検査・Vite成功（既存500kB超警告あり）。独立した変更前後比較10,000遷移で返り値の数値とJSON状態の完全一致を確認。JSONでは見えない列挙キーの差を直接検査している。
+
+この追補はローカル検査結果。新headのCI・実ブラウザは提出後に別確認し、旧PR #20の成功を新候補へ転用しない。iPhone実機でのカクつき解消、merge、本番公開は未確認・未実施。復元は今回の3ファイル差分だけをrevertし、PR #20の履歴・旧検査記録を保持する。
