@@ -13,6 +13,27 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   const read = () => page.evaluate(() => (window as any).__kaisenReadState());
   const readPilot = () => page.evaluate(() => (window as any).__kaisenReadState(false));
+  // Reuse existing reads and input observations: no extra browser round trips,
+  // game writes, waits or pilot calls. Host times are not simulation time.
+  const routeStartedAt = performance.now(), routeLimit = 2048;
+  const summarize = (s: any) => ({
+    tick:s.tick, elapsed:s.elapsed, phase:s.phase, deathCause:s.deathCause,
+    result:s.result, controlsInput:s.controlsInput,
+    player:{health:s.player.health, maxHealth:s.player.maxHealth,
+      mg:s.player.mg, cannon:s.player.cannon, reloadTicksRemaining:s.player.reloadTicksRemaining,
+      position:s.player.position, yaw:s.player.yaw, pitch:s.player.pitch, speed:s.player.speed},
+    // These are observed targets, not a claim about the pilot's private selection.
+    enemies:s.enemies.map((t:any)=>({id:t.id, health:t.health, position:t.position, generation:t.generation})),
+    ships:s.ships.map((t:any)=>({id:t.id, health:t.health, position:t.position})),
+  });
+  type RouteSample = {
+    sample:ReturnType<typeof summarize>; sampleReadCompletedAtMs:number;
+    request:null|{turn:number; climb:number; helperInvokedAtMs:number};
+    observation:null|Awaited<ReturnType<typeof steerAndObserve>>;
+    observationCompletedAtMs:number|null;
+  };
+  const route:RouteSample[] = [];
+  let droppedRouteSamples = 0;
   const capture = async (name: string) => {
     await mkdir('test-results/evidence', {recursive:true});
     await writeFile(`test-results/evidence/${name}.json`, JSON.stringify({note:'Real clock and CDP touch input, no world/clock injection. Pause menu hidden only for screenshot.', snapshot:await read()},null,2));
@@ -32,6 +53,10 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         const s=(window as any).__kaisenReadState('clock'); return s.phase !== 'playing' || s.tick >= next;
       },lastSample+6,{polling:'raf'});
       const s = await readPilot();
+      const entry:RouteSample = {sample:summarize(s), sampleReadCompletedAtMs:performance.now()-routeStartedAt,
+        request:null, observation:null, observationCompletedAtMs:null};
+      if (route.length === routeLimit) { route.shift(); droppedRouteSamples++; }
+      route.push(entry);
       if (captured && s.player.reloadTicksRemaining < capturedRemaining) progressAdvanced = true;
       if (captured && s.phase === 'playing' && s.player.reloadTicksRemaining > 0) {
         const shown = Number(await page.locator('#reload-status').getAttribute('data-progress'));
@@ -95,7 +120,12 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         ? {turn:.45,climb:.8} : pilot(s);
       const {dx,dy} = pointerOffsetForControls(request.turn,request.climb);
       expect(Math.hypot(dx,dy)).toBeLessThanOrEqual(36+1e-9);
-      lastSample = (await steerAndObserve(page,cdp,origin,request.turn,request.climb)).tick;
+      entry.request = {turn:request.turn,climb:request.climb,helperInvokedAtMs:performance.now()-routeStartedAt};
+      const observation = await steerAndObserve(page,cdp,origin,request.turn,request.climb);
+      entry.observation = observation;
+      entry.observationCompletedAtMs = performance.now()-routeStartedAt;
+      // The helper also returns when flight ends; that is not input acceptance.
+      lastSample = observation.tick;
     }
     expect(captured).toBe(true); expect(progressAdvanced).toBe(true);
     expect(completed || clearDuringReload).toBe(true);
@@ -105,7 +135,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
     expect(errors).toEqual([]);
   } finally {
     await mkdir('test-results/evidence',{recursive:true});
-    await writeFile('test-results/evidence/reload-route-state.json',JSON.stringify({captured,completed,clearDuringReload,capturedRemaining,progressAdvanced,errors,snapshot:await read()},null,2));
+    await writeFile('test-results/evidence/reload-route-state.json',JSON.stringify({captured,completed,clearDuringReload,capturedRemaining,progressAdvanced,errors,
+      routeDiagnostics:{note:'Read-only samples; host milliseconds relative to test setup. Observation may be a phase exit, not acceptance. Null observation means no completed steering observation. Oldest samples dropped only at the stated limit.',
+        limit:routeLimit,droppedSamples:droppedRouteSamples,samples:route},snapshot:await read()},null,2));
     if (!completed && !clearDuringReload) await page.screenshot({path:'test-results/evidence/reload-route-failure.png'});
   }
 });
