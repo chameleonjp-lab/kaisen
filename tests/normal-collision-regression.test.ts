@@ -98,6 +98,7 @@ function replayDecisionTail(lateral:boolean){
   assert.equal(JSON.stringify(snapshot),snapshotBefore,'the captured decision snapshot stays read-only');
   assert.equal(JSON.stringify(state),before,'the decision pilot only observes the captured collision state');
   let index=0,held:FlightInput={...neutral},minSeparation=Infinity,minAltitude=Infinity;
+  const lateralCommands:FlightInput[]=[];
   while(index<trace.entries.length&&trace.entries[index][0]<=state.tick+1){
     const row=trace.entries[index++];
     held=Object.fromEntries(trace.columns.slice(1).map((key:string,i:number)=>[key,row[i+1]])) as unknown as FlightInput;
@@ -108,14 +109,19 @@ function replayDecisionTail(lateral:boolean){
       held=Object.fromEntries(trace.columns.slice(1).map((key:string,i:number)=>[key,row[i+1]])) as unknown as FlightInput;
     }
     const steeringReplaced=lateral&&state.tick+1>=pose.steeringTick&&state.tick+1<pose.dodgeExpiryTick;
-    stepGame(state,steeringReplaced?{...held,turn:command.turn,climb:command.climb}:held);
+    // The held Normal stick now preserves pitch. Re-observe and explicitly
+    // level through ordinary rate commands instead of relying on the removed
+    // automatic settling during a two-second frozen horizontal command.
+    const currentCommand=steeringReplaced?observePilotReadOnly(state,pilot):null;
+    if(currentCommand)lateralCommands.push(currentCommand);
+    stepGame(state,currentCommand?{...held,turn:currentCommand.turn,climb:currentCommand.climb}:held);
     if(state.tick>=pose.steeringTick){
       minAltitude=Math.min(minAltitude,state.player.position.y);
       for(const enemy of state.enemies)if(enemy.health>0)minSeparation=Math.min(minSeparation,state.player.position.distanceTo(enemy.position));
     }
     assertFiniteState(state);
   }
-  return {state,command,minSeparation,minAltitude};
+  return {state,command,minSeparation,minAltitude,lateralCommands};
 }
 
 test('lateral fallback keeps the low-altitude ascent, safe descent and Easy pilot branches',()=>{
@@ -152,7 +158,9 @@ test('CI38 decision pose detects the collision on original steering and clears w
   assert.ok(original.minSeparation<40,'the unchanged steering enters the historical collision envelope');
 
   const lateral=replayDecisionTail(true);
-  assert.equal(lateral.command.climb,0);assert.equal(Math.abs(lateral.command.turn),1);
+  assert.ok(lateral.command.climb<0,'the pilot explicitly levels the captured nose-up attitude');
+  assert.ok(lateral.lateralCommands.some(input=>Math.abs(input.turn)>.9),'the leveled maneuver uses its lateral authority');
+  for(const input of lateral.lateralCommands)assert.ok(Math.hypot(input.turn,input.climb)<=1+1e-12,'every live command stays inside the circular stick');
   assert.equal(lateral.command.fire,false);assert.equal(lateral.command.accelerate,true);
   assert.equal(lateral.state.tick,pose.dodgeExpiryTick);
   assert.equal(lateral.state.phase,'playing');assert.equal(lateral.state.result,null);
@@ -197,8 +205,9 @@ function observeNewThreatDuringDodge(reverseThreatOrder:boolean){
   assert.equal(state.phase,'playing');
   b.health=b.maxHealth;
   const secondCommand=observePilotReadOnly(state,pilot);
-  assert.equal(secondCommand.climb,0,'the newly active above-player threat replaces the active climb');
-  assert.equal(Math.abs(secondCommand.turn),1,'the new threat selects a full lateral dodge');
+  assert.ok(secondCommand.climb<0,'the newly active above-player threat replaces the climb with explicit leveling');
+  assert.ok(Math.abs(secondCommand.turn)>0,'the new threat selects a lateral dodge');
+  assert.ok(Math.abs(Math.hypot(secondCommand.turn,secondCommand.climb)-1)<1e-12,'leveling and lateral dodge share the full legal stick budget');
   assert.equal(secondCommand.fire,false);
   return {firstCommand,secondCommand};
 }

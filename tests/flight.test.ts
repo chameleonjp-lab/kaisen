@@ -206,7 +206,7 @@ test('manual pitch reverses smoothly away from level, neutral return obeys the s
   const before = level.pitch;
   const control = createFlightController(level);
   for (let i = 0; i < 240; i++) {
-    const input = { ...neutral, steeringActive: true };
+    const input = { ...neutral };
     const previous = level.pitch, previousSpeed = level.speed;
     updatePlayerLoop(level, control, input, input, false, dt, 110, 141, 1);
     assert.ok(Math.abs(level.pitch - previous) <= .82 * expectedAuthority(previousSpeed) * dt + 1e-12,

@@ -1,3 +1,21 @@
+# 2026-10-22 UTC Normalの上下入力0通過と敵捕捉時の旋回応答
+
+対象はmain `7ade6aa8bec0a62c77694aa163574faf865889d2` からの本差分。公開の `deployment.json` は `6118b7868b72315bd52106da4326f9f00f91814c`、HTMLは `index-BOWx6ORw.js` を参照していた。公開版から基点まで今回の製品2ファイルに差分はない。採用ハーネスは従来のc60683b5を維持し、最新の本人依頼をPLAN先頭に対応づけた。
+
+原因は2つの入力依存処理。Normalでpitch +0.6rad、turn .3、climb .001→0→.001→0を1/60秒ずつ通すと、微小入力の上下移動は約+0.000783度だが、0になったtickは自動水平復帰に切り替わり約−0.783221度動く。反対側のpitchでも対称に再現した。また、NormalでもgetFlightAssistが敵の画面内外を判定し、同じ手入力のyaw応答を1/1.65へ変えていた。自動射撃・弾の誘導は元からNormalにはなかった。
+
+修正は `src/flight.ts` と `src/flight-assist.ts`。Normalの操縦保持中のclimb 0は姿勢を保ち、解放後に従来の制限付き水平復帰を行う。範囲外pitchからの復帰は先行する。Normalは標的選択/可視判定へ入る前に手入力と応答倍率1を返す。Easyと描画/カメラの幾何は変更しない。テストは実際のupdatePlayerLoop/stepGameとカメラQuaternionを使用し、本体へ試験用書込APIを追加していない。
+
+- N01: `tests/normal-camera.test.ts` の3回帰は変更前にそれぞれ0通過の姿勢変化、Normalの標的照会、画面外での同一入力不一致により失敗。変更後は3/3成功。上下±0.6、水平/中立保持、微小入力の方向、解放復帰、敵機/艦の照準/画面端/画面外/後方、手動射撃時を検査する。
+- N02: `browser-tests/normal-camera.spec.ts` は通常CDPタッチで上昇→水平ドラッグ→中立保持→指の解放→停止を検査し成功。保持前後のpitchは完全一致し、解放後は水平へ復帰する。画面画像 `test-results/evidence/normal-camera.png` を実見し、カメラ、照準、HUD、機体、艦の描画を確認した。初回の検査側には、配送前の古い上昇観測との一致を要求する誤りがあったため、受理済み水平入力の観測を起点に修正した。これは製品のカメラ修正の追加ではない。
+- N03: 初回全単体は旧CI38検査pilotの距離60m条件で失敗。水平入力が自動で機首を下げる旧前提を外し、外部pilotが現在姿勢から水平へ戻す合法な上下/左右入力を毎観測で選ぶよう修正した。元fixture/原操舵の衝突再現、HP>50、高度>270m、距離>60mのassertは保持。修正後の局所例は距離65.73m、高度277.74m、HP51.36で4回帰すべて成功。
+- N04: 最終実行関連内容の `npm test` は355/355成功、fail/cancel/skip0、36.08秒。`npm run build` は型検査/Vite成功。既存の500kB超bundle警告を保持。
+- N05: 固定旧版 `3d751051dc6212482a129e8da596ddd349b2f9f5` との通常操作による比較は成功。393×852/852×393の変更前後4枚を同じNormal/tick12で取得し、通常のカメラとHUDを実見した。中立の比較であり、修正対象の上下入力0通過の合格はN01/N02で判定する。`npm run test:browser` は60/60成功（Chromium50/WebKit10、11.8分）、fail/skip/retry0。最新のN02画像も再確認した。実在する提出commit取得後、同じbuildへ完全SHAを指定する配布manifest検査の結果と、提出headのリモートCIはPRへ記録する。
+
+実行関連163ファイル（src、tests、browser-tests、scenarios、scripts、workflow、依存/設定、入口HTML、public）のpath/SHA256をpath順JSONで記録した識別は `6dacb69a2e2b9daffc0bdbb80a61e20010f6599f52cb4dfd145164ff27d2c2fc`。取得後に変更するのはPLAN/本検証記録だけで、検査中の実行関連内容を変更しない。提出時はGitHubから返されたtreeとローカルindexの全treeを照合し、提出head/正式CIの結果をPRへ結ぶ。mainのbranch報告はprotected=false、詳細protectionは接続権限により403、親を含むrulesets応答は空配列。保護なしの保証とは扱わず、mainには書き込まず確認した新規作業branch/Draft PRだけへ提出する。
+
+環境はNode24.19.0/npm11.9.0/Playwright1.61.1/Chromium149.0.7827.55/WebKit26.5、393×852と既存検査の縦横寸法、ソフトウェア描画。WebKitに不足した共有ライブラリは一時ディレクトリに展開して実ロードを確認し、ローカル実行ではldconfigに未登録のライブラリを誤って欠落扱いする起動前検査だけを省略する。ゲーム検査・描画保護・workers1/retries0は維持。package-lock SHA-256 `5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78`、依存/設定/workflow変更なし。実機iPhoneの操作感やGPU性能の確認とは区別する。以下は過去の検証履歴。
+
 # 2026-10-17 UTC Easy補助開始時の逆向きピッチ遷移
 
 基点は `67ac107c77ea4dc784a938fbd2f4390f095721e3`。Easyの間欠的な上下の跳ねを調べ、補助開始・標的切替・手動解除後の再補助で、絶対ピッチ指令のslewを0（水平）から始める問題を数値再現した。画面上側の敵を追う初期pitch +0.6radでは、要求pitch +0.95radに対し、最初の平滑化指令が+0.02375radとなり、機首は1tickで逆向きに2.23213度下がる。負pitchの下降側も対称。これは人の端末での申告症状との同一性を確定する証拠ではない。

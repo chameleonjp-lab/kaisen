@@ -70,6 +70,7 @@ export function updateAircraftMotion(
   responseMultiplier = 1,
   manualSteering = false,
   cameraLookAngle = NORMAL_CAMERA_LOOK_ANGLE,
+  holdNeutralPitch = false,
 ): void {
   let turn = clamp(turnInput, -1, 1);
   let climb = clamp(climbInput, -1, 1);
@@ -103,7 +104,7 @@ export function updateAircraftMotion(
         aircraft.pitch += clamp(clamp(aircraft.pitch, -maxPitch, maxPitch) - aircraft.pitch, -angularStep, angularStep);
       } else if (Math.abs(climb) > EPSILON) {
         aircraft.pitch = clamp(aircraft.pitch + climb * angularStep, -maxPitch, maxPitch);
-      } else {
+      } else if (!holdNeutralPitch) {
         // Retain neutral levelling, with no faster vertical camera snap.
         aircraft.pitch += clamp(-aircraft.pitch * pitchBlend, -angularStep, angularStep);
       }
@@ -190,6 +191,11 @@ export function updatePlayerLoop(
   const manualSteering = !!userInput.steeringActive
     || Math.max(Math.abs(userInput.turn), Math.abs(userInput.climb)) > EPSILON
     || Math.max(Math.abs(input.turn), Math.abs(input.climb)) <= EPSILON;
+  // Crossing the horizontal axis during a live Normal gesture is a zero
+  // pitch-rate command. Level only after release, rather than injecting a
+  // full-rate return step between arbitrarily small up/down inputs.
+  const holdNeutralPitch = mode === 'normal' && (!!userInput.steeringActive
+    || Math.max(Math.abs(userInput.turn), Math.abs(userInput.climb)) > EPSILON);
 
   const revisionChanged = meta.loopStartSteeringRevision !== undefined
     && userInput.steeringRevision !== undefined
@@ -225,6 +231,7 @@ export function updatePlayerLoop(
       responseMultiplier,
       true,
       cameraLookAngle,
+      holdNeutralPitch,
     );
     return false;
   }
@@ -252,6 +259,7 @@ export function updatePlayerLoop(
       responseMultiplier,
       manualSteering,
       cameraLookAngle,
+      holdNeutralPitch,
     );
     return false;
   }

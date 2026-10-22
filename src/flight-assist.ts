@@ -69,6 +69,11 @@ export function getFlightAssist(
 ): FlightAssistResult {
   const manualTurn = clamp(input.turn, -1, 1);
   const manualClimb = clamp(input.climb, -1, 1);
+  // Normal is entirely manual: acquiring/losing an enemy must not change
+  // steering gain, select a target, or run the Easy line-of-sight queries.
+  if (mode !== 'easy') {
+    return { turn: manualTurn, climb: manualClimb, responseMultiplier: 1, hasVisibleTarget: false };
+  }
   const aspect = normalizedAspect(input.viewAspect);
   const target = closestVisibleTarget(player, enemies, aspect, mode, lock, !!input.steeringActive || Math.max(Math.abs(manualTurn), Math.abs(manualClimb)) > 1e-4, false, unobstructed);
   const hasVisibleTarget = target !== null;
@@ -76,7 +81,7 @@ export function getFlightAssist(
     ? OFFSCREEN_RESPONSE_MULTIPLIER
     : 1;
 
-  if (mode !== 'easy' || input.steeringActive) {
+  if (input.steeringActive) {
     return { turn: manualTurn, climb: manualClimb, responseMultiplier, hasVisibleTarget };
   }
 
