@@ -1,0 +1,118 @@
+{
+  "sourceHead": "22502d371a252237fe4e4b1ddace5ac2350f90a8",
+  "sourceRun": "https://github.com/chameleonjp-lab/kaisen/actions/runs/39821535066",
+  "artifactSha256": "4e38e04293a650ff511534ac5c6bff0a4a52af4e0dfce7e85f8abce9f5e102aa",
+  "note": "Observed pause pose from CI66. Only the player and imminent enemy are restored into an isolated simulation; this is not the complete recorded world/input replay.",
+  "tick": 5155,
+  "elapsed": 85.91666666666667,
+  "player": {
+    "kind": "aircraft",
+    "id": 1,
+    "team": "friendly",
+    "role": "player",
+    "position": {
+      "x": 1245.9519530352427,
+      "y": 719.7314424204902,
+      "z": -80.23741797192844
+    },
+    "previous": {
+      "x": 1245.4649769538344,
+      "y": 719.9125761445611,
+      "z": -78.49124820927568
+    },
+    "quaternion": [
+      -0.05198309824043783,
+      -0.13439723282769298,
+      0.012829146015091223,
+      0.9894799413419695
+    ],
+    "yaw": -0.27197208819932506,
+    "pitch": -0.09958859904639926,
+    "bank": -0.03956745752144233,
+    "speed": 109.3097904650097,
+    "health": 71.9440000000002,
+    "maxHealth": 80,
+    "mg": 0,
+    "cannon": 0,
+    "reloadTicksRemaining": 330,
+    "generation": "initial",
+    "fireClock": 0,
+    "cannonClock": 0,
+    "bombs": 2,
+    "torpedoes": 1,
+    "bombReloadTicks": 0,
+    "torpedoReloadTicks": 0,
+    "payloadCooldown": 0,
+    "aiBomb": false,
+    "loopProgress": 0,
+    "loopCooldown": 0,
+    "mode": "pursue",
+    "age": 85.91666666666308,
+    "targetId": null,
+    "aiPhase": "approach",
+    "aiPhaseTime": 0,
+    "aiWaypoint": {
+      "x": 0,
+      "y": 300,
+      "z": 240
+    },
+    "aiTurn": 0,
+    "aiClimb": 0,
+    "aiFire": false
+  },
+  "threat": {
+    "kind": "aircraft",
+    "id": 5581,
+    "team": "enemy",
+    "role": "interceptor",
+    "position": {
+      "x": 1284.5214533751885,
+      "y": 738.4715543702423,
+      "z": -233.76055094748835
+    },
+    "previous": {
+      "x": 1284.9829294255496,
+      "y": 738.680785442422,
+      "z": -235.56015262519196
+    },
+    "quaternion": [
+      -0.0035643052523195887,
+      0.9905927816852038,
+      0.056039288021497796,
+      0.12479116474847894
+    ],
+    "yaw": 2.8905692556756453,
+    "pitch": -0.11214875713338437,
+    "bank": -0.006968699941365935,
+    "speed": 112.17439255934205,
+    "health": 38,
+    "maxHealth": 80,
+    "mg": 288,
+    "cannon": 96,
+    "reloadTicksRemaining": 0,
+    "generation": "reinforcement",
+    "fireClock": 0.21333333333333337,
+    "cannonClock": 0.233333333333332,
+    "bombs": 2,
+    "torpedoes": 1,
+    "bombReloadTicks": 0,
+    "torpedoReloadTicks": 0,
+    "payloadCooldown": 0,
+    "aiBomb": false,
+    "loopProgress": 0,
+    "loopCooldown": 0,
+    "mode": "pursue",
+    "age": 5.916666666666651,
+    "targetId": 1,
+    "aiPhase": "attack",
+    "aiPhaseTime": 5.916666666666651,
+    "aiWaypoint": {
+      "x": 1471.4808133190452,
+      "y": 779.8202796210815,
+      "z": -865.467949427282
+    },
+    "aiTurn": -0.01205293959113174,
+    "aiClimb": -0.2361167854778025,
+    "aiFire": true
+  }
+}

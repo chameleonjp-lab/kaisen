@@ -1,8 +1,7 @@
-import { createBrowserMissionPilot } from '../tests/helpers/mission-browser-pilot';
 import { steerAndObserve } from './touch-command';
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
+import { createTouchReloadPilot, pointerOffsetForControls } from '../tests/helpers/touch-reload-pilot';
 import { waitForPausedView } from './paused-view';
 
 test.use({ trace: 'off' });
@@ -40,7 +39,7 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
     await page.screenshot({path:`test-results/evidence/${name}.png`,style:'#pause-screen { visibility: hidden !important; }'});
   };
   await page.goto('/'); await expect(page.locator('#start')).toBeEnabled();
-  const cdp = await context.newCDPSession(page), pilot = createBrowserMissionPilot(true);
+  const cdp = await context.newCDPSession(page), pilot = createTouchReloadPilot();
   const origin = {x:90,y:650};
   const touchStart = () => cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});
   const touchEnd = () => cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
@@ -114,10 +113,9 @@ test('real touch flight shows a filling reload ring, freezes it, then refills or
         completed = true; break;
       }
       lastSample = s.tick;
-      // Empty magazines are a reason to disengage: climb and bank using the
-      // same legal stick instead of pursuing a reinforcement head-on unarmed.
-      const request = s.player.reloadTicksRemaining > 0
-        ? {turn:.45,climb:.8} : pilot(s);
+      // The shared driver checks collision avoidance before disengaging while
+      // unarmed; the reload route must not override that response.
+      const request = pilot(s);
       const {dx,dy} = pointerOffsetForControls(request.turn,request.climb);
       expect(Math.hypot(dx,dy)).toBeLessThanOrEqual(36+1e-9);
       entry.request = {turn:request.turn,climb:request.climb,helperInvokedAtMs:performance.now()-routeStartedAt};

@@ -171,6 +171,12 @@ export function createBrowserMissionPilot(preferAircraft = false) {
         ? dodgeTurn * Math.sqrt(Math.max(0, 1 - climb * climb)) : dodgeTurn;
       return {turn,climb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
     }
+    // Gun-reload practice disengages only after checking imminent collisions.
+    // CI66's browser-only fixed climb bypassed the dodge and hit an above-player
+    // reinforcement while unarmed. Keep the same legal cruise-away command,
+    // with the ordinary collision response taking priority on every sample.
+    if (preferAircraft && player.reloadTicksRemaining > 0)
+      return {turn:.45,climb:.8,fire:false,loop:false,bomb:false,torpedo:false,accelerate:false,brake:false};
     const ships = snapshot.ships.map(ship => ({ ...ship, position: vector(ship.position), velocity: vector(ship.velocity) }));
     const guide = snapshot.bombGuide;
     const guidedBombReady = snapshot.phase === 'playing' && player.health > 0 && player.bombs > 0

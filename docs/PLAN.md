@@ -5,6 +5,7 @@
 - done: PR25のマージ先main `ad9ea6f75dbb2cfbbc39cad1fae76988f8b648e8` と検査済みhead c9bf3a0のtree `5741b891596aab79e4eef534762e144077ead8cb` 一致を確認。古い公開6118b78を既存の完全SHA指定の手動workflowで更新し、配備run39819375057の成功と公開応答の全ファイルhash一致、実公開URLの通常画面経路を確認した。
 - approved implementation: Pages workflowへ `push.branches: [main]` を追加。人がPRをmainへマージすると、そのmain SHAをcheckoutして単体・型/build・配布内容検査の成功後に公開する。手動 `workflow_dispatch` は `expected_sha` の完全一致を引き続き必須とする。main以外や別イベントは拒否する。
 - unchanged boundary: PR検査workflow、ゲーム本体、依存、Pages source/権限/保護、秘密情報、直列配備・公開artifactの範囲と保持期限は維持する。新しいサービスやService Workerを追加しない。
+- required CI repair: 初回候補のCI66は再装填の既存browser経路だけ失敗。再装填中の固定上昇入力が共有pilotの衝突回避を迂回していたため、同じ通常操縦を共有pilotへまとめ、回避の後に非武装離脱を処理する。失敗時の観測姿勢を限定した数値回帰と実browserで確認する。製品やゲートのassert、timeout、workers/retriesは変えない。
 - delivery: `ci/auto-pages-on-main-20261022` のDraft PRで提出する。自動反映はこの設定PRを本人がmainへマージした時点から有効。今回の既存mainの公開完了と、未マージ設定の有効化を区別する。新規候補の正確なhead/tree・CI結果は提出PRとActionsへ対応づける。
 
 # 2026-10-22 追加依頼: Normalの描画段差・空間での上下左右の速度差と投下判定負荷
