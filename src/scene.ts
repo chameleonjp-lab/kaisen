@@ -37,6 +37,7 @@ import { currentBombGuide } from "./bomb-guide";
 import { BOMB_BLAST } from "./bomb-blast";
 import { seaVertex, seaFragment, skyVertex, skyFragment } from "./atmosphere";
 import { RenderQueue } from "./render-queue";
+import { FlightPresentation } from "./flight-presentation";
 import { FIXED_DT, MAX_BULLETS, PLAYER_RELOAD_TICKS } from "./mission";
 import { createOceanGeometry, oceanAnchor, OCEAN_GLSL } from "./ocean";
 import {
@@ -141,6 +142,10 @@ export class KaisenScene {
   private missionId = 0;
   private layoutRevision = 0;
   private pausedView: PausedViewStamp | null = null;
+  private presentation = new FlightPresentation();
+  private presentedTick = 0;
+  private presentedAlpha = 1;
+  private presentedElapsed = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -433,7 +438,8 @@ export class KaisenScene {
     if (this.navalFlashes.length > NAVAL_FLASH_CAPACITY)
       this.navalFlashes.splice(0, this.navalFlashes.length - NAVAL_FLASH_CAPACITY);
   }
-  render(state: GameState, showHUD: boolean, presentationDt = 0) {
+  capturePresentation(state: GameState) { this.presentation.capture(state); }
+  render(state: GameState, showHUD: boolean, presentationDt = 0, alpha = 1) {
     if (this.disposed) return false;
     // Event IDs and wreck ownership follow the new mission immediately, even
     // when the previous view still has one GPU frame in flight.
@@ -444,6 +450,11 @@ export class KaisenScene {
     // submission completes, keep its canvas until the pose or layout changes.
     if (state.phase === "paused" && this.pausedViewMatches(state, showHUD) &&
         this.pausedViewReady(state, showHUD)) return true;
+    const authoritative = state;
+    state = this.presentation.sample(authoritative, alpha);
+    this.presentedTick = authoritative.tick;
+    this.presentedAlpha = state === authoritative ? 1 : Math.max(0, Math.min(1, alpha));
+    this.presentedElapsed = state.elapsed;
     const dt = Math.max(0, Math.min(0.1, state.elapsed - this.lastTime));
     this.lastTime = state.elapsed;
     if (state.phase === "ended")
@@ -460,7 +471,7 @@ export class KaisenScene {
       v.root.quaternion.copy(p.quaternion);
       const wreck = this.wrecks.get(p.id);
       if (p.health <= 0 && wreck) {
-        const age = this.visualTime - wreck.time;
+        const age = Math.max(0, this.visualTime - wreck.time);
         v.root.visible = age < 5;
         v.root.position
           .copy(wreck.position)
@@ -527,7 +538,7 @@ export class KaisenScene {
     const effects = [...this.particles, ...this.navalFlashes];
     for (let i = 0; i < effects.length; i++) {
       const p = effects[i],
-        a = this.visualTime - p.born,
+        a = Math.max(0, this.visualTime - p.born),
         pos = p.p.clone().addScaledVector(p.v, a);
       pos.y -= a * a * (p.gravity ?? 4);
       const fade = 1 - a / p.life;
@@ -551,7 +562,7 @@ export class KaisenScene {
     for (const a of Object.values(this.particleGeometry.attributes))
       a.needsUpdate = true;
     this.renderer.render(this.scene, this.camera);
-    this.drawOverlay(state, showHUD);
+    this.drawOverlay(state, showHUD, authoritative);
     if (this.prepared) {
       const before = this.renderQueue.diagnostics(performance.now()).submittedCount;
       this.renderQueue.submit(performance.now());
@@ -565,7 +576,7 @@ export class KaisenScene {
     }
     return true;
   }
-  private drawOverlay(state: GameState, show: boolean) {
+  private drawOverlay(state: GameState, show: boolean, authoritative: GameState) {
     const c = this.ctx,
       w = this.width,
       h = this.height;
@@ -574,7 +585,7 @@ export class KaisenScene {
     if (!show) return;
     const sight = state.mode === "normal" ? this.gunSight(state) : { x: w / 2, y: h / 2 };
     const radius = aimRadius(state.mode, w, h);
-    const indicator = aimIndicator(state, [...state.allies, ...state.enemies, ...state.ships], sight, w, h, target => flightTargetLineOfSight(state, target), selectedFlightTargetKey(state));
+    const indicator = aimIndicator(state, [...state.allies, ...state.enemies, ...state.ships], sight, w, h, target => flightTargetLineOfSight(state, target), selectedFlightTargetKey(authoritative));
     const aimColor = AIM_COLORS[indicator];
     c.strokeStyle = aimColor;
     c.lineWidth = 1;
@@ -605,7 +616,7 @@ export class KaisenScene {
     }
     c.fillStyle = aimColor;
     c.fillRect(sight.x - 1, sight.y - 1, 2, 2);
-    const bombGuide = currentBombGuide(state);
+    const bombGuide = currentBombGuide(authoritative);
     if (bombGuide && state.player.bombs > 0) {
       const p = bombGuide.position.clone().project(this.camera);
       if (p.z > -1 && p.z < 1 && Math.abs(p.x) < .94 && Math.abs(p.y) < .82) {
@@ -800,6 +811,8 @@ export class KaisenScene {
       height: this.height,
       pixelRatio: this.renderer.getPixelRatio(),
       aircraftTracers: this.aircraftTracers.diagnostics(),
+      presentation: { tick: this.presentedTick, alpha: this.presentedAlpha, elapsed: this.presentedElapsed,
+        cameraPosition: this.camera.position.toArray(), cameraQuaternion: this.camera.quaternion.toArray() },
     };
   }
   dispose() {

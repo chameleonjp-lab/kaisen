@@ -22,3 +22,17 @@ test('circle uses white/hostile red/friendly blue without mutating the world in 
     assert.equal(aimRadius('easy',width,height),393*.135);assert.ok(aimRadius('normal',width,height)>=26);
   }
 });
+
+test('sight only queries occlusion for targets inside its display circle', () => {
+  for (const mode of ['easy', 'normal'] as const) {
+    const state = createGame(1, mode), width = 393, height = 852;
+    const sight = mode === 'normal' ? projectGunSight(state.player, [], width, height) : { x: width / 2, y: height / 2 };
+    const target = state.enemies[0];
+    for (const offset of [new Vector3(10000, 0, 0), new Vector3(0, 0, 500)]) {
+      target.position.copy(state.player.position).add(offset);
+      assert.equal(aimIndicator(state, [target], sight, width, height, () => {
+        assert.fail('offscreen targets must not run ship occlusion tests');
+      }), 'clear');
+    }
+  }
+});

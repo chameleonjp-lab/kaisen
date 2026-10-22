@@ -12,11 +12,12 @@ export function aimIndicator(state: Pick<GameState, 'player' | 'mode'>, targets:
   const radius = aimRadius(state.mode, width, height);
   let indicator: keyof typeof AIM_COLORS = 'clear';
   for (const target of targets) {
-    if (target.health <= 0 || (unobstructed && !unobstructed(target))) continue;
+    if (target.health <= 0) continue;
     if (state.mode === 'easy' && target.team === 'enemy' && selectedKey !== undefined && flightTargetKey(target) !== selectedKey) continue;
     const p = projectFlightTarget(state.player, targetAimPoint(target), width / height, state.mode);
     if (p.depth <= 0 || p.distance > (state.mode === 'easy' ? 1200 : target.kind === 'ship' ? 6000 : 1500)) continue;
     if (Math.hypot((p.x * .5 + .5) * width - sight.x, (.5 - p.y * .5) * height - sight.y) > radius) continue;
+    if (unobstructed && !unobstructed(target)) continue;
     if (target.team === 'friendly') return 'friendly';
     indicator = 'enemy';
   }

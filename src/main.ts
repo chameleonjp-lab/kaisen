@@ -1,4 +1,5 @@
 import { currentBombGuide, bombReleaseCue, bombForecastTiming } from './bomb-guide';
+import { FrameClock } from './frame-clock';
 import "./style.css";
 import "./control-settings.css";
 import {
@@ -93,8 +94,8 @@ for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="gam
   });
 }
 const pauseReasons = new Set<string>();
+const frameClock = new FrameClock();
 let accumulator = 0,
-  lastFrame = 0,
   frameId = 0,
   disposed = false,
   generation = 0,
@@ -203,7 +204,7 @@ function begin() {
   syncMode();
   startGame(state);
   accumulator = 0;
-  lastFrame = 0;
+  frameClock.reset();
   frameIntervals = [];
   updateTimes = [];
   if (import.meta.env.DEV) { inputAudit=[];inputAuditSignature="";inputAuditDropped=0; }
@@ -213,7 +214,7 @@ function begin() {
   announce("敵機5機と艦隊4隻をすべて撃破", 4);
   scene.render(state, true);
   // Initial resource upload is preparation, not elapsed mission time.
-  lastFrame = 0;
+  frameClock.reset();
   updateHUD();
 }
 function home() {
@@ -278,7 +279,7 @@ function resume() {
   updateBombCue();
   updateTorpedoCue();
   accumulator = 0;
-  lastFrame = 0;
+  frameClock.reset();
   setScreen("playing");
   syncAudio();
   void audio.unlock().then(() => syncAudio());
@@ -345,6 +346,7 @@ function updateTorpedoCue() {
     el("payload-status").textContent = torpedoCue.text;
     noticeLayoutDirty = true;
   }
+  return torpedoCue;
 }
 function updateHUD() {
   el("timer").textContent = formatTime(state.elapsed);
@@ -355,7 +357,7 @@ function updateHUD() {
   el("bomb-ammo").textContent = payloadReadout(state.player.bombs, state.player.bombReloadTicks);
   el("torpedo-ammo").textContent = payloadReadout(state.player.torpedoes, state.player.torpedoReloadTicks);
   updateBombCue();
-  updateTorpedoCue();
+  const torpedoCue = updateTorpedoCue();
   el("mg-ammo").textContent = String(state.player.mg);
   el("cannon-ammo").textContent = String(state.player.cannon);
   const reloading = state.player.reloadTicksRemaining > 0;
@@ -392,7 +394,7 @@ function updateHUD() {
     else el("ally-announcements").removeAttribute("aria-label");
     noticeLayoutDirty = true;
   }
-  positionHudNotices();
+  positionHudNotices(torpedoCue);
 }
 
 const noticeResize = new ResizeObserver(() => { noticeLayoutDirty = true; });
@@ -406,7 +408,7 @@ const noticeMutations = new MutationObserver(records => {
 });
 for (const element of Object.values(buttons)) noticeMutations.observe(element, { attributes:true, attributeFilter:['style','hidden'] });
 for (const id of ['warning','reload-status','flight-tip','throttle-layout-note']) noticeMutations.observe(el(id), { attributes:true, attributeFilter:['hidden'] });
-function positionHudNotices() {
+function positionHudNotices(torpedoCue?: ReturnType<typeof torpedoReleaseCue>) {
   if (!noticeLayoutDirty || !scene || el("hud").hidden) return;
   noticeLayoutDirty = false;
   const root = app.getBoundingClientRect(), flight = canvas.getBoundingClientRect();
@@ -461,7 +463,7 @@ function positionHudNotices() {
         el("pause-ally-news").textContent = full;
         el("pause-ally-report").hidden = false;
         notice.textContent = `僚機報告${full.split("\n").length}件\nⅡで全文`;
-      } else notice.textContent = `魚雷：${torpedoReleaseCue(state).short}`;
+      } else notice.textContent = `魚雷：${(torpedoCue ?? torpedoReleaseCue(state)).short}`;
       notice.setAttribute("aria-label", full);
       placed = fit([160, 200, 130, 96, 88, 260, bounds.width / scaleX]);
     } else notice.removeAttribute("aria-label");
@@ -487,28 +489,28 @@ function positionReloadStatus() {
     el("reload-status").style.removeProperty("left");
   }
 }
-function frame() {
-  // Sample callback execution time, not a possibly queued vsync timestamp.
+function frame(refresh: number) {
+  // Stable refresh timestamps drive the view; execution time independently
+  // catches real interruptions even when the queued timestamp understates them.
   const now = performance.now();
   if (disposed) return;
   frameId = requestAnimationFrame(frame);
-  const dt = lastFrame ? Math.max(0, (now - lastFrame) / 1000) : 0;
-  lastFrame = now;
-  lastFrameGap = dt;
+  const { dt, gap } = frameClock.sample(refresh, now);
+  lastFrameGap = gap;
   if (state.phase === "playing" && screen === "playing") {
-    if (dt > 1) {
-      lastInterruption = { reason: "frame", gap: dt, render: scene?.diagnostics() };
+    if (gap > 1 || dt > 1) {
+      lastInterruption = { reason: "frame", gap, render: scene?.diagnostics() };
       pause("frame");
       return;
     }
     renderStatus = scene?.pollRender(now) ?? "failed";
     if (renderStatus === "stalled" || renderStatus === "failed") {
-      lastInterruption = { reason: renderStatus, gap: dt, render: scene?.diagnostics() };
+      lastInterruption = { reason: renderStatus, gap, render: scene?.diagnostics() };
       pause(renderStatus === "failed" ? "render-failed" : "render");
       return;
     }
-    if (dt > 0) {
-      frameIntervals.push(dt * 1000);
+    if (gap > 0) {
+      frameIntervals.push(gap * 1000);
       if (frameIntervals.length > 3600) frameIntervals.shift();
     }
     accumulator += dt;
@@ -530,6 +532,7 @@ function frame() {
           inputAuditSignature=signature;
         }
       }
+      scene?.capturePresentation(state);
       stepGame(state, consumed, FIXED_DT);
       events.push(...state.events);
       accumulator -= FIXED_DT;
@@ -574,7 +577,10 @@ function frame() {
     }
     audio.update(state.player.speed);
     audio.updatePasses([...state.allies, ...state.enemies], state.player, state.elapsed);
-    updateHUD();
+    // Multiple display refreshes may share one 60Hz world tick. Forecast once
+    // for the current tick; viewport-only changes still get their layout pass.
+    if (!first) updateHUD();
+    else positionHudNotices();
     if (state.result !== null) finish();
   }
   if (state.phase !== "playing" && scene && !contextLost) {
@@ -586,7 +592,7 @@ function frame() {
     }
   }
   if (scene && !contextLost) {
-    scene.render(state, screen === "playing" || screen === "paused", dt);
+    scene.render(state, screen === "playing" || screen === "paused", dt, accumulator / FIXED_DT);
     if (screen === "paused") {
       positionReloadStatus(); positionHudNotices();
       const pausedViewReady = renderStatus !== "failed" && scene.pausedViewReady(state, true, now);

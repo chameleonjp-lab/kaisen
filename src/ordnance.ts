@@ -118,13 +118,28 @@ function validShip(ship: OrdnanceShip): boolean {
 }
 interface ShipSweep {
   ship: OrdnanceShip; before: Quaternion; after: Quaternion; scale: Vector3;
-  boxes: { min: Vector3; max: Vector3 }[];
+  boxes: { min: Vector3; max: Vector3 }[]; radius: number;
+}
+function collisionRadius(ship: OrdnanceShip): number {
+  const min = NAVAL_COLLISION_BOUNDS.min, max = NAVAL_COLLISION_BOUNDS.max;
+  return Math.hypot(ship.width / CAPITAL_SHIP.width * Math.max(Math.abs(min[0]), Math.abs(max[0])),
+    ship.height / CAPITAL_SHIP.height * Math.max(Math.abs(min[1]), Math.abs(max[1])),
+    ship.length / CAPITAL_SHIP.length * Math.max(Math.abs(min[2]), Math.abs(max[2])));
+}
+/** Rotation-independent bounds include all physical mounts, both ship endpoints and blast reach. */
+function nearSegment(start: Vector3, end: Vector3, ship: OrdnanceShip, radius: number): boolean {
+  return Math.min(start.x, end.x) <= Math.max(ship.previous.x, ship.position.x) + radius &&
+    Math.max(start.x, end.x) >= Math.min(ship.previous.x, ship.position.x) - radius &&
+    Math.min(start.y, end.y) <= Math.max(ship.previous.y, ship.position.y) + radius &&
+    Math.max(start.y, end.y) >= Math.min(ship.previous.y, ship.position.y) - radius &&
+    Math.min(start.z, end.z) <= Math.max(ship.previous.z, ship.position.z) + radius &&
+    Math.max(start.z, end.z) >= Math.min(ship.previous.z, ship.position.z) - radius;
 }
 function shipSweeps(ships: readonly OrdnanceShip[]): ShipSweep[] {
   return ships.filter(validShip).map(ship => ({ ship,
     before: (ship.previousQuaternion ?? ship.quaternion).clone().normalize(), after: ship.quaternion.clone().normalize(),
     scale: new Vector3(ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length),
-    boxes: shipCollisionBoxes(ship),
+    boxes: shipCollisionBoxes(ship), radius: collisionRadius(ship),
   }));
 }
 function localAt(point: Vector3, sweep: ShipSweep, fraction: number): Vector3 {
@@ -135,6 +150,7 @@ function localAt(point: Vector3, sweep: ShipSweep, fraction: number): Vector3 {
 function firstShipContact(start: Vector3, end: Vector3, ships: readonly ShipSweep[], from: number, to: number): { shipId: number; fraction: number } | null {
   let first: { shipId: number; fraction: number } | null = null;
   for (const sweep of ships) {
+    if (!nearSegment(start, end, sweep.ship, sweep.radius)) continue;
     const a = localAt(start, sweep, from), b = localAt(end, sweep, to);
     const scaledA = a.clone().divide(sweep.scale), scaledB = b.clone().divide(sweep.scale);
     if (!finiteVector(a) || !finiteVector(b) || !finiteVector(scaledA) || !finiteVector(scaledB)) continue;
@@ -219,15 +235,27 @@ export function stepOrdnance(round: OrdnanceRound, ships: readonly OrdnanceShip[
   // Conservative world-space broad phase includes the entire curved short step and blast radius.
   // It avoids building every distant ship's collision boxes for each forecast tick.
   const endBound = ballisticPosition(round.position, round.velocity, Math.min(dt, round.life));
-  const nearBomb = (ship: OrdnanceShip) => {
-    if (round.kind !== 'bomb') return true;
-    const scale = [ship.width / CAPITAL_SHIP.width, ship.height / CAPITAL_SHIP.height, ship.length / CAPITAL_SHIP.length];
-    const radius = Math.hypot(...scale.map((v,i) => v * Math.max(Math.abs(NAVAL_COLLISION_BOUNDS.min[i]), Math.abs(NAVAL_COLLISION_BOUNDS.max[i])))) + BOMB_BLAST.radius + 1;
-    return (['x','y','z'] as const).every(axis =>
-      Math.min(round.position[axis], endBound[axis]) <= Math.max(ship.previous[axis], ship.position[axis]) + radius &&
-      Math.max(round.position[axis], endBound[axis]) >= Math.min(ship.previous[axis], ship.position[axis]) - radius);
-  };
+  const nearBomb = (ship: OrdnanceShip) => round.kind !== 'bomb' ||
+    nearSegment(round.position, endBound, ship, collisionRadius(ship) + BOMB_BLAST.radius + 1);
   return advanceOrdnance(round, shipSweeps(ships.filter(nearBomb)), startTime, dt);
+}
+
+/** A read-only forecast owns these ships; dimensions/mount geometry stay fixed, transforms may advance each tick. */
+export function createOrdnanceStepper(ships: readonly OrdnanceShip[]) {
+  const geometry = shipSweeps(ships);
+  return (round: OrdnanceRound, startTime: number, dt: number): OrdnanceStepResult => {
+    if (!validRound(round) || round.life <= 0) { round.life = 0; return { active: false, outcomes: [] }; }
+    if (!Number.isFinite(startTime) || !Number.isFinite(dt) || dt <= 0 || dt > ORDNANCE_TUNING.maxStep + EPS)
+      return { active: true, outcomes: [] };
+    const end = ballisticPosition(round.position, round.velocity, Math.min(dt, round.life));
+    const nearby = geometry.filter(sweep => validShip(sweep.ship) && (round.kind !== 'bomb' ||
+      nearSegment(round.position, end, sweep.ship, sweep.radius + BOMB_BLAST.radius + 1)));
+    for (const sweep of nearby) {
+      sweep.before.copy(sweep.ship.previousQuaternion ?? sweep.ship.quaternion).normalize();
+      sweep.after.copy(sweep.ship.quaternion).normalize();
+    }
+    return advanceOrdnance(round, nearby, startTime, dt);
+  };
 }
 
 /** Forecasts may reuse collision geometry and consume only the remaining part of a ship frame. */

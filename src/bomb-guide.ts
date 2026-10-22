@@ -1,6 +1,6 @@
 import { CAPITAL_SHIP, NAVAL_COLLISION_BOUNDS } from './naval';
 import { OCEAN_MAX_HEIGHT } from './ocean';
-import { releaseBomb, predictBombImpact, stepOrdnance, type OrdnanceOutcome } from './ordnance';
+import { releaseBomb, predictBombImpact, createOrdnanceStepper, type OrdnanceOutcome } from './ordnance';
 import { advanceShipMotion } from './ship-motion';
 import { isShipObstacle } from './ship-wreck';
 import { FIXED_DT, MAX_ORDNANCE } from './mission';
@@ -32,12 +32,15 @@ export function predictBombEffect(state: Pick<GameState,'player'|'ships'|'elapse
     return ship.position.y+Math.hypot(...scale.map((v,i)=>v*Math.max(Math.abs(NAVAL_COLLISION_BOUNDS.min[i]),Math.abs(NAVAL_COLLISION_BOUNDS.max[i]))));
   }));
   if (round.position.y > ceiling && !predictBombImpact(state.player,ceiling)) return null;
-  const ships = state.ships.map(copyShip);
+  const ships = state.ships.map(ship => ({ ...copyShip(ship), collisionActive: isShipObstacle(ship, state.elapsed) }));
+  const step = createOrdnanceStepper(ships);
   for (let tick = 0; round.life > 0 && tick < 1800; tick++) {
     const time = state.elapsed + tick * FIXED_DT;
-    for (const ship of ships) advanceShipMotion(ship, time + FIXED_DT, FIXED_DT);
-    const obstacles = ships.filter(ship => isShipObstacle(ship, time + FIXED_DT));
-    const result = stepOrdnance(round, obstacles.map(ship => ({...ship,collisionActive:true})), time, FIXED_DT);
+    for (const ship of ships) {
+      advanceShipMotion(ship, time + FIXED_DT, FIXED_DT);
+      ship.collisionActive = isShipObstacle(ship, time + FIXED_DT);
+    }
+    const result = step(round, time, FIXED_DT);
     if (result.active) continue;
     if (!result.outcomes.length) return null;
     const impacts = result.outcomes.filter((outcome): outcome is Extract<OrdnanceOutcome,{type:'impact'}> => outcome.type === 'impact');
