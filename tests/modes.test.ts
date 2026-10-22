@@ -111,7 +111,7 @@ test('Normal throttle persists after release; Easy ignores fire and throttle awa
   assert.ok(normal.player.speed < held, 'opposite buttons cancel trim changes rather than selecting accelerate');
 });
 
-test('source offscreen yaw boost ramps gently in both modes without amplifying bank or pitch', () => {
+test('Easy offscreen yaw boost ramps gently; Normal response is independent of target visibility', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const offscreen = quiet(mode), visible = quiet(mode);
     screenTarget(visible, 0, 0);
@@ -126,7 +126,7 @@ test('source offscreen yaw boost ramps gently in both modes without amplifying b
     const horizontal = Math.sqrt(visibleAngle ** 2 - pitchDelta ** 2);
     const boostedHorizontal = Math.sqrt(boostedAngle ** 2 - pitchDelta ** 2);
     assert.ok(horizontal > 0);
-    assert.ok(Math.abs(boostedHorizontal / horizontal - (1 + 2.5 / 60)) < 1e-10);
+    assert.ok(Math.abs(boostedHorizontal / horizontal - (mode === 'easy' ? 1 + 2.5 / 60 : 1)) < 1e-10);
     assert.equal(offscreen.player.bank, visible.player.bank);
     assert.equal(offscreen.player.pitch, visible.player.pitch);
     const noTargets = getFlightAssist(offscreen.player, [], input, mode);

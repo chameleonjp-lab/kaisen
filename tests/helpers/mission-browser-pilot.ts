@@ -162,7 +162,14 @@ export function createBrowserMissionPilot(preferAircraft = false) {
     }
     if (snapshot.tick < dodgeUntil) {
       trimDirection = snapshot.mode === 'normal' ? 1 : 0;
-      return {turn:dodgeTurn,climb:dodgeClimb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
+      // Normal no longer levels a held horizontal stick automatically. The
+      // external test pilot must request its intended level attitude itself,
+      // sharing the legal circular stick budget with the lateral dodge.
+      const climb = snapshot.mode === 'normal' && dodgeTurn !== 0
+        ? absolutePitchTargetToRateCommand(0, player.pitch, player.speed) : dodgeClimb;
+      const turn = snapshot.mode === 'normal' && dodgeTurn !== 0
+        ? dodgeTurn * Math.sqrt(Math.max(0, 1 - climb * climb)) : dodgeTurn;
+      return {turn,climb,fire:false,loop:false,bomb:false,torpedo:false,accelerate:trimDirection > 0,brake:false};
     }
     const ships = snapshot.ships.map(ship => ({ ...ship, position: vector(ship.position), velocity: vector(ship.velocity) }));
     const guide = snapshot.bombGuide;
