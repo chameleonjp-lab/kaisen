@@ -30,9 +30,8 @@ test('real circular-stick mapping reaches and completes reload with six/seven ti
 });
 
 test('browser reload practice engages aircraft and completes real magazines despite uneven input delivery', async context => {
-  const { createBrowserMissionPilot }=await import('./helpers/mission-browser-pilot');
   for(const pattern of [[6,7],[6,10,15]]) {
-    const state=createGame(),pilot=createBrowserMissionPilot(true);startGame(state);
+    const state=createGame(),pilot=createTouchReloadPilot();startGame(state);
     let next=0,sample=0,pending:{tick:number;turn:number;climb:number}|null=null;
     let held={turn:0,climb:0,fire:false,loop:false,steeringActive:true,viewAspect:393/852};
     const reloads:number[]=[];
@@ -40,7 +39,7 @@ test('browser reload practice engages aircraft and completes real magazines desp
       if(pending&&tick>=pending.tick){held={...held,turn:pending.turn,climb:pending.climb};pending=null;}
       if(tick>=next) {
         next=tick+pattern[sample++%pattern.length];
-        const request=state.player.reloadTicksRemaining>0?{turn:.45,climb:.8}:pilot(JSON.parse(JSON.stringify(state)));
+        const request=pilot(JSON.parse(JSON.stringify(state)));
         const {dx,dy}=pointerOffsetForControls(request.turn,request.climb),r=Math.hypot(dx,dy),response=r/36<=.08?0:(r/36-.08)/.92;
         assert.ok(r<=36+1e-9);pending={tick:tick+1,turn:r?dx/r*response:0,climb:r?-dy/r*response:0};
       }
@@ -51,4 +50,55 @@ test('browser reload practice engages aircraft and completes real magazines desp
     assert.equal(state.phase,'playing');assert.equal(reloads.length,2);assert.equal(reloads[1]-reloads[0],360);
     assert.ok(state.stats.shots>=384);assert.equal(state.player.bombs,2,'gun reload practice does not depend on ordnance');
   }
+});
+
+
+test('CI66 reload pose preserves collision avoidance through delayed legal stick delivery', async context => {
+  const { readFileSync } = await import('node:fs');
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/reload-collision-ci66.json', import.meta.url), 'utf8'));
+  const replay = (legacy: boolean) => {
+    const state = createGame(), pilot = createTouchReloadPilot(); startGame(state);
+    for (const aircraft of [...state.allies, ...state.enemies]) aircraft.health = 0;
+    for (const ship of state.ships) ship.health = 0;
+    for (const [target, source] of [[state.player, fixture.player], [state.enemies[0], fixture.threat]] as const) {
+      for (const [key, value] of Object.entries(source)) {
+        if (key === 'quaternion') target.quaternion.fromArray(value as number[]);
+        else if (key === 'position' || key === 'previous' || key === 'aiWaypoint') {
+          const point = value as {x:number;y:number;z:number};
+          target[key].set(point.x, point.y, point.z);
+        } else (target as any)[key] = value;
+      }
+    }
+    state.tick = fixture.tick; state.elapsed = fixture.elapsed;
+    let held = {turn:0, climb:0, fire:false, loop:false, steeringActive:true, viewAspect:393/852};
+    let pending: {tick:number; turn:number; climb:number} | null = null, next = state.tick;
+    let minDistance = Infinity;
+    while (state.phase === 'playing' && state.player.reloadTicksRemaining > 0) {
+      if (pending && state.tick >= pending.tick) {
+        held = {...held, turn:pending.turn, climb:pending.climb}; pending = null;
+      }
+      if (state.tick >= next) {
+        next = state.tick + 12;
+        const before = JSON.stringify(state), snapshot = JSON.parse(before);
+        const request = legacy ? {turn:.45,climb:.8} : pilot(snapshot);
+        assert.equal(JSON.stringify(state), before); assert.equal(JSON.stringify(snapshot), before);
+        assert.ok(Math.hypot(request.turn,request.climb) <= 1 + 1e-12);
+        const {dx,dy} = pointerOffsetForControls(request.turn,request.climb), r = Math.hypot(dx,dy);
+        const response = r/36 <= .08 ? 0 : (r/36-.08)/.92;
+        pending = {tick:state.tick+8,turn:r ? dx/r*response : 0,climb:r ? -dy/r*response : 0};
+      }
+      stepGame(state,held);
+      minDistance = Math.min(minDistance,state.player.position.distanceTo(state.enemies[0].position));
+    }
+    return {state,minDistance};
+  };
+  const original = replay(true);
+  assert.equal(original.state.deathCause,'aircraft-collision','the unchanged fixed climb reproduces the observed collision');
+  const corrected = replay(false);
+  assert.equal(corrected.state.phase,'playing'); assert.equal(corrected.state.result,null);
+  assert.ok(corrected.state.player.health > 0);
+  assert.equal(corrected.state.player.reloadTicksRemaining,0);
+  assert.ok(corrected.state.player.mg + corrected.state.player.cannon > 0);
+  assert.ok(corrected.minDistance > 20,`ordinary avoidance keeps over 20m of center separation (${corrected.minDistance}m)`);
+  context.diagnostic(JSON.stringify({originalTick:original.state.tick,originalCause:original.state.deathCause,correctedTick:corrected.state.tick,correctedMinDistance:corrected.minDistance,correctedHealth:corrected.state.player.health}));
 });

@@ -1,3 +1,29 @@
+# 2026-10-22 UTC マージ済み最新版の公開と自動反映設定
+
+PR25は16:59:31 UTCに本人がマージ。main `ad9ea6f75dbb2cfbbc39cad1fae76988f8b648e8` のtree `5741b891596aab79e4eef534762e144077ead8cb` は検査済みPR25 head `c9bf3a00c8c2ca8c922d8173c45bc9e6fb818b90` と同一。開始時の公開manifestは旧 `6118b7868b72315bd52106da4326f9f00f91814c`、HTMLは index-BOWx6ORw.js を参照しており、マージだけでは手動専用workflowが起動しないことを確認した。
+
+本人の今回の明示指示に従い、既存のmain専用手動workflowへ完全SHA ad9ea6fを指定した。[Pages run39819375057](https://github.com/chameleonjp-lab/kaisen/actions/runs/39819375057) のbuild/deployはともに成功。buildは既存の単体・型/build・prepare-pages検査を完了した。Pages sourceは従来のActions、独自ドメインなし/HTTPS有効のまま。接続GitHubツールにworkflow dispatchがないため、配備起動には既存認証済みgh CLIを用いた。
+
+公開 `https://chameleonjp-lab.github.io/kaisen/` のdeployment.jsonはad9ea6f。公開HTML、JS、CSS、NOTICEの実bytesは同じソース/固定lockfileからのローカル本番buildと全件SHA256一致した。通常URL、index.html、クエリ付きURLはいずれも200。適切なContent-TypeとCache-Control max-age=600を受信した。公開JSは index-DiqwG3_d.js、CSSは index-CC4z0vjG.css。完全な各hashは [DEPLOYMENT.md](DEPLOYMENT.md) に記録する。
+
+公開URLを393×852のタッチ対応Chromium/SwiftShaderで初回相当の新規contextと再読込・クエリ付きURLから確認した。Normalを通常タップで選択→出撃→タッチ操縦→停止中の時計凍結→再開→停止→ホームが成功し、画像で機体/艦/照準/HUDを確認。再読込時のアセット名も一致。pageerror/requestfailedは0、公開に開発用状態hookがないことも確認。初回の確認スクリプトはゼロ寸法のHUDコンテナへ可視条件を要求して待機失敗したため、実際の可視操作ボタンで待つよう修正して再実行した。製品変更による修復ではない。ブラウザはセッションの既知proxy CAを信頼させ、TLS検証を無効化していない。模擬端末の成功を実機iPhoneの操作感・性能・実音の合格とはしない。
+
+配布artifactのメタデータはid12444575226/name github-pages/239566bytes/期限2026-10-29T17:04:35Z/対象run39819375057・head ad9ea6fで一致した。archiveダウンロードは配信先403のため内部ZIP/TARの照合は未実施。公開応答bytesと検査済みローカルbuildの照合は完了しており、archiveを取得・検査できたとは記録しない。
+
+初回提出head22502d3はworkflowのmain push起動と実イベント/SHA検証、直接回帰2件、PLAN/本記録/DEPLOYMENTの5ファイルのみ。ゲーム本体、入口、public、依存、build設定はad9ea6fと同一。新しい検査は実workflowのshellを読み、main pushの手動入力なし、手動SHA一致/不一致/未指定、他ref・他イベントの計14条件を実行する。旧workflowで2件とも失敗を確認後、修正後2件とも成功。PyYAML BaseLoaderで構文とmain限定push/必須手動SHA/直列配備/依存関係も確認した。
+
+初回候補の `npm test` は56ファイル成功、fail/cancel/skip0、37.676秒。`npm run build` は型検査/Vite成功、既存の500kB超bundle警告のみ。新しい候補の完全SHAに対応する配布manifestと全体browser62件を含む正式CIの結果は、提出PRへ追記して照合する。前PRの62件成功を新規候補の実行結果へ付け替えない。候補はDraft PRまでで、自動反映設定のmain反映・起動は本人のマージ待ち。PR25の公開完了とこの設定の未有効化を区別する。
+
+追補: 初回head `22502d371a252237fe4e4b1ddace5ac2350f90a8` / tree `a27e270be5712733e43bdde8fe42771fd62e8557` の [CI66](https://github.com/chameleonjp-lab/kaisen/actions/runs/39821535066) は単体/型build/実SHAのmanifest/固定旧版比較が成功し、browserは61成功・再装填1失敗（14.1分）、2026-10-22T17:37:14 UTC終了。失敗を成功へ付け替えず保存する。artifact12445936969のZIP 18,140,658bytes/SHA256 `4e38e04293a650ff511534ac5c6bff0a4a52af4e0dfce7e85f8abce9f5e102aa` を照合し、実際のroute JSONと失敗画像を確認した。
+
+失敗時はEasy/tick5197/86.6167秒、死亡理由aircraft-collision、再装填残り288tick。再装填リングの進行/停止中の凍結は既に成功し、JS/console errorは0。browser専用の固定turn .45/climb .8への切替が共有pilotの通常の衝突回避を迂回し、上方の増援へ上昇していた。再装填の離脱入力を共有pilot内の衝突回避の後へ移し、browser/数値試験とも同じhelperを毎観測で使う。ゲーム、装填/生存assert、timeout、workers1/retries0は維持する。
+
+追加fixture `reload-collision-ci66.json` は配布artifactで観測した停止時tick5155の自機/相手機の姿勢だけを固定する。純粋な数値試験内でこの2機を復元し、12tickサンプル/8tick配送遅延の通常円形stickを適用する。旧固定入力で衝突を再現し、通常の回避を優先した経路で正HP/装填完了/残弾回復を要求する。完全なCI世界/入力履歴の再現やbrowserへの世界注入ではない。この3件の局所回帰は成功。固定入力の衝突はCIと同じtick5197、修正経路はtick5485で装填完了/HP70.024/最小中心間25.707mだった。初回補助assertの40mは製品の衝突形状と無関係な余分な距離指定だったため、20m超の中心間距離と実際の非衝突/装填完了を要求する形に修正した。
+
+最終の差分は上記5ファイルにbrowser再装填経路・共有試験pilot・touch-reload回帰・観測pose fixtureを加えた9ファイル。追加修正後の実browser再装填経路は1/1成功（1.6分）、86.433秒/HP16.816で残弾288/96、リング消失・再開後の装填完了/ホームを確認し画像も実見。残弾/世界/時計の注入は0。型/Vite buildも成功し、公開4ファイルの内容は前候補と同一。最終実行関連候補の `npm test` は56ファイル成功、fail/cancel/skip0、39.014秒。実在する新規headの配布manifestおよび全体CIの結果は提出PRへ対応づけて記録する。公開中ad9ea6fの製品内容は変更しない。
+
+Node24.19.0/npm11.9.0/Playwright1.61.1、lockfile SHA256 `5e4f59eb5c1288a252c663a8126a4b49991834bb9b1ced4b9d1cf90d724e2d78` は維持。mainはbranch報告protected=false、詳細protectionは接続権限により403、親を含むrulesetsは空配列。main直接書込・merge・保護緩和は行わない。
+
 # 2026-10-22 UTC 追加調査: Normalの表示段差・更新時計・投下予測負荷
 
 本人の追加申告を受け、先行PR24の `eea28a639ab8032417481154cbdd736cbffe72d3` を継続調査した。調査開始時のmainは `7ade6aa8bec0a62c77694aa163574faf865889d2`、公開 `deployment.json` は `6118b7868b72315bd52106da4326f9f00f91814c`、PR24はDraft/未マージだった。公開版の左右だけ1.65倍になる応答と、PR版にも残る表示・負荷の問題を分ける。先行headのGitHub checks #64 attempt 2は成功しているが、その成功を今回の候補へ付け替えない。

@@ -1,5 +1,8 @@
 name: Deploy Kaisen to GitHub Pages
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       expected_sha:
@@ -20,12 +23,16 @@ jobs:
       contents: read
       pages: read
     steps:
-      - name: Verify requested revision
+      - name: Verify deployment event and revision
         env:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
         run: |
           test "$GITHUB_REF" = "refs/heads/main"
-          test "$EXPECTED_SHA" = "$GITHUB_SHA"
+          case "$GITHUB_EVENT_NAME" in
+            push) ;;
+            workflow_dispatch) test "$EXPECTED_SHA" = "$GITHUB_SHA" ;;
+            *) exit 1 ;;
+          esac
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.sha }}

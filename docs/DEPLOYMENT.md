@@ -1,3 +1,20 @@
+# 最新公開と自動反映（2026-10-22 UTC）
+
+PR25は本人が16:59:31 UTCにマージ済み。公開が旧6118b78のままだったため、本人の依頼に従いmain `ad9ea6f75dbb2cfbbc39cad1fae76988f8b648e8` を既存の手動workflowで配備した。[Pages run39819375057](https://github.com/chameleonjp-lab/kaisen/actions/runs/39819375057) はbuild/deployとも成功。mainのtree `5741b891596aab79e4eef534762e144077ead8cb` は検査済みPR25 head c9bf3a0と同一だった。
+
+公開URL <https://chameleonjp-lab.github.io/kaisen/> のmanifestはad9ea6f。HTML・JS・CSS・NOTICEの全bytesを同じソース/lockfileの検査済みローカルbuildと照合し、以下のSHA256が全件一致した。通常URL・index.html・クエリ付きURLも200。公開ページでNormalの通常出撃・タッチ操縦・停止/再開・ホーム、初回相当/再読込/クエリ付き起動を確認し、JavaScript/通信エラーは0だった。操作画像も実見した。実機iPhoneの操作感・性能・実音は未確認。
+
+| 公開ファイル | SHA256 |
+|---|---|
+| index.html | bf1cf5caab649e7fc48e17239722040a99963563741a03cc3b16089d7904483f |
+| assets/index-DiqwG3_d.js | 2bb5299df3dbbb019c9aada1f0776b726eb4dc955012dafbcc0f69fb7612b7fe |
+| assets/index-CC4z0vjG.css | 27a94f1a79f29ec460e9d2493989b05d0870874621a13186c397a5fe3e0c527a |
+| third-party-notices.txt | 97de7ac302052bcea7f20e5ae89635c10e049614f56409288d554d63fceb614f |
+
+今後の自動反映は今回の明示指示に従い、`.github/workflows/deploy-pages.yml` の `push.branches: [main]` で行う。各main SHAに対する単体/型/build/公開内容検査が成功した場合だけ配備する。手動再実行の完全SHA検証、main限定、固定Actions SHA、最小job権限、直列配備、dist限定と7日保持は維持する。Pages source/秘密情報/保護は変更しない。自動反映設定は作業branchのDraft PRで提出し、本人がそのPRをマージした時点から有効になる。この時点の公開更新は完了している。
+
+配布artifact id12444575226はrun39819375057/head ad9ea6f、239566bytes、期限2026-10-29T17:04:35Z。取得先403によりarchive内部の照合は未実施。公開応答と検査済みローカルbuildの全ファイル照合とは分けて記録する。以下は旧公開・初回準備の履歴。
+
 # 最新公開の確認（2026-10-03 15:03:58 UTC）
 
 利用者がPR9を14:56:55 UTCにマージ。main `8663af9b67c31b01c7b7b0b16a605fd0b9b32770` は検査済みhead9adeb05とtree7d876ad6が一致し、[Pages run37131825873](https://github.com/chameleonjp-lab/kaisen/actions/runs/37131825873)で公開した。統合mainの202単体・型/build・成果物検査とdeploy成功。公開ページのJS index-BFEt2XH3.js/CSS index-DWkLjsCm.css、両モード、爆弾/魚雷を含む配置設定・音ON/OFFを確認。配布artifact11277022330の216238bytes/SHA256 c3b62ca4c81a4a81b644592d866b5faba91fdea29f67be748fdf31bca8bc04e9と内部4ファイルを照合した。
@@ -14,7 +31,7 @@ PR #7/#8を利用者がマージしたmain `c63bff8b328676f2435ee50454143f321eef
 
 PR #6を利用者がマージしたmain `1950788018fa2a0466715f85c866d9f273718138` を、承認後に [run37086928771](https://github.com/chameleonjp-lab/kaisen/actions/runs/37086928771) で配備し成功。107単体・build・成果物照合が再度合格。公開画面のEasy/Normal切替、読み込まれたJS `index-BTmHSAV9.js` / CSS `index-KW3ZlEZ-.css` と、そのSHAを記録した配備成果物の対応を確認した。公開manifestの直接取得はアクセス制限のため未検証であり、別経路で迂回しない。dot側クラウドブラウザはWebGL無効なので公開版の飛行確認はblocked、CIの模擬ブラウザ成功とは区別する。
 
-本人は以後もマージされたカイセンをPagesへ反映するよう指示した。運用はmain/検査済みtreeを確認して既存手動ワークフローへ完全SHAを指定する。GitHubの自動実行設定・保護・権限を変更する指示とは扱わず、未マージ変更は公開しない。
+当時の本人指示ではmain/検査済みtreeを確認して既存手動ワークフローへ完全SHAを指定した。手動限定の運用は2026-10-22の自動反映の明示指示で置換する。未マージ変更は引き続き公開しない。
 
 ## 初回準備の記録
 
@@ -33,8 +50,8 @@ PR #6を利用者がマージしたmain `1950788018fa2a0466715f85c866d9f27371813
 
 1. この変更のDraft PRで既存の全検査とPages成果物検査を確認し、利用者がmainへマージする。
 2. mainの完全commit SHAと、検査したPR headとの差分を照合する。
-3. Actionsの **Deploy Kaisen to GitHub Pages** を **main** で手動実行し、`expected_sha` に照合したmainの完全SHAを指定する。PR/pushでは自動公開しない。現在の本人指示に従い、カイセンを本人がマージした後、検査合格とmain一致を確認して反映する。
-4. ワークフローは選択refとSHAを照合し、固定Node24/lockfileで単体検査・型/buildを実行する。既存Pages設定を読むだけで、新しいPAT/秘密情報・有料サービス・管理権限を追加しない。
+3. 自動反映設定のPRを本人がmainへマージすると、**Deploy Kaisen to GitHub Pages** はmainへのpushで起動する。以後のPRマージも、そのmain commitを対象に自動反映する。手動再配備は **main** で実行し、`expected_sha` に照合したmainの完全SHAを指定する。PR branchやpull_requestイベントから公開しない。
+4. ワークフローはmainとイベントを照合し、手動実行では指定SHAの完全一致も確認する。固定Node24/lockfileで単体検査・型/buildを実行する。既存Pages設定を読むだけで、新しいPAT/秘密情報・有料サービス・管理権限を追加しない。
 5. `dist/` だけを公開用artifactへ保存し、`github-pages` 環境へ配備する。公開jobだけが一時的な `pages:write` / `id-token:write` を使う。保護ルールを緩和しない。
 6. deploy stepが返す実URLを開き、次項を確認してから公開完了とする。
 
