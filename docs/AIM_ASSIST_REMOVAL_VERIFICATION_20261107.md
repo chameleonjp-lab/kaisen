@@ -58,4 +58,18 @@ M1の操縦用遮蔽照会は両モード0である。海だけの表示と艦�
 
 `presentation-lifecycle-boundary.test.ts`は実mainのpause/resumeをVMで読み、実sceneの停止stamp判定・描画sample境界と実presentationを通す。GPU描画以降だけは明示的な完了count fixtureとし、実GPU・実機の検査とはしない。停止直後の再開拒否、pending queueでの拒否、停止sampleによる履歴破棄、submitとcompleteの区別、完了後の再開とゼロtick表示を両モードで確認し、確定世界のJSONも停止前後で一致した。2/2pass（`/tmp/kaisen-lifecycle-boundary.log`）。一時的な検査コピーで`pausedViewReady`のguardだけを除いた変異は両モードともplaying≠pausedでfail、exit1（`/tmp/kaisen-lifecycle-boundary-mutant.log`）。一時コピーは削除し、製品へ変異を入れていない。
 
-この2件を追加した全364件は `/tmp/kaisen-lifecycle-final-tests.log` で実行中。直前の製品全362件の成功を364件の成功へ付け替えない。今回のコミットは検査と記録のみで、d34afedの製品内容を維持する。最終候補の正式CI・ブラウザ・M1・実機・公開状態は取りまとめ側へ引き継ぐ。
+この2件を追加した全364件はpass、fail/cancel/skip0、106.683秒（`/tmp/kaisen-lifecycle-final-tests.log`）。今回のコミットは検査と記録のみで、d34afedの製品内容を維持する。最終候補の正式CI・ブラウザ・M1・実機・公開状態は取りまとめ側へ引き継ぐ。
+
+## 高さだけで縦横比の区分が変わる境界
+
+共有レビューで指摘された402×430→402×390→402×430を、両モードの実入力controllerと実main `handleResize`をVMで接続して再現した。旧判定は幅が変わらなくてもwidth>heightの真偽が変わると回転とみなし、操縦pointer21をnullへ失効させた（`/tmp/kaisen-square-resize-red.log`、両モードfail）。入力の判定を幅変更だけへ限定し、既存の明示orientationchangeによる解除を維持した。mainのresize処理には回転判定・自動停止が存在せず、既にscene/HUDの寸法更新だけなので製品mainは変更していない。
+
+新回帰は同じ指・操作量・Normalの独立射撃指、変化後のclient座標rebase、次の移動での操縦継続、main画面/phaseがplayingのまま、4回のscene更新、明示回転と幅変更の解除を検査する。関連19/19pass（`/tmp/kaisen-square-resize-green.log`）。buildもpass（`/tmp/kaisen-square-build.log`）。全366件はpass、fail/cancel/skip0、78.886秒（`/tmp/kaisen-square-final-tests.log`）。実在commit1819266のPages成果物検査もpass（`/tmp/kaisen-square-prepare-pages.log`）。ブラウザや実機の未確認をこれらの数値/VM検査で代替しない。
+
+## 初回の正式CIとcamera測定窓の修正
+
+Draft PR27の初回提出remote `6cb63b5f0a03c9f83d9cc05f45d0b2856cc5f158` はlocal eaf9a2fのtree `b9f2269b0b3ae56cc17b071dc88d58228ee85325` と完全一致。[CI42276362089](https://github.com/chameleonjp-lab/kaisen/actions/runs/42276362089)で単体364件、build、Pages成果物、固定旧版との同条件throttle比較が成功した。browserは64/66pass、2failで、全件成功ではない。
+
+失敗したEasyのcamera-rate 393×852/852×393は、敵のいない測定窓に入る前の累積射撃まで0と要求していた。保存artifact13535280598の実sampleはvisibleが全て0、窓内のshotsは縦6→6→6、横38→38→38→38で、測定rateはそれぞれ0.207417926/0.207386533 rad/sだった。開始時の有効敵へのEasy自動射撃を認める今回の仕様と、累積0の期待が矛盾する。
+
+測定窓開始時の射撃数をread-onlyで保存し、窓中に1発も増えないことを要求するよう修正した。visible0・補間alpha・各方向rate・上下左右比率のassert、全件数・timeout・workflowは維持する。元失敗とartifactは残す。この検査修正を含むローカル全366件はpass、fail/cancel/skip0、81.811秒（`/tmp/kaisen-ci-fix-final-tests.log`）、buildもpass（`/tmp/kaisen-ci-fix-build.log`）。この検査修正と高さ境界修正を含む新しい提出treeのbrowser全件結果は未取得で、初回CIの成功を付け替えない。M1のp50/p95と実機・公開後照合も引き続き未取得。

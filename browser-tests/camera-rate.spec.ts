@@ -20,6 +20,9 @@ for (const mode of ['easy', 'normal'] as const) for (const viewport of [{ width:
       for (const [name, turn, climb] of [['up', 0, .25], ['down', 0, -.25], ['left', -.25, 0], ['right', .25, 0]] as const) {
         const accepted = await steerAndObserve(page, cdp, origin, turn, climb);
         const samples = await page.evaluate(async ({ width, height, afterTick, mode }) => {
+          // Easy may fire at valid opening targets before the pilot turns away.
+          // The empty measurement window must add no shots of its own.
+          const shotsAtStart = (window as any).__kaisenReadState(false).stats.shots;
           const { Vector3, Quaternion } = await import('/node_modules/three/build/three.module.js');
           const { projectFlightTarget } = await import('/src/flight-view.ts');
           return new Promise<any[]>((resolve, reject) => {
@@ -34,7 +37,7 @@ for (const mode of ['easy', 'normal'] as const) for (const viewport of [{ width:
                   quaternion: new Quaternion().fromArray(s.player.quaternion) };
                 const visible = [...s.enemies, ...s.ships].filter(t => t.health > 0 && projectFlightTarget(player,
                   new Vector3(t.position.x, t.position.y + (t.kind === 'ship' ? t.height * .4 : 0), t.position.z), width / height, mode).visible).length;
-                samples.push({ ...pose, visible, speed: s.player.speed, shots: s.stats.shots,
+                samples.push({ ...pose, visible, speed: s.player.speed, shots: s.stats.shots, shotsAtStart,
                   bombCue: document.getElementById('bomb')!.dataset.ready, torpedoCue: document.getElementById('torpedo')!.dataset.ready });
                 if (samples.length >= 3 && pose.elapsed - samples[0].elapsed >= .4) { clearTimeout(timeout); resolve(samples); return; }
               }
@@ -50,7 +53,7 @@ for (const mode of ['easy', 'normal'] as const) for (const viewport of [{ width:
           (samples.at(-1).elapsed - samples[0].elapsed);
         observations.push({ name, rate, samples });
         expect(samples.every(s => s.alpha >= 0 && s.alpha < 1), 'the real renderer consumes the fractional accumulator').toBe(true);
-        expect(samples.every(s => s.visible === 0 && s.shots === 0), 'empty view has no enemy assistance or automatic firing').toBe(true);
+        expect(samples.every(s => s.visible === 0 && s.shots === s.shotsAtStart), 'empty measurement window has no visible enemies or additional automatic shots').toBe(true);
         expect(rate).toBeGreaterThan(.19); expect(rate).toBeLessThan(.24);
       }
       const rates = observations.map(o => o.rate);
