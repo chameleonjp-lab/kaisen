@@ -153,22 +153,22 @@ test('actual camera rate keeps direction, strength, pitch and yaw symmetric in b
     }
 });
 
-test('camera-forward manual rate preserves the yaw-only offscreen 1.65 multiplier', () => {
+test('camera-forward manual rate uses the same unit gain across target-independent commands', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const speed = 110, angularStep = .82 * expectedAuthority(speed) * dt;
     const boosted = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
     const visible = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player');
     boosted.speed = visible.speed = speed;
-    manualStep(boosted, .6, 0, 1.65, mode);
+    manualStep(boosted, .6, 0, 1, mode);
     manualStep(visible, .6, 0, 1, mode);
     const boostedAngle = cameraAngle(
       cameraForward(makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'), mode), cameraForward(boosted, mode));
     const visibleBaseline = makeAircraft(1, 'friendly', new Vector3(0, 900, 0), 0, 'player'); visibleBaseline.speed = speed;
     manualStep(visibleBaseline, 0, 0, 1, mode);
     const visibleAngle = cameraAngle(cameraForward(visibleBaseline, mode), cameraForward(visible, mode));
-    assert.ok(Math.abs(boostedAngle - .6 * angularStep * 1.65) < 1e-12);
+    assert.ok(Math.abs(boostedAngle - .6 * angularStep) < 1e-12);
     assert.ok(Math.abs(visibleAngle - .6 * angularStep) < 1e-12);
-    assert.ok(Math.abs(boostedAngle / visibleAngle - 1.65) < 1e-12);
+    assert.ok(Math.abs(boostedAngle / visibleAngle - 1) < 1e-12);
   }
 });
 

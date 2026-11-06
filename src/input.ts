@@ -44,6 +44,9 @@ export class FlightControls {
   // it because pause/blur release controls synthetically.
   private steeringRevision = 0;
   private origin = { x: 0, y: 0 };
+  private lastSteeringPoint = { x: 0, y: 0 };
+  private rebaseSteering = false;
+  private viewportWidth = window.innerWidth;
   private mode: FlightMode = 'normal';
   private readonly abort = new AbortController();
   private readonly joystick: HTMLElement;
@@ -109,9 +112,9 @@ export class FlightControls {
     window.addEventListener('keyup', event => this.keyUp(event), opts);
     window.addEventListener('blur', () => this.clear(), opts);
     window.addEventListener('pagehide', () => this.clear(), opts);
-    window.addEventListener('resize', () => this.clear(), opts);
+    window.addEventListener('resize', () => this.resizeViewport(), opts);
     window.addEventListener('orientationchange', () => this.clear(), opts);
-    window.visualViewport?.addEventListener('resize', () => this.clear(), opts);
+    window.visualViewport?.addEventListener('resize', () => this.resizeViewport(), opts);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.clear();
     }, opts);
@@ -170,6 +173,7 @@ export class FlightControls {
     const steeringPointer = this.steerPointer;
     this.steerPointer = null;
     this.steerPointerType = null;
+    this.rebaseSteering = false;
     this.buttonPointerTypes.clear();
     this.turn = 0;
     this.climb = 0;
@@ -197,6 +201,16 @@ export class FlightControls {
     this.abort.abort();
   }
 
+  private resizeViewport(): void {
+    const width = window.innerWidth;
+    // Browser chrome may change height across square proportions without a
+    // device rotation. Width changes and explicit orientationchange clear.
+    const rotated = width !== this.viewportWidth;
+    this.viewportWidth = width;
+    if (rotated) this.clear();
+    else if (this.steerPointer !== null) this.rebaseSteering = true;
+  }
+
   private beginSteering(event: PointerEvent, app: HTMLElement): void {
     if (!this.active() || (event.pointerType === 'mouse' && event.button !== 0)) return;
     if (event.isPrimary) this.retireSameTypePointer(event.pointerType);
@@ -206,6 +220,8 @@ export class FlightControls {
     this.steerPointer = event.pointerId;
     this.steerPointerType = event.pointerType;
     this.origin = { x: event.clientX, y: event.clientY };
+    this.lastSteeringPoint = { ...this.origin };
+    this.rebaseSteering = false;
     const appRect = app.getBoundingClientRect();
     this.joystick.style.left = `${event.clientX - appRect.left}px`;
     this.joystick.style.top = `${event.clientY - appRect.top}px`;
@@ -219,6 +235,17 @@ export class FlightControls {
     if (event.pointerId !== this.steerPointer) return;
     if (event.pointerType === 'mouse' && event.buttons === 0) { this.endSteering(event); return; }
     event.preventDefault();
+    if (this.rebaseSteering) {
+      // Browser chrome can shift client coordinates while preserving the finger.
+      // Re-anchor the next delivered event to the retained command before moving.
+      this.origin.x += event.clientX - this.lastSteeringPoint.x;
+      this.origin.y += event.clientY - this.lastSteeringPoint.y;
+      this.rebaseSteering = false;
+      const rect = this.surface.closest<HTMLElement>('#app')?.getBoundingClientRect() ?? this.surface.getBoundingClientRect();
+      this.joystick.style.left = `${this.origin.x - rect.left}px`;
+      this.joystick.style.top = `${this.origin.y - rect.top}px`;
+    }
+    this.lastSteeringPoint = { x: event.clientX, y: event.clientY };
     const dx = event.clientX - this.origin.x;
     const dy = event.clientY - this.origin.y;
     const distance = Math.hypot(dx, dy);

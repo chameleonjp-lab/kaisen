@@ -48,7 +48,7 @@ test('Easy bombing pilot holds a level physical stick without compensating neutr
   enemy.position.copy(s.player.position).addScaledVector(stern,-1000);enemy.position.y=600;
   s.tick=600;s.elapsed=10;const before=JSON.stringify(s),command=pilot(s);
   const neutral={turn:0,climb:0,fire:false,loop:false,viewAspect:393/852};
-  assert.ok(getFlightAssist(s.player,[ship,enemy],neutral,'easy').climb<-.1,'a visible lower aircraft pulls a neutral bombing approach downward');
+  assert.equal(getFlightAssist(s.player,[ship,enemy],neutral,'easy').climb,0,'a visible lower aircraft cannot pull a neutral bombing approach downward');
   assert.ok(Math.abs(command.climb)<1e-12,'the held stick must not climb to counter an absent automatic pull');
   const physical={...command,steeringActive:true,viewAspect:393/852};
   assert.equal(getFlightAssist(s.player,[ship,enemy],physical,'easy').climb,command.climb);

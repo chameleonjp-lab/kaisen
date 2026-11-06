@@ -58,7 +58,7 @@ test('deterministic bounded fleet simulations include actual AI and real project
 
 import { forwardOf } from '../src/flight';
 
-test('surface marker, steering and auto-fire share the above-water point at the circle edge', () => {
+test('surface marker and auto-fire share the above-water point at the circle edge', () => {
   const state = createGame(21), player = state.player, ship = state.ships[0];
   player.position.set(0, 150, 0); player.pitch = -.276; updateQuaternion(player);
   ship.position.set(0, 0, -400); ship.velocity.set(0, 0, 0);
@@ -68,7 +68,7 @@ test('surface marker, steering and auto-fire share the above-water point at the 
   assert.equal(projectFlightTarget(player, point, aspect, 'easy').inCircle, true);
   assert.equal(autoFireTarget(player, [ship], 'easy', aspect), ship);
   const assist = getFlightAssist(player, [ship], { ...neutral, viewAspect: aspect }, 'easy');
-  assert.equal(assist.hasVisibleTarget, true); assert.equal(assist.turn, 0); assert.equal(assist.climb, 0, 'point inside circle needs no steering pull');
+  assert.equal(assist.hasVisibleTarget, false); assert.equal(assist.turn, 0); assert.equal(assist.climb, 0, 'point inside circle needs no steering pull');
   const forward = forwardOf(player);
   const predicted = predictedShotDirection(player.position, forward, ship, 930, 1.5);
   assert.ok(predicted.distanceTo(point.clone().sub(player.position).normalize()) < 1e-12);

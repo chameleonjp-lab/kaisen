@@ -1,3 +1,5 @@
+> 2026-11-07 JST: 以下の操縦追尾・発射補正は履歴です。現行契約は [ZERO_SERIES_AIM_CONTRACT.md](ZERO_SERIES_AIM_CONTRACT.md) の2026-11-07節へ置換。開始高度・弾道表示・AI・爆弾・誘導魚雷は維持します。
+
 # Easyの開始高度と艦への追尾
 
 ## 依頼と原因

@@ -191,10 +191,10 @@ export function updatePlayerLoop(
   const manualSteering = !!userInput.steeringActive
     || Math.max(Math.abs(userInput.turn), Math.abs(userInput.climb)) > EPSILON
     || Math.max(Math.abs(input.turn), Math.abs(input.climb)) <= EPSILON;
-  // Crossing the horizontal axis during a live Normal gesture is a zero
+  // Crossing the horizontal axis during a live steering gesture is a zero
   // pitch-rate command. Level only after release, rather than injecting a
   // full-rate return step between arbitrarily small up/down inputs.
-  const holdNeutralPitch = mode === 'normal' && (!!userInput.steeringActive
+  const holdNeutralPitch = (!!userInput.steeringActive
     || Math.max(Math.abs(userInput.turn), Math.abs(userInput.climb)) > EPSILON);
 
   const revisionChanged = meta.loopStartSteeringRevision !== undefined

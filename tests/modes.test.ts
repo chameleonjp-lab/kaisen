@@ -41,17 +41,15 @@ function cameraAngle(before: Vector3, after: Vector3): number {
   return Math.atan2(new Vector3().crossVectors(before, after).length(), before.dot(after));
 }
 
-test('Normal emits no automatic shots or visible-target steering; Easy keeps both', () => {
+test('Both modes keep manual steering; Easy alone fires on a valid target', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const state = quiet(mode), target = screenTarget(state, .8, .3);
     const assist = getFlightAssist(state.player, [target], neutral, mode);
-    if (mode === 'normal') {
-      assert.equal(assist.turn, 0); assert.equal(assist.climb, 0);
-      assert.equal(autoFireTarget(state.player, [target], mode, neutral.viewAspect), null);
-    } else { assert.ok(assist.turn > 0); assert.ok(assist.climb > 0); }
+    assert.equal(assist.turn, 0); assert.equal(assist.climb, 0);
+    assert.equal(autoFireTarget(state.player, [target], mode, neutral.viewAspect), null);
     stepGame(state, neutral);
     assert.equal(mode === 'normal' ? state.player.yaw : 0, 0);
-    if (mode === 'easy') assert.ok(state.player.yaw < 0);
+    assert.equal(state.player.yaw, 0);
   }
   for (const mode of ['easy', 'normal'] as const) {
     const state = quiet(mode); screenTarget(state, 0, 0);
@@ -60,7 +58,7 @@ test('Normal emits no automatic shots or visible-target steering; Easy keeps bot
   }
 });
 
-test('Normal bullets follow the bore line, while Easy alone predicts a crossing target', () => {
+test('Both modes fire along the bore line when a target crosses', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const state = quiet(mode), target = state.enemies[0];
     target.health = 100; target.position.copy(state.player.position).add(new Vector3(0, 0, -650));
@@ -71,29 +69,13 @@ test('Normal bullets follow the bore line, while Easy alone predicts a crossing 
     const forward = forwardOf(state.player);
     for (const bullet of bullets) {
       const angle = bullet.velocity.clone().normalize().angleTo(forward);
-      if (mode === 'normal') assert.ok(angle < 1e-10, 'manual shot is not corrected toward the target');
-      else assert.ok(angle > .005 && angle <= .0280000001, 'Easy only partially corrects toward straight lead');
+      assert.ok(angle < 1e-7, 'the shot follows the muzzle regardless of target velocity');
     }
     const velocities = bullets.map(b => b.velocity.toArray());
     target.position.x += 200;
     stepGame(state, neutral);
     bullets.forEach((b, i) => assert.deepEqual(b.velocity.toArray(), velocities[i], 'launched shots do not home'));
   }
-});
-
-test('Easy target assistance keeps its absolute-pitch command contract', () => {
-  const state = quiet('easy');
-  state.player.pitch = .4; updateQuaternion(state.player);
-  const target = screenTarget(state, 0, -.6);
-  const assist = getFlightAssist(state.player, [target], neutral, 'easy');
-  assert.ok(assist.climb > 0, 'the selected target requests an absolute pitch below the current nose-up attitude');
-  const adjusted = { ...neutral, turn: assist.turn, climb: assist.climb };
-  const before = state.player.pitch;
-  updatePlayerLoop(state.player, createFlightController(state.player), adjusted, neutral, false, 1 / 60, 110, 141, 1);
-  const targetPitch = assist.climb * .95;
-  const expected = before + (targetPitch - before) * (1 - Math.exp(-4.2 / 60));
-  assert.ok(Math.abs(state.player.pitch - expected) < 1e-12,
-    'non-manual Easy correction remains a smoothed absolute attitude target, not a manual rate');
 });
 
 test('Normal throttle persists after release; Easy ignores fire and throttle away from targets', () => {
@@ -111,7 +93,7 @@ test('Normal throttle persists after release; Easy ignores fire and throttle awa
   assert.ok(normal.player.speed < held, 'opposite buttons cancel trim changes rather than selecting accelerate');
 });
 
-test('Easy offscreen yaw boost ramps gently; Normal response is independent of target visibility', () => {
+test('Both modes have the same turn response with visible or offscreen enemies', () => {
   for (const mode of ['easy', 'normal'] as const) {
     const offscreen = quiet(mode), visible = quiet(mode);
     screenTarget(visible, 0, 0);
@@ -126,7 +108,7 @@ test('Easy offscreen yaw boost ramps gently; Normal response is independent of t
     const horizontal = Math.sqrt(visibleAngle ** 2 - pitchDelta ** 2);
     const boostedHorizontal = Math.sqrt(boostedAngle ** 2 - pitchDelta ** 2);
     assert.ok(horizontal > 0);
-    assert.ok(Math.abs(boostedHorizontal / horizontal - (mode === 'easy' ? 1 + 2.5 / 60 : 1)) < 1e-10);
+    assert.ok(Math.abs(boostedHorizontal / horizontal - 1) < 1e-10);
     assert.equal(offscreen.player.bank, visible.player.bank);
     assert.equal(offscreen.player.pitch, visible.player.pitch);
     const noTargets = getFlightAssist(offscreen.player, [], input, mode);

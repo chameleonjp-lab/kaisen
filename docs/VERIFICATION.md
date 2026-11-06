@@ -1,3 +1,7 @@
+# 2026-11-07 JST 操縦・通常弾の標的補助撤去候補
+
+今回のK1–K3の変更、旧版比較、全件/ブラウザの実行状態と未検査は [AIM_ASSIST_REMOVAL_VERIFICATION_20261107.md](AIM_ASSIST_REMOVAL_VERIFICATION_20261107.md) を参照。旧記録の補助仕様と成功を今回の候補へ流用しない。
+
 # 2026-10-22 UTC マージ済み最新版の公開と自動反映設定
 
 PR25は16:59:31 UTCに本人がマージ。main `ad9ea6f75dbb2cfbbc39cad1fae76988f8b648e8` のtree `5741b891596aab79e4eef534762e144077ead8cb` は検査済みPR25 head `c9bf3a00c8c2ca8c922d8173c45bc9e6fb818b90` と同一。開始時の公開manifestは旧 `6118b7868b72315bd52106da4326f9f00f91814c`、HTMLは index-BOWx6ORw.js を参照しており、マージだけでは手動専用workflowが起動しないことを確認した。
