@@ -24,7 +24,7 @@ test('three pointer owners preserve micro-steering through fire/lever release an
   buttons.fire.dispatchEvent(pointer('lostpointercapture',2));assert.equal(controls.sample().fire,false);assert.equal(controls.sample().turn,held.turn);assert.equal(controls.sample().throttle,1);
   win.dispatchEvent(pointer('pointercancel',3));assert.equal(controls.sample().throttle,0);assert.equal(controls.sample().climb,held.climb);
   win.dispatchEvent(pointer('pointerup',1));assert.equal(controls.sample().turn,0);assert.equal(controls.sample().climb,0);assert.equal(controls.sample().steeringActive,undefined);
-  for(const name of ['blur','resize','pagehide']){surface.dispatchEvent(pointer('pointerdown',4));win.dispatchEvent(new Event(name));assert.equal(controls.peek().steerPointer,null);assert.equal(controls.sample().steeringActive,undefined);}
+  for(const name of ['blur','orientationchange','pagehide']){surface.dispatchEvent(pointer('pointerdown',4));win.dispatchEvent(new Event(name));assert.equal(controls.peek().steerPointer,null);assert.equal(controls.sample().steeringActive,undefined);}
   surface.dispatchEvent(pointer('pointerdown',5));controls.clear();assert.equal(controls.sample().turn,0);
  } finally {controls.dispose();for(const [key,d] of originals)if(d)Object.defineProperty(globalThis,key,d);else Reflect.deleteProperty(globalThis,key);}
 });

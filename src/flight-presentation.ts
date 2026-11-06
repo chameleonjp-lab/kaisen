@@ -12,7 +12,6 @@ export class FlightPresentation {
   private poses = new Map<number, Pose>();
 
   capture(state: GameState): void {
-    if (state.mode !== 'normal') return;
     if (this.state !== state) this.poses.clear();
     this.state = state; this.tick = state.tick;
     const live = new Set<number>();
@@ -30,7 +29,7 @@ export class FlightPresentation {
 
   sample(state: GameState, alpha: number): GameState {
     if (state.phase !== 'playing') { this.state = null; return state; }
-    if (state.mode !== 'normal' || this.state !== state || this.tick !== state.tick - 1) return state;
+    if (this.state !== state || this.tick !== state.tick - 1) return state;
     const fraction = Number.isFinite(alpha) ? Math.max(0, Math.min(1, alpha)) : 1;
     const pose = <T extends CombatTarget>(target: T): T => {
       const previous = this.poses.get(target.id);

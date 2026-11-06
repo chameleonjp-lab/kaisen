@@ -21,7 +21,7 @@ function pointer(type:string,id:number,x=100,y=200,primary=false) {
 }
 test('capture failure plus release on window cannot strand steering; other held fingers survive cancellation',()=>{
   const originals=['window','document','HTMLElement'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)] as const);
-  const win=Object.assign(new EventTarget(),{visualViewport:new EventTarget()});
+  const win=Object.assign(new EventTarget(),{innerWidth:402,innerHeight:874,visualViewport:new EventTarget()});
   const doc=Object.assign(new EventTarget(),{hidden:false,getElementById:()=>new ElementStub()});
   Object.defineProperty(globalThis,'window',{configurable:true,value:win});
   Object.defineProperty(globalThis,'document',{configurable:true,value:doc});
@@ -41,10 +41,19 @@ test('capture failure plus release on window cannot strand steering; other held 
     // New steering works without a retry/home reset.
     surface.dispatchEvent(pointer('pointerdown',4));win.dispatchEvent(pointer('pointermove',4,70,200));
     assert.ok(controls.sample().turn<-.7);
-    for(const event of ['resize','blur','pagehide']) {
+    for(const event of ['orientationchange','blur','pagehide']) {
       win.dispatchEvent(new Event(event));assert.equal(controls.peek().steerPointer,null);
       assert.equal(controls.sample().accelerate,false);surface.dispatchEvent(pointer('pointerdown',5));
     }
+    controls.clear();surface.dispatchEvent(pointer('pointerdown',11));win.dispatchEvent(pointer('pointermove',11,118,190));
+    const held=controls.sample();buttons.fire.dispatchEvent(pointer('pointerdown',12));
+    win.innerHeight=820;win.dispatchEvent(new Event('resize'));win.visualViewport.dispatchEvent(new Event('resize'));
+    assert.equal(controls.peek().steerPointer,11);assert.equal(controls.sample().fire,true);
+    win.dispatchEvent(pointer('pointermove',11,118,136));
+    assert.equal(controls.sample().turn,held.turn);assert.equal(controls.sample().climb,held.climb,'first shifted client coordinate rebases without a jump');
+    win.dispatchEvent(pointer('pointermove',11,124,136));assert.ok(controls.sample().turn>held.turn,'same finger keeps steering');
+    win.dispatchEvent(pointer('pointercancel',12));assert.equal(controls.peek().steerPointer,11);
+    win.innerWidth=874;win.innerHeight=402;win.dispatchEvent(new Event('resize'));assert.equal(controls.peek().steerPointer,null);
     // A missing terminal notification is recoverable when the browser identifies a new primary finger.
     surface.dispatchEvent(pointer('pointerdown',8,100,200,true));assert.equal(controls.peek().steerPointer,8);
     doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));assert.equal(controls.peek().steerPointer,null);

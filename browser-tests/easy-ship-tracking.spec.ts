@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { steerAndObserve } from './touch-command';
 import { waitForPausedView } from './paused-view';
 
-test('Easy higher opening keeps ship pull gentle and deliberate climb wins; replay retains altitude',async({page,context})=>{
+test('Easy higher opening keeps level cruise and deliberate climb works; replay retains altitude',async({page,context})=>{
  test.setTimeout(60000);await page.setViewportSize({width:393,height:648});
  const read=()=>page.evaluate(()=>(window as any).__kaisenReadState(false));
  await page.goto('/');await expect(page.locator('#start')).toBeEnabled();
@@ -19,7 +19,7 @@ test('Easy higher opening keeps ship pull gentle and deliberate climb wins; repl
  await page.locator('#pause').tap();const tracked=await read();
  expect(tracked.player.position.y).toBeGreaterThan(250);expect(tracked.player.pitch).toBeGreaterThan(-.22);
  await waitForPausedView(page,{tick:tracked.tick,cssWidth:393,cssHeight:648});
- await page.screenshot({path:'test-results/evidence/easy-gentle-ship-follow.png',style:'#pause-screen {visibility:hidden!important}'});
+ await page.screenshot({path:'test-results/evidence/easy-manual-level-cruise.png',style:'#pause-screen {visibility:hidden!important}'});
  await page.locator('#resume').tap();
  const cdp=await context.newCDPSession(page),origin={x:90,y:500};
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...origin,id:1}]});

@@ -1,3 +1,7 @@
+# 2026-11-07 JST 操縦・通常弾の標的補助を撤去
+
+今回の実装依頼と[8作品修正計画](https://github.com/chameleonjp-lab/zero-series/blob/main/docs/ZERO_SERIES_AIM_ASSIST_REMOVAL_PLAN_20261107.md)を適用する。両モードの標的追尾・敵に応じた倍率・自機通常弾の発射補正はsuperseded。Easyの有効敵に対する自動引き金はproposedの仮案として実装し、巡航と開始高度を維持する。Normalの手動射撃、得点・保存・公開設定は継続。保持中の中央上下入力・高さresizeと表示補間を両モードで修正する。現行契約は [ZERO_SERIES_AIM_CONTRACT.md](ZERO_SERIES_AIM_CONTRACT.md)、証拠は [AIM_ASSIST_REMOVAL_VERIFICATION_20261107.md](AIM_ASSIST_REMOVAL_VERIFICATION_20261107.md)。mainへの反映・公開・iPhone実機は本ローカル候補の完了と区別する。
+
 # 2026-10-22 採用済み: マージ済み最新版の公開と今後の自動反映
 
 本人がPR25をマージし、「ページ最新化されてないなら最新化して、今後はPRがマージされたら自動でページに反映されるようにして」と明示した。今回の配備と公開workflowの起動条件変更を許可済みとして扱う。従来の手動限定方針とworkflow変更対象外はこの範囲だけ置換する。mainへの直接push・代理merge・auto-merge・保護変更は行わず、設定変更は作業branchからmain宛てDraft PRへ提出する。

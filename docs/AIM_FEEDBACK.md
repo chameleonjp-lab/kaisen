@@ -1,3 +1,5 @@
+> 2026-11-07 JST: 以下の操縦追尾・発射補正は履歴です。現行契約は [ZERO_SERIES_AIM_CONTRACT.md](ZERO_SERIES_AIM_CONTRACT.md) の2026-11-07節へ置換。開始高度・弾道表示・AI・爆弾・誘導魚雷は維持します。
+
 # 現行の小幅調整（2026-10-04）
 
 公開版の弾補正をもう少し強める本人指示により、35%・上限0.028radへ更新する。測定と旧値比較は[EASY_ASSIST_TUNING.md](EASY_ASSIST_TUNING.md)。カメラ/飛行補助・予測門0.16rad・Normal・AIを変更しない。以下は前回25%/0.020radを採用した履歴。

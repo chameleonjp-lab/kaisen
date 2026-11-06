@@ -1,0 +1,67 @@
+{
+  "baseline": "c95c9d186b977b2ab02bd6fa9e1a0ca32ea7f0a8",
+  "seed": 73,
+  "altitude": 1500,
+  "input": {
+    "turn": 0,
+    "climb": 0,
+    "viewAspect": 0.459954233409611
+  },
+  "enemyComparison": {
+    "right": 105,
+    "forward": 500,
+    "behind": 500,
+    "fixedTicks": 12
+  },
+  "heldPitch": {
+    "degrees": 20,
+    "fixedTicks": 12
+  },
+  "presentation": {
+    "fixedHz": 60,
+    "displayHz": 120,
+    "climb": 0.45,
+    "samples": 48
+  },
+  "before": [
+    {
+      "mode": "easy",
+      "enemyCameraDifferenceDegrees": 2.545184186224406,
+      "heldPitchReturnDegrees": 9.386182155238327,
+      "repeat120Hz": {
+        "repeated": 24,
+        "samples": 48
+      }
+    },
+    {
+      "mode": "normal",
+      "enemyCameraDifferenceDegrees": 0,
+      "heldPitchReturnDegrees": 0,
+      "repeat120Hz": {
+        "repeated": 0,
+        "samples": 48
+      }
+    }
+  ],
+  "after": [
+    {
+      "mode": "easy",
+      "enemyCameraDifferenceDegrees": 0,
+      "heldPitchReturnDegrees": 0,
+      "repeat120Hz": {
+        "repeated": 0,
+        "samples": 48
+      }
+    },
+    {
+      "mode": "normal",
+      "enemyCameraDifferenceDegrees": 0,
+      "heldPitchReturnDegrees": 0,
+      "repeat120Hz": {
+        "repeated": 0,
+        "samples": 48
+      }
+    }
+  ],
+  "note": "Pure numerical production simulation and camera pose. No GPU or physical-device timing claim."
+}

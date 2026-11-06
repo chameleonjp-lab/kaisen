@@ -74,7 +74,7 @@ function syncInstructions() {
   el("flight-tip").textContent = touch ? "ドラッグで操縦" : "キーで操縦";
   el("input-guide").textContent = touch ? "画面をドラッグして操縦" : "キーボードで操縦";
   el("mode-guide").textContent = state.mode === "easy"
-    ? "照準円内・1.2km以内へ自動射撃 · 弾道を見て少し先を狙う"
+    ? "手動操縦 · 円内・1.2km以内の見える敵へ自動射撃 · 弾は銃口正面"
     : touch ? "照準補助なし・手動射撃 · 射撃は長押し · 速度レバーは上下、離すと速度を保持" : "照準補助なし・手動射撃 · 射撃・加減速はキーを長押し";
   el("keyboard-guide").hidden = touch;
   el("keyboard-guide").textContent = keyboardDescription();

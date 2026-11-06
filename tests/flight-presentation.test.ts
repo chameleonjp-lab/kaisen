@@ -13,11 +13,11 @@ const forward = (state: ReturnType<typeof createGame>) => {
 };
 const angle = (a: Vector3, b: Vector3) => Math.atan2(new Vector3().crossVectors(a, b).length(), a.dot(b));
 
-test('Normal camera moves on every 120Hz presentation sample between 60Hz ticks', () => {
+for (const mode of ['easy', 'normal'] as const) test(`${mode} camera moves on every 120Hz presentation sample between 60Hz ticks`, () => {
   for (const command of [input, { ...input, climb: -.45 }, { ...input, turn: .45, climb: 0 }]) {
-    const state = createGame(73, 'normal'), view = new FlightPresentation(); startGame(state);
+    const state = createGame(73, mode), view = new FlightPresentation(); startGame(state);
     let accumulator = 0, previous = forward(state); const rates: number[] = [];
-    for (let frame = 0; frame < 50; frame++) {
+    for (let frame = 0; frame < 51; frame++) {
       accumulator += FIXED_DT / 2;
       if (accumulator + 1e-9 >= FIXED_DT) {
         view.capture(state); stepGame(state, command); accumulator -= FIXED_DT;
@@ -33,8 +33,8 @@ test('Normal camera moves on every 120Hz presentation sample between 60Hz ticks'
   }
 });
 
-test('presentation shares one interpolation phase for aircraft, ships, projectiles and camera', () => {
-  const state = createGame(73, 'normal'), view = new FlightPresentation(); startGame(state);
+for (const mode of ['easy', 'normal'] as const) test(`${mode} presentation shares one interpolation phase for aircraft, ships, projectiles and camera`, () => {
+  const state = createGame(73, mode), view = new FlightPresentation(); startGame(state);
   view.capture(state); const oldPlayer = state.player.position.clone(), oldShip = state.ships[0].position.clone();
   stepGame(state, { ...input, fire: true });
   const sampled = view.sample(state, .25);
@@ -46,7 +46,18 @@ test('presentation shares one interpolation phase for aircraft, ships, projectil
   assert.ok(Math.abs(sampled.elapsed - (state.elapsed - FIXED_DT * .75)) < 1e-12);
   pauseGame(state); assert.equal(view.sample(state, .25), state, 'pause draws the authoritative final pose');
   resumeGame(state); assert.equal(view.sample(state, 0), state, 'resume must not jump backwards to a stale pose');
-  const next = createGame(73, 'normal'); startGame(next); assert.equal(view.sample(next, .5), next);
-  const easy = createGame(73, 'easy'); startGame(easy); view.capture(easy); stepGame(easy, input);
-  assert.equal(view.sample(easy, .5), easy, 'Easy retains its targeting presentation');
+  const next = createGame(73, mode); startGame(next); assert.equal(view.sample(next, .5), next);
+});
+
+for (const mode of ['easy', 'normal'] as const) test(`${mode} fixed simulation is independent of 30/60/120Hz presentation`, () => {
+  let expected: string | undefined;
+  for (const hz of [30,60,120]) {
+    const state=createGame(73,mode),view=new FlightPresentation();startGame(state);let accumulator=0;
+    for(let frame=0;frame<hz;frame++) {
+      accumulator+=1/hz;
+      while(accumulator+1e-9>=FIXED_DT) {view.capture(state);stepGame(state,input);accumulator-=FIXED_DT;}
+      view.sample(state,accumulator/FIXED_DT);
+    }
+    expected??=JSON.stringify(state);assert.equal(JSON.stringify(state),expected,`${hz}Hz must not alter bullets, time, result or flight`);
+  }
 });
